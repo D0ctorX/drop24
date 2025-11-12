@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Réseau Social (Fonctionnel)</title>
+    <!-- Utilisation de Font Awesome pour les icônes -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400&family=Montserrat:wght@700&family=Pacifico&display=swap');
+
+        :root {
+            --primary-bg: #FAFAFA;
+            --secondary-bg: #FFFFFF;
+            --border-color: #DBDBDB;
+            --text-color: #262626;
+            --highlight-color: #3897f0;
+            --last-seen-color: #8E8E8E;
+            --button-border: #d4d4d4;
+            --like-color: #3897f0;
+            --dislike-color: #E74C3C;
+            --action-color: #8e8e8e;
+            --switch-off: #ccc;
+            --switch-on: #5cb85c;
+        }
+
+        .font-inter { font-family: 'Inter', sans-serif; }
+        .font-roboto { font-family: 'Roboto', sans-serif; }
+        .font-montserrat { font-family: 'Montserrat', sans-serif; }
+        .font-pacifico { font-family: 'Pacifico', cursive; }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #EFEFEF;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: var(--text-color);
+            overflow: hidden;
+        }
+
+        .container {
+            width: 100%;
+            height: 100%;
+            max-width: 450px;
+            max-height: 900px;
+            background-color: var(--primary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .view {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--primary-bg);
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            z-index: 1;
+        }
+
+        .view-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 15px;
+            border-bottom: 1px solid var(--border-color);
+            background-color: var(--secondary-bg);
+            flex-shrink: 0;
+            height: 60px;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .header-icon, .back-button {
+            font-size: 20px;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .feed-view, .contacts-view { transform: translateX(0%); }
+        .contacts-view, .profile-view, .chat-view, .post-creation-view { transform: translateX(100%); }
+        .post-creation-view { z-index: 10; }
+
+        .view.visible {
+            transform: translateX(0%);
+            z-index: 2;
+        }
+        
+        .profile-view.visible, .chat-view.visible, .post-creation-view.visible { z-index: 5; }
+        .view.pushed-left { transform: translateX(-100%); z-index: 1; }
+
+        .feed-content {
+            padding: 10px 0;
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        .post-card {
+            background-color: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            margin: 0 10px 15px 10px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .post-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+        }
+
+        .post-publisher { font-weight: 600; cursor: pointer; }
+        .post-countdown { font-size: 12px; font-weight: 600; color: var(--dislike-color); }
+
+        .post-image-wrapper {
+            width: 100%;
+            padding-top: 100%;
+            position: relative;
+            background-color: #EFEFEF;
+        }
+
+        .post-content-inner {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+        }
+        
+        .post-message {
+            font-size: 22px;
+            text-align: center;
+            line-height: 1.4;
+            max-width: 90%;
+            word-wrap: break-word;
+        }
+
+        .post-actions {
+            display: flex;
+            align-items: center;
+            padding: 8px 15px;
+            gap: 20px;
+        }
+
+        .action-button {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            color: var(--action-color);
+            transition: color 0.2s ease-in-out;
+        }
+        
+        .action-button i { font-size: 18px; }
+
+        .action-button.liked, .action-button.disliked {
+            font-weight: 600;
+        }
+        .action-button.liked { color: var(--like-color); }
+        .action-button.disliked { color: var(--dislike-color); }
+
+        .contacts-content { flex-grow: 1; overflow-y: auto; }
+
+        .search-bar { padding: 10px 15px; border-bottom: 1px solid var(--border-color); }
+
+        #search-input {
+            width: 100%;
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background-color: var(--primary-bg);
+            outline: none;
+        }
+
+        .friend-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .friend-item:hover { background-color: #f9f9f9; }
+
+        .friend-pp { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; margin-right: 15px; }
+        .friend-info { flex-grow: 1; }
+        .friend-info h4 { margin: 0; font-size: 16px; }
+        .friend-info p { margin: 2px 0 0; font-size: 12px; color: var(--last-seen-color); }
+
+        .dm-button {
+            padding: 8px 16px;
+            background-color: var(--highlight-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+        .dm-button:hover { background-color: #2D79C7; }
+
+        .bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            max-width: 450px;
+            height: 60px;
+            background-color: var(--secondary-bg);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 0 10px;
+            z-index: 10;
+            box-sizing: border-box;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--last-seen-color);
+            transition: color 0.2s ease-in-out;
+            flex-grow: 1; /* Pour qu'ils prennent la même place */
+        }
+
+        .nav-item.active { color: var(--highlight-color); }
+        .nav-item i { font-size: 22px; margin-bottom: 4px; }
+        .nav-item p { font-size: 10px; font-weight: 600; margin: 0; }
+
+        .profile-content { flex-grow: 1; overflow-y: auto; padding-bottom: 20px; }
+        .profile-header-card { display: flex; align-items: center; padding: 20px 15px; border-bottom: 1px solid var(--border-color); }
+        #profile-pic { width: 100px; height: 100px; border-radius: 50%; margin-right: 20px; }
+        .profile-main-info { flex-grow: 1; }
+        #profile-username { font-size: 22px; font-weight: 600; margin: 0; }
+        #edit-bio-btn, #profile-dm-btn { background: none; border: 1px solid var(--button-border); border-radius: 6px; padding: 6px 12px; margin-top: 10px; cursor: pointer; font-weight: 600; width: 100%; }
+        #profile-dm-btn { background-color: var(--highlight-color); color: white; border-color: var(--highlight-color); }
+        .profile-stats { display: flex; justify-content: space-around; text-align: center; padding: 15px 0; border-bottom: 1px solid var(--border-color); }
+        .stat-item h3 { margin: 0; font-size: 18px; }
+        .stat-item p { margin: 2px 0 0; font-size: 12px; color: var(--last-seen-color); }
+        .profile-details { padding: 15px; }
+        .profile-details h4 { margin: 0 0 5px 0; font-size: 16px; }
+        .profile-details p { margin: 0 0 15px 0; line-height: 1.5; }
+
+        .chat-view { background-color: #F0F2F5; }
+        .chat-header { display: flex; align-items: center; }
+        #chat-user-pp { width: 40px; height: 40px; border-radius: 50%; margin-left: 10px; margin-right: 10px; }
+        .chat-content { flex-grow: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column-reverse; }
+        #chat-body { display: flex; flex-direction: column; gap: 10px; }
+        .message { max-width: 75%; padding: 10px 15px; border-radius: 18px; position: relative; word-wrap: break-word; }
+        .message-row { display: flex; align-items: flex-end; gap: 8px; }
+        .message.sent { background-color: var(--highlight-color); color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
+        .message-container.sent { align-items: flex-end; }
+        .message.received { background-color: var(--secondary-bg); color: var(--text-color); align-self: flex-start; border-bottom-left-radius: 4px; }
+        .message-container.received { align-items: flex-start; }
+        .message-time { font-size: 10px; color: var(--last-seen-color); }
+        .chat-input { display: flex; padding: 10px 15px; background-color: var(--secondary-bg); border-top: 1px solid var(--border-color); }
+        #message-input { flex-grow: 1; border: 1px solid var(--border-color); border-radius: 20px; padding: 10px 15px; outline: none; margin-right: 10px; }
+        #send-button { background-color: transparent; border: none; color: var(--highlight-color); font-size: 24px; cursor: pointer; }
+
+        .post-creation-view { background-color: var(--secondary-bg); }
+        .post-creation-content { flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; }
+        .post-input-area { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; overflow-y: hidden; }
+        #square-content { width: 90%; padding-top: 90%; position: relative; background-color: #f1f1f1; border-radius: 12px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); transition: background-color 0.3s ease-in-out; cursor: text; }
+        #post-textarea { position: absolute; top: 0; left: 0; width: 100%; height: 100%; box-sizing: border-box; padding: 20px; background: transparent; border: none; resize: none; outline: none; text-align: center; font-size: 20px; line-height: 1.4; color: var(--text-color); }
+        .controls-area { padding: 15px; border-top: 1px solid var(--border-color); }
+        .control-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .control-row:last-child { margin-bottom: 0; }
+        .control-buttons { display: flex; gap: 10px; }
+        .control-btn { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--border-color); background-color: var(--primary-bg); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+        #color-swatches-container { display: flex; gap: 8px; }
+        .color-swatch { width: 28px; height: 28px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: border-color 0.2s; }
+        .color-swatch.selected { border-color: var(--highlight-color); }
+        .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--switch-off); transition: .4s; border-radius: 28px; }
+        .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--switch-on); }
+        input:checked + .slider:before { transform: translateX(22px); }
+
+        #toast-message {
+            position: absolute;
+            bottom: 80px;
+            left: 50%;
+            transform: translate(-50%, 100%);
+            background-color: rgba(0, 0, 0, 0.75);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            z-index: 100;
+            opacity: 0;
+            transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+            pointer-events: none;
+        }
+        #toast-message.show { transform: translate(-50%, 0); opacity: 1; }
+        #toast-message.success { background-color: #28a745; }
+        #toast-message.error { background-color: #dc3545; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- VUE FEED -->
+        <div id="feed-view" class="view feed-view visible">
+            <div class="view-header">
+                <div style="width: 40px;"></div> <!-- Placeholder -->
+                <h1 class="header-title">Flux</h1>
+                <!-- MODIFIÉ: Bouton Publier -->
+                <i id="create-post-header-btn" class="fas fa-feather-alt header-icon"></i>
+            </div>
+            <div id="feed-content" class="feed-content">
+                <!-- Les posts seront injectés ici -->
+            </div>
+        </div>
+
+        <!-- VUE CONTACTS -->
+        <div id="contacts-view" class="view contacts-view">
+            <div class="view-header">
+                <!-- MODIFIÉ: Bouton Mon Profil -->
+                <i id="my-profile-nav-item" class="fas fa-user header-icon"></i>
+                <h1 class="header-title">Contacts</h1>
+                <div style="width: 40px;"></div> <!-- Placeholder -->
+            </div>
+            <div class="search-bar">
+                <input type="text" id="search-input" placeholder="Rechercher un utilisateur...">
+            </div>
+            <div id="friends-list" class="contacts-content">
+                <!-- La liste d'amis sera injectée ici -->
+            </div>
+        </div>
+
+        <!-- VUE PROFIL -->
+        <div id="profile-view" class="view profile-view">
+            <div class="view-header">
+                <i id="profile-back-btn" class="fas fa-arrow-left back-button"></i>
+                <h1 id="profile-username-header" class="header-title">Profil</h1>
+                <div style="width: 40px;"></div>
+            </div>
+            <div class="profile-content">
+                <div class="profile-header-card">
+                    <img id="profile-pic" src="https://placehold.co/100x100" alt="Photo de profil">
+                    <div class="profile-main-info">
+                        <h2 id="profile-username">Username</h2>
+                        <button id="edit-bio-btn">Modifier la bio</button>
+                        <button id="profile-dm-btn">Message</button>
+                    </div>
+                </div>
+                <div class="profile-stats">
+                    <div class="stat-item"><h3 id="posts-count">0</h3><p>Publications</p></div>
+                    <div class="stat-item"><h3 id="followers-count">0</h3><p>Followers</p></div>
+                </div>
+                <div class="profile-details">
+                    <h4>Bio</h4>
+                    <p id="profile-bio">Pas de bio.</p>
+                    <h4>Membre depuis</h4>
+                    <p id="creation-date">Inconnue</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- VUE CHAT -->
+        <div id="chat-view" class="view chat-view">
+            <div class="view-header chat-header">
+                <i id="chat-back-btn" class="fas fa-arrow-left back-button"></i>
+                <img id="chat-user-pp" src="https://placehold.co/40x40" alt="">
+                <h1 id="chat-username" class="header-title">Chat</h1>
+                <div style="width: 40px;"></div>
+            </div>
+            <div class="chat-content">
+                <div id="chat-body"></div>
+            </div>
+            <div class="chat-input">
+                <input type="text" id="message-input" placeholder="Votre message...">
+                <button id="send-button"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+        
+        <!-- VUE CREATION DE POST -->
+        <div id="post-creation-view" class="view post-creation-view">
+            <div class="view-header">
+                <i id="creation-back-btn" class="fas fa-times back-button"></i>
+                <h1 class="header-title">Nouveau Post</h1>
+                <button id="post-submit-btn" style="background:none; border:none; color:var(--highlight-color); font-weight:600; font-size:16px; cursor:pointer;">Publier</button>
+            </div>
+            <div class="post-creation-content">
+                <div class="post-input-area">
+                    <div id="square-content">
+                        <textarea id="post-textarea" placeholder="Exprimez-vous..." maxlength="280"></textarea>
+                    </div>
+                </div>
+                <div class="controls-area">
+                    <div class="control-row">
+                        <div id="color-swatches-container"></div>
+                        <div class="control-buttons">
+                            <button id="font-style-btn" class="control-btn"><i class="fas fa-font"></i></button>
+                        </div>
+                    </div>
+                    <div class="control-row">
+                        <span>Publier en anonyme</span>
+                        <label class="switch">
+                            <input type="checkbox" id="anonymous-switch-input">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- BARRE DE NAVIGATION (MODIFIÉE) -->
+        <div class="bottom-nav">
+            <div class="nav-item active" data-view="feed-view"><i class="fas fa-home"></i><p>Flux</p></div>
+            <div class="nav-item" data-view="contacts-view"><i class="fas fa-users"></i><p>Contacts</p></div>
+        </div>
+        
+        <!-- MESSAGE TOAST -->
+        <div id="toast-message"></div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, serverTimestamp, query, orderBy, onSnapshot, doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- CONFIGURATION FIREBASE ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyB_z5U4yKJERho93p9696NujcG5R5fvlD8",
+            authDomain: "studio-3374032724-f28d6.firebaseapp.com",
+            projectId: "studio-3374032724-f28d6",
+            storageBucket: "studio-3374032724-f28d6.appspot.com",
+            messagingSenderId: "541715107757",
+            appId: "1:541715107757:web:0141b71ee3cd1ce5ec5b24"
+        };
+        
+        // --- INITIALISATION FIREBASE & GLOBALES ---
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        
+        const dbPath = `artifacts/${firebaseConfig.appId}/public/data`;
+        const postsCollectionRef = collection(db, dbPath, 'posts');
+        const usersCollectionRef = collection(db, dbPath, 'users');
+        const chatsCollectionRef = collection(db, dbPath, 'chats');
+
+        let currentUserId = null;
+        let activeProfileUserId = null;
+        let activeChatId = null;
+        let usersData = {};
+        let postsData = [];
+        let countdownInterval;
+
+        let unsubscribeFeedListener = null;
+        let unsubscribeUsersListener = null;
+        let unsubscribeChat = null;
+
+        // --- REFERENCES DOM ---
+        const feedView = document.getElementById('feed-view');
+        const contactsView = document.getElementById('contacts-view');
+        const profileView = document.getElementById('profile-view');
+        const chatView = document.getElementById('chat-view');
+        const postCreationView = document.getElementById('post-creation-view');
+        
+        const feedContent = document.getElementById('feed-content');
+        const friendsList = document.getElementById('friends-list');
+        const navItems = document.querySelectorAll('.nav-item');
+
+        // --- FONCTIONS UTILITAIRES ---
+        let toastTimeout;
+        function showMessage(message, isSuccess) {
+            const toast = document.getElementById('toast-message');
+            toast.textContent = message;
+            toast.className = 'show';
+            toast.classList.add(isSuccess ? 'success' : 'error');
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.className = toast.className.replace('show', '');
+            }, 3000);
+        }
+
+        // --- LOGIQUE DE NAVIGATION ---
+        let lastMainView = feedView;
+        function navigateTo(viewId) {
+            const targetView = document.getElementById(viewId);
+            if (!targetView) return;
+            
+            navItems.forEach(item => item.classList.toggle('active', item.dataset.view === viewId));
+            
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('visible'));
+            targetView.classList.add('visible');
+            lastMainView = targetView;
+        }
+
+        function showSecondaryView(view) {
+            lastMainView.classList.add('pushed-left');
+            view.classList.add('visible');
+        }
+
+        function hideSecondaryView(view) {
+            view.classList.remove('visible');
+            lastMainView.classList.remove('pushed-left');
+        }
+
+        // --- CRÉATION / MISE À JOUR D'UTILISATEUR ---
+        async function upsertUserDocument(user) {
+            const userRef = doc(usersCollectionRef, user.uid);
+            const userDoc = await getDoc(userRef);
+
+            if (!userDoc.exists()) {
+                const username = `User_${user.uid.substring(0, 6)}`;
+                await setDoc(userRef, {
+                    username: username,
+                    bio: "Bienvenue sur l'application !",
+                    pp: `https://placehold.co/100x100/3897f0/ffffff?text=${username.charAt(0)}`,
+                    accountCreatedAt: serverTimestamp(),
+                    postsCount: 0,
+                    followers: [],
+                });
+            }
+        }
+        
+        // --- GESTION DES UTILISATEURS ET CONTACTS ---
+        function listenToUsers() {
+            if (unsubscribeUsersListener) unsubscribeUsersListener();
+            unsubscribeUsersListener = onSnapshot(usersCollectionRef, (snapshot) => {
+                snapshot.forEach(doc => {
+                    usersData[doc.id] = { id: doc.id, ...doc.data() };
+                });
+                renderFriendsList();
+                if (profileView.classList.contains('visible') && activeProfileUserId) {
+                    showProfile(activeProfileUserId);
+                }
+            });
+        }
+        
+        function renderFriendsList() {
+            friendsList.innerHTML = '';
+            const otherUsers = Object.values(usersData).filter(u => u.id !== currentUserId);
+            
+            if (otherUsers.length === 0) {
+                friendsList.innerHTML = '<p style="text-align: center; color: var(--last-seen-color); padding: 40px 20px; font-size: 14px;">Vous êtes seul ici pour le moment.</p>';
+                return;
+            }
+            
+            otherUsers.forEach(user => {
+                const friendItem = document.createElement('div');
+                friendItem.className = 'friend-item';
+                friendItem.dataset.userId = user.id;
+                friendItem.innerHTML = `
+                    <img class="friend-pp" src="${user.pp || 'https://placehold.co/50x50'}" alt="Avatar">
+                    <div class="friend-info">
+                        <h4>${user.username}</h4>
+                        <p>${user.bio || 'Aucune bio.'}</p>
+                    </div>
+                    <button class="dm-button" data-user-id="${user.id}">Message</button>
+                `;
+                friendsList.appendChild(friendItem);
+            });
+        }
+        
+        // --- GESTION DU PROFIL ---
+        function showProfile(userId) {
+            const user = usersData[userId];
+            if (!user) return;
+            
+            activeProfileUserId = userId;
+            
+            document.getElementById('profile-pic').src = user.pp || 'https://placehold.co/100x100';
+            document.getElementById('profile-username').textContent = user.username;
+            document.getElementById('profile-username-header').textContent = user.username;
+            document.getElementById('profile-bio').textContent = user.bio || "Pas de bio.";
+            document.getElementById('followers-count').textContent = user.followers?.length || 0;
+            document.getElementById('posts-count').textContent = user.postsCount || 0;
+            document.getElementById('creation-date').textContent = user.accountCreatedAt ? user.accountCreatedAt.toDate().toLocaleDateString('fr-FR') : 'Inconnue';
+            
+            const editBioBtn = document.getElementById('edit-bio-btn');
+            const dmBtn = document.getElementById('profile-dm-btn');
+            
+            if (userId === currentUserId) {
+                editBioBtn.style.display = 'block';
+                dmBtn.style.display = 'none';
+            } else {
+                editBioBtn.style.display = 'none';
+                dmBtn.style.display = 'block';
+                dmBtn.dataset.userId = userId;
+            }
+
+            showSecondaryView(profileView);
+        }
+
+        // --- GESTION DU FEED ---
+        function listenToFeed() {
+            if (unsubscribeFeedListener) unsubscribeFeedListener();
+            const q = query(postsCollectionRef, orderBy('createdAt', 'desc'));
+
+            unsubscribeFeedListener = onSnapshot(q, (snapshot) => {
+                const twentyFourHoursAgo = Date.now() - (24 * 60 * 60 * 1000);
+                postsData = [];
+                snapshot.forEach(doc => {
+                    const post = { id: doc.id, ...doc.data() };
+                    const createdAt = post.createdAt?.toDate();
+                    if (!createdAt || createdAt.getTime() < twentyFourHoursAgo) return;
+                    post.expiresAt = new Date(createdAt.getTime() + (24 * 60 * 60 * 1000));
+                    postsData.push(post);
+                });
+                renderFeedDOM();
+            });
+        }
+        
+        function renderFeedDOM() {
+            if (postsData.length === 0) {
+                feedContent.innerHTML = '<p style="text-align: center; color: var(--last-seen-color); padding: 40px 20px; font-size: 14px;">Le flux est vide. Soyez le premier à publier !</p>';
+                return;
+            }
+            
+            feedContent.innerHTML = postsData.map(createPostHTML).join('');
+            startCountdownTimer();
+        }
+        
+        function createPostHTML(post) {
+            const publisher = usersData[post.publisherId];
+            const publisherDisplay = post.isAnonymous ? "Anonyme" : (publisher?.username || "Utilisateur inconnu");
+            const isLiked = post.likers?.includes(currentUserId);
+            const isDisliked = post.dislikers?.includes(currentUserId);
+
+            return `
+                <div class="post-card" data-post-id="${post.id}" data-expires-at="${post.expiresAt.toISOString()}">
+                    <header class="post-header">
+                        <span class="post-publisher" data-user-id="${post.isAnonymous ? '' : post.publisherId}">${publisherDisplay}</span>
+                        <span class="post-countdown">--:--:--</span>
+                    </header>
+                    <div class="post-image-wrapper">
+                        <div class="post-content-inner" style="background-color: ${post.backgroundColor || '#EFEFEF'};">
+                            <p class="post-message ${post.fontClass || 'font-inter'}">${post.message}</p>
+                        </div>
+                    </div>
+                    <div class="post-actions">
+                        <div class="action-button ${isLiked ? 'liked' : ''}" data-action="like"><i class="fas fa-thumbs-up"></i><span>${post.likers?.length || 0}</span></div>
+                        <div class="action-button ${isDisliked ? 'disliked' : ''}" data-action="dislike"><i class="fas fa-thumbs-down"></i><span>${post.dislikers?.length || 0}</span></div>
+                    </div>
+                </div>`;
+        }
+
+        async function handlePostAction(postId, action) {
+            const postRef = doc(postsCollectionRef, postId);
+            const batch = writeBatch(db);
+            if (action === 'like') {
+                batch.update(postRef, { likers: arrayUnion(currentUserId), dislikers: arrayRemove(currentUserId) });
+            } else if (action === 'dislike') {
+                batch.update(postRef, { dislikers: arrayUnion(currentUserId), likers: arrayRemove(currentUserId) });
+            }
+            await batch.commit();
+        }
+
+        function startCountdownTimer() {
+            if (countdownInterval) clearInterval(countdownInterval);
+            countdownInterval = setInterval(() => {
+                document.querySelectorAll('.post-card').forEach(card => {
+                    const expiresAt = new Date(card.dataset.expiresAt);
+                    const diff = expiresAt - new Date();
+                    if (diff <= 0) {
+                        card.style.display = 'none';
+                    } else {
+                        const h = Math.floor(diff / 3600000);
+                        const m = Math.floor((diff % 3600000) / 60000);
+                        const s = Math.floor((diff % 60000) / 1000);
+                        card.querySelector('.post-countdown').textContent = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+                    }
+                });
+            }, 1000);
+        }
+
+        // --- GESTION DU CHAT ---
+        async function showChat(otherUserId) {
+            const otherUser = usersData[otherUserId];
+            if (!otherUser) return;
+            
+            activeChatId = [currentUserId, otherUserId].sort().join('_');
+            const chatRef = doc(chatsCollectionRef, activeChatId);
+            
+            const chatDoc = await getDoc(chatRef);
+            if (!chatDoc.exists()) {
+                await setDoc(chatRef, { participants: [currentUserId, otherUserId] });
+            }
+
+            document.getElementById('chat-username').textContent = otherUser.username;
+            document.getElementById('chat-user-pp').src = otherUser.pp || 'https://placehold.co/40x40';
+            listenToChatMessages(activeChatId);
+            showSecondaryView(chatView);
+        }
+
+        function listenToChatMessages(chatId) {
+            if (unsubscribeChat) unsubscribeChat();
+            const messagesRef = collection(db, `${dbPath}/chats/${chatId}/messages`);
+            const q = query(messagesRef, orderBy('timestamp', 'desc'));
+            const chatBody = document.getElementById('chat-body');
+            
+            unsubscribeChat = onSnapshot(q, (snapshot) => {
+                chatBody.innerHTML = snapshot.empty ? '<p style="text-align: center; color: var(--last-seen-color);">Commencez la conversation !</p>' : '';
+                snapshot.docs.reverse().forEach(doc => addMessageToChatDOM(doc.data()));
+            });
+        }
+        
+        async function sendMessage() {
+            const messageInput = document.getElementById('message-input');
+            const text = messageInput.value.trim();
+            if (!text || !activeChatId) return;
+            const messagesRef = collection(db, `${dbPath}/chats/${activeChatId}/messages`);
+            await addDoc(messagesRef, { text, senderId: currentUserId, timestamp: serverTimestamp() });
+            messageInput.value = '';
+        }
+        
+        function addMessageToChatDOM(msg) {
+            const chatBody = document.getElementById('chat-body');
+            const type = msg.senderId === currentUserId ? 'sent' : 'received';
+            const time = msg.timestamp ? msg.timestamp.toDate().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '';
+            const msgContainer = document.createElement('div');
+            msgContainer.className = `message-container ${type}`;
+            msgContainer.innerHTML = `<div class="message-row"><div class="message ${type}">${msg.text}</div><span class="message-time">${time}</span></div>`;
+            chatBody.appendChild(msgContainer);
+            chatBody.parentElement.scrollTop = chatBody.parentElement.scrollHeight;
+        }
+
+        // --- GESTION DE LA CRÉATION DE PUBLICATION ---
+        const postTextarea = document.getElementById('post-textarea');
+        const squareContent = document.getElementById('square-content');
+        const colorSwatchesContainer = document.getElementById('color-swatches-container');
+        const COLOR_PALETTE = ['#FFFFFF', '#FFDDC1', '#FFD1DC', '#D1FFDC', '#D1DCFF', '#F1D1FF'];
+        const FONT_FAMILIES = ['font-inter', 'font-roboto', 'font-montserrat', 'font-pacifico'];
+        let currentBackgroundColor = COLOR_PALETTE[0];
+        let currentFontIndex = 0;
+
+        function handleColorSelect(color) {
+            currentBackgroundColor = color;
+            squareContent.style.backgroundColor = color;
+            document.querySelectorAll('.color-swatch').forEach(sw => sw.classList.toggle('selected', sw.dataset.color === color));
+        }
+
+        function generateColorSwatches() {
+            colorSwatchesContainer.innerHTML = COLOR_PALETTE.map(c => `<div class="color-swatch ${c===currentBackgroundColor?'selected':''}" style="background-color:${c};" data-color="${c}"></div>`).join('');
+        }
+
+        function handleFontStyleChange() {
+            postTextarea.classList.remove(FONT_FAMILIES[currentFontIndex]);
+            currentFontIndex = (currentFontIndex + 1) % FONT_FAMILIES.length;
+            postTextarea.classList.add(FONT_FAMILIES[currentFontIndex]);
+            showMessage(`Police: ${FONT_FAMILIES[currentFontIndex].replace('font-','')}`, true);
+        }
+
+        async function handlePostSubmit() {
+            const message = postTextarea.value.trim();
+            if (!message) return showMessage("La publication ne peut pas être vide.", false);
+            const isAnonymous = document.getElementById('anonymous-switch-input').checked;
+            
+            try {
+                await addDoc(postsCollectionRef, { message, publisherId: currentUserId, isAnonymous, createdAt: serverTimestamp(), backgroundColor: currentBackgroundColor, fontClass: FONT_FAMILIES[currentFontIndex], likers: [], dislikers: [] });
+                if (!isAnonymous) {
+                    const userRef = doc(usersCollectionRef, currentUserId);
+                    const count = (await getDoc(userRef)).data().postsCount || 0;
+                    await updateDoc(userRef, { postsCount: count + 1 });
+                }
+                showMessage("Publication envoyée !", true);
+                postTextarea.value = '';
+                handleColorSelect(COLOR_PALETTE[0]);
+                document.getElementById('anonymous-switch-input').checked = false;
+                hideSecondaryView(postCreationView);
+            } catch (e) { showMessage("Échec de la publication.", false); }
+        }
+        
+        // --- AUTHENTIFICATION & INITIALISATION ---
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUserId = user.uid;
+                await upsertUserDocument(user);
+                listenToFeed();
+                listenToUsers();
+            } else {
+                currentUserId = null;
+                if (unsubscribeFeedListener) unsubscribeFeedListener();
+                if (unsubscribeUsersListener) unsubscribeUsersListener();
+                if (unsubscribeChat) unsubscribeChat();
+            }
+        });
+
+        async function initializeAppLogic() {
+            try { await signInAnonymously(auth); } 
+            catch (e) { document.body.innerHTML = "Impossible de se connecter. Vérifiez votre configuration Firebase."; }
+        }
+
+        // --- ATTACHEMENT DES ÉVÉNEMENTS ---
+        document.addEventListener('DOMContentLoaded', () => {
+            navItems.forEach(item => item.addEventListener('click', () => navigateTo(item.dataset.view)));
+            document.getElementById('create-post-header-btn').addEventListener('click', () => showSecondaryView(postCreationView));
+            document.getElementById('my-profile-nav-item').addEventListener('click', () => showProfile(currentUserId));
+            
+            document.getElementById('profile-back-btn').addEventListener('click', () => hideSecondaryView(profileView));
+            document.getElementById('chat-back-btn').addEventListener('click', () => hideSecondaryView(chatView));
+            document.getElementById('creation-back-btn').addEventListener('click', () => hideSecondaryView(postCreationView));
+            
+            friendsList.addEventListener('click', e => {
+                const userItem = e.target.closest('.friend-item');
+                const dmButton = e.target.closest('.dm-button');
+                if (dmButton) { showChat(dmButton.dataset.userId); }
+                else if (userItem) { showProfile(userItem.dataset.userId); }
+            });
+
+            feedContent.addEventListener('click', e => {
+                const publisher = e.target.closest('.post-publisher');
+                const actionBtn = e.target.closest('.action-button');
+                if (publisher && publisher.dataset.userId) { showProfile(publisher.dataset.userId); }
+                else if (actionBtn) { handlePostAction(actionBtn.closest('.post-card').dataset.postId, actionBtn.dataset.action); }
+            });
+
+            document.getElementById('post-submit-btn').addEventListener('click', handlePostSubmit);
+            document.getElementById('font-style-btn').addEventListener('click', handleFontStyleChange);
+            colorSwatchesContainer.addEventListener('click', e => { if (e.target.classList.contains('color-swatch')) handleColorSelect(e.target.dataset.color); });
+            generateColorSwatches();
+
+            document.getElementById('send-button').addEventListener('click', sendMessage);
+            document.getElementById('message-input').addEventListener('keyup', e => { if (e.key === 'Enter') sendMessage(); });
+            
+            document.getElementById('profile-dm-btn').addEventListener('click', e => showChat(e.currentTarget.dataset.userId));
+            document.getElementById('edit-bio-btn').addEventListener('click', async () => {
+                const newBio = prompt("Entrez votre nouvelle bio :", usersData[currentUserId]?.bio || '');
+                if (newBio !== null) {
+                    try {
+                        await updateDoc(doc(usersCollectionRef, currentUserId), { bio: newBio });
+                        showMessage("Bio mise à jour !", true);
+                    } catch (e) { showMessage("Échec de la mise à jour.", false); }
+                }
+            });
+            
+            document.getElementById('search-input').addEventListener('input', e => {
+                const term = e.target.value.toLowerCase();
+                document.querySelectorAll('#friends-list .friend-item').forEach(item => {
+                    const name = usersData[item.dataset.userId]?.username.toLowerCase() || '';
+                    item.style.display = name.includes(term) ? 'flex' : 'none';
+                });
+            });
+
+            initializeAppLogic();
+        });
+    </script>
+</body>
+</html>
