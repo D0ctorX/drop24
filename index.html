@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Drop</title>
+    <title>Réseau Social (Fonctionnel)</title>
     <!-- Utilisation de Font Awesome pour les icônes -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400&family=Montserrat:wght@700&family=Pacifico&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Montserrat:wght@700&family=Pacifico&display=swap');
 
         :root {
             --primary-bg: #FAFAFA;
@@ -35,238 +35,164 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #EFEFEF;
+        html, body {
+            height: 100%;
             margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: #000; /* MODIFIÉ: Fond noir pour l'extérieur */
             color: var(--text-color);
-            overflow: hidden;
+            overscroll-behavior-y: contain;
         }
 
         .container {
             width: 100%;
             height: 100%;
-            max-width: 450px;
-            max-height: 900px;
-            background-color: var(--primary-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            max-width: 480px;
+            margin: 0 auto;
+            background-color: var(--primary-bg); /* Garde le fond de l'app */
             display: flex;
             flex-direction: column;
             position: relative;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
             overflow: hidden;
         }
 
+        #view-wrapper {
+            display: flex;
+            flex-grow: 1;
+            width: 100%;
+            transition: transform 0.3s ease-in-out;
+        }
+        
         .view {
+            display: flex;
+            flex-direction: column;
+            background-color: var(--primary-bg);
+            width: 100%;
+            height: 100%;
+            flex-shrink: 0;
+        }
+
+        .view.secondary {
             position: absolute;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: var(--primary-bg);
-            display: flex;
-            flex-direction: column;
-            transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            z-index: 1;
+            right: 0;
+            bottom: 0;
+            transform: translateX(100%);
+            transition: transform 0.3s ease-in-out;
+            z-index: 20;
+            visibility: hidden;
+        }
+        
+        .view.secondary.visible {
+            transform: translateX(0);
+            visibility: visible;
         }
 
         .view-header {
             display: flex;
-            align-items: center;
             justify-content: space-between;
-            padding: 10px 15px;
-            border-bottom: 1px solid var(--border-color);
-            background-color: var(--secondary-bg);
-            flex-shrink: 0;
-            height: 60px;
-        }
-
-        .header-title {
-            font-size: 18px;
-            font-weight: 600;
-        }
-
-        .header-icon, .back-button {
-            font-size: 20px;
-            cursor: pointer;
-            width: 40px;
-            height: 40px;
-            display: flex;
             align-items: center;
-            justify-content: center;
+            padding: 10px 15px;
+            background-color: var(--secondary-bg);
+            border-bottom: 1px solid var(--border-color);
+            min-height: 60px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
 
-        .feed-view, .contacts-view { transform: translateX(0%); }
-        .contacts-view, .profile-view, .chat-view, .post-creation-view { transform: translateX(100%); }
-        .post-creation-view { z-index: 10; }
+        .header-title { font-size: 20px; font-weight: 600; margin: 0; }
+        .header-icon { font-size: 22px; cursor: pointer; color: var(--text-color); }
+        .back-button { font-size: 20px; cursor: pointer; width: 40px; text-align: left; }
 
-        .view.visible {
-            transform: translateX(0%);
-            z-index: 2;
-        }
-        
-        .profile-view.visible, .chat-view.visible, .post-creation-view.visible { z-index: 5; }
-        .view.pushed-left { transform: translateX(-100%); z-index: 1; }
-
-        .feed-content {
-            padding: 10px 0;
+        .feed-content, .contacts-content, .chat-content, .profile-content {
             flex-grow: 1;
             overflow-y: auto;
+            padding-bottom: 60px;
         }
 
-        .post-card {
-            background-color: var(--secondary-bg);
-            border: 1px solid var(--border-color);
-            margin: 0 10px 15px 10px;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        }
-
-        .post-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 15px;
-        }
-
-        .post-publisher { font-weight: 600; cursor: pointer; }
-        .post-countdown { font-size: 12px; font-weight: 600; color: var(--dislike-color); }
-
-        .post-image-wrapper {
-            width: 100%;
-            padding-top: 100%;
-            position: relative;
-            background-color: #EFEFEF;
-        }
-
-        .post-content-inner {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 15px;
-        }
-        
-        .post-message {
-            font-size: 22px;
-            text-align: center;
-            line-height: 1.4;
-            max-width: 90%;
-            word-wrap: break-word;
-        }
-
-        .post-actions {
-            display: flex;
-            align-items: center;
-            padding: 8px 15px;
-            gap: 20px;
-        }
-
-        .action-button {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            color: var(--action-color);
-            transition: color 0.2s ease-in-out;
-        }
-        
-        .action-button i { font-size: 18px; }
-
-        .action-button.liked, .action-button.disliked {
-            font-weight: 600;
-        }
-        .action-button.liked { color: var(--like-color); }
-        .action-button.disliked { color: var(--dislike-color); }
-
-        .contacts-content { flex-grow: 1; overflow-y: auto; }
-
-        .search-bar { padding: 10px 15px; border-bottom: 1px solid var(--border-color); }
-
-        #search-input {
-            width: 100%;
-            padding: 10px 15px;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-            background-color: var(--primary-bg);
-            outline: none;
-        }
-
-        .friend-item {
-            display: flex;
-            align-items: center;
-            padding: 10px 15px;
-            cursor: pointer;
-            transition: background-color 0.2s ease;
-        }
-
-        .friend-item:hover { background-color: #f9f9f9; }
-
-        .friend-pp { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; margin-right: 15px; }
-        .friend-info { flex-grow: 1; }
-        .friend-info h4 { margin: 0; font-size: 16px; }
-        .friend-info p { margin: 2px 0 0; font-size: 12px; color: var(--last-seen-color); }
-
-        .dm-button {
-            padding: 8px 16px;
-            background-color: var(--highlight-color);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: background-color 0.2s;
-        }
-        .dm-button:hover { background-color: #2D79C7; }
-
-        .bottom-nav {
+        /* --- Barre de Navigation --- */
+        .nav-bar {
             position: absolute;
             bottom: 0;
             left: 0;
-            width: 100%;
-            max-width: 450px;
-            height: 60px;
-            background-color: var(--secondary-bg);
-            border-top: 1px solid var(--border-color);
+            right: 0;
             display: flex;
             justify-content: space-around;
-            align-items: center;
-            padding: 0 10px;
-            z-index: 10;
-            box-sizing: border-box;
+            background-color: var(--secondary-bg);
+            border-top: 1px solid var(--border-color);
+            z-index: 15;
+            padding-bottom: env(safe-area-inset-bottom);
         }
+        .nav-item { padding: 10px 15px; font-size: 24px; color: var(--action-color); cursor: pointer; text-align: center; transition: color 0.2s, transform 0.2s; }
+        .nav-item.active { color: var(--highlight-color); transform: scale(1.1); }
+        .nav-item span { display: block; font-size: 10px; margin-top: 2px; }
 
-        .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            color: var(--last-seen-color);
-            transition: color 0.2s ease-in-out;
-            flex-grow: 1; /* Pour qu'ils prennent la même place */
+        /* --- Feed --- */
+        .feed-content { padding: 0; }
+        .post-card { background-color: var(--secondary-bg); border-bottom: 1px solid var(--border-color); margin-bottom: 8px; }
+        .post-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; font-size: 14px; }
+        .post-publisher { font-weight: 600; cursor: pointer; }
+        .post-countdown { 
+            font-size: 12px; 
+            color: var(--dislike-color); /* MODIFIÉ: Couleur rouge pour le temps */
+            font-family: 'Roboto Mono', monospace;
+            font-weight: 700;
+            background-color: #fcebeb;
+            padding: 2px 6px;
+            border-radius: 4px;
         }
+        .post-image-wrapper { width: 100%; padding-top: 100%; position: relative; }
+        .post-content-inner { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .post-message { font-size: 22px; text-align: center; white-space: pre-wrap; word-wrap: break-word; }
+        .post-actions { display: flex; padding: 8px 15px; gap: 20px; }
+        .action-button { display: flex; align-items: center; gap: 8px; font-size: 18px; color: var(--action-color); cursor: pointer; }
+        .action-button span { font-size: 14px; font-weight: 600; }
+        .action-button.liked i { color: var(--like-color); }
+        .action-button.liked span { color: var(--like-color); } /* NOUVEAU */
+        .action-button.disliked i { color: var(--dislike-color); }
+        .action-button.disliked span { color: var(--dislike-color); } /* NOUVEAU */
 
-        .nav-item.active { color: var(--highlight-color); }
-        .nav-item i { font-size: 22px; margin-bottom: 4px; }
-        .nav-item p { font-size: 10px; font-weight: 600; margin: 0; }
-
-        .profile-content { flex-grow: 1; overflow-y: auto; padding-bottom: 20px; }
-        .profile-header-card { display: flex; align-items: center; padding: 20px 15px; border-bottom: 1px solid var(--border-color); }
-        #profile-pic { width: 100px; height: 100px; border-radius: 50%; margin-right: 20px; }
-        .profile-main-info { flex-grow: 1; }
+        /* --- Amis --- */
+        .search-bar { padding: 10px; background-color: var(--primary-bg); }
+        #search-input { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--secondary-bg); font-size: 14px; }
+        .friend-item { display: flex; align-items: center; padding: 10px 15px; border-bottom: 1px solid var(--border-color); cursor: pointer; transition: background-color 0.2s; }
+        .friend-item:hover { background-color: #f9f9f9; }
+        .friend-pp { width: 50px; height: 50px; border-radius: 50%; margin-right: 15px; }
+        .friend-info { flex-grow: 1; }
+        .friend-info h4 { margin: 0 0 4px 0; font-size: 16px; }
+        .friend-info p { margin: 0; font-size: 12px; color: var(--last-seen-color); }
+        .dm-button { background-color: var(--highlight-color); color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: 600; }
+        
+        /* --- Chat --- */
+        .chat-view .view-header { gap: 10px; }
+        #chat-user-pp { width: 40px; height: 40px; border-radius: 50%; }
+        .chat-view .header-title { flex-grow: 1; text-align: left; }
+        .chat-content { background-color: #f0f2f5; padding: 10px; }
+        #chat-body { display: flex; flex-direction: column; gap: 10px; }
+        .message-container { display: flex; width: 100%; }
+        .message-row { max-width: 75%; display: flex; align-items: flex-end; gap: 8px; }
+        .message { padding: 10px 15px; border-radius: 18px; font-size: 15px; line-height: 1.4; word-wrap: break-word; }
+        .message-time { font-size: 11px; color: var(--last-seen-color); white-space: nowrap; }
+        .message-container.sent { justify-content: flex-end; }
+        .message.sent { background-color: var(--highlight-color); color: white; border-bottom-right-radius: 4px; }
+        .message-container.received { justify-content: flex-start; }
+        .message.received { background-color: var(--secondary-bg); border-bottom-left-radius: 4px; }
+        .chat-input { display: flex; padding: 10px; background-color: var(--secondary-bg); border-top: 1px solid var(--border-color); }
+        #message-input { flex-grow: 1; border: 1px solid var(--border-color); border-radius: 20px; padding: 10px 15px; font-size: 15px; }
+        #send-button { background: none; border: none; font-size: 22px; color: var(--highlight-color); cursor: pointer; padding: 0 10px; }
+        
+        /* --- Profil --- */
+        .profile-header { display: flex; align-items: center; padding: 15px; gap: 15px; background-color: var(--secondary-bg); border-bottom: 1px solid var(--border-color); }
+        #profile-pic { width: 80px; height: 80px; border-radius: 50%; }
+        .profile-info-main { flex-grow: 1; }
         #profile-username { font-size: 22px; font-weight: 600; margin: 0; }
-        #edit-bio-btn, #profile-dm-btn { background: none; border: 1px solid var(--button-border); border-radius: 6px; padding: 6px 12px; margin-top: 10px; cursor: pointer; font-weight: 600; width: 100%; }
+        #edit-bio-btn { background: none; border: 1px solid var(--button-border); border-radius: 6px; padding: 6px 12px; margin-top: 10px; cursor: pointer; font-weight: 600; width: 100%; }
+        #profile-actions { display: flex; gap: 10px; margin-top: 10px; }
+        #toggle-friend-btn, #profile-dm-btn { background: none; border: 1px solid var(--button-border); border-radius: 6px; padding: 8px 12px; cursor: pointer; font-weight: 600; flex-grow: 1; }
         #profile-dm-btn { background-color: var(--highlight-color); color: white; border-color: var(--highlight-color); }
         .profile-stats { display: flex; justify-content: space-around; text-align: center; padding: 15px 0; border-bottom: 1px solid var(--border-color); }
         .stat-item h3 { margin: 0; font-size: 18px; }
@@ -275,127 +201,253 @@
         .profile-details h4 { margin: 0 0 5px 0; font-size: 16px; }
         .profile-details p { margin: 0 0 15px 0; line-height: 1.5; }
 
-        .chat-view { background-color: #F0F2F5; }
-        .chat-header { display: flex; align-items: center; }
-        #chat-user-pp { width: 40px; height: 40px; border-radius: 50%; margin-left: 10px; margin-right: 10px; }
-        .chat-content { flex-grow: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column-reverse; }
-        #chat-body { display: flex; flex-direction: column; gap: 10px; }
-        .message { max-width: 75%; padding: 10px 15px; border-radius: 18px; position: relative; word-wrap: break-word; }
-        .message-row { display: flex; align-items: flex-end; gap: 8px; }
-        .message.sent { background-color: var(--highlight-color); color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
-        .message-container.sent { align-items: flex-end; }
-        .message.received { background-color: var(--secondary-bg); color: var(--text-color); align-self: flex-start; border-bottom-left-radius: 4px; }
-        .message-container.received { align-items: flex-start; }
-        .message-time { font-size: 10px; color: var(--last-seen-color); }
-        .chat-input { display: flex; padding: 10px 15px; background-color: var(--secondary-bg); border-top: 1px solid var(--border-color); }
-        #message-input { flex-grow: 1; border: 1px solid var(--border-color); border-radius: 20px; padding: 10px 15px; outline: none; margin-right: 10px; }
-        #send-button { background-color: transparent; border: none; color: var(--highlight-color); font-size: 24px; cursor: pointer; }
-
-        .post-creation-view { background-color: var(--secondary-bg); }
-        .post-creation-content { flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; }
-        .post-input-area { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; overflow-y: hidden; }
-        #square-content { width: 90%; padding-top: 90%; position: relative; background-color: #f1f1f1; border-radius: 12px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); transition: background-color 0.3s ease-in-out; cursor: text; }
-        #post-textarea { position: absolute; top: 0; left: 0; width: 100%; height: 100%; box-sizing: border-box; padding: 20px; background: transparent; border: none; resize: none; outline: none; text-align: center; font-size: 20px; line-height: 1.4; color: var(--text-color); }
-        .controls-area { padding: 15px; border-top: 1px solid var(--border-color); }
-        .control-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .control-row:last-child { margin-bottom: 0; }
-        .control-buttons { display: flex; gap: 10px; }
-        .control-btn { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--border-color); background-color: var(--primary-bg); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; }
-        #color-swatches-container { display: flex; gap: 8px; }
-        .color-swatch { width: 28px; height: 28px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: border-color 0.2s; }
-        .color-swatch.selected { border-color: var(--highlight-color); }
-        .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--switch-off); transition: .4s; border-radius: 28px; }
-        .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background-color: var(--switch-on); }
-        input:checked + .slider:before { transform: translateX(22px); }
-
-        #toast-message {
-            position: absolute;
-            bottom: 80px;
-            left: 50%;
-            transform: translate(-50%, 100%);
-            background-color: rgba(0, 0, 0, 0.75);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 20px;
-            font-size: 14px;
-            z-index: 100;
-            opacity: 0;
-            transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
-            pointer-events: none;
-        }
+        /* --- Toast --- */
+        #toast-message { position: absolute; bottom: 80px; left: 50%; transform: translate(-50%, 100%); background-color: rgba(0, 0, 0, 0.75); color: white; padding: 10px 20px; border-radius: 20px; font-size: 14px; z-index: 100; opacity: 0; transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out; pointer-events: none; }
         #toast-message.show { transform: translate(-50%, 0); opacity: 1; }
         #toast-message.success { background-color: #28a745; }
         #toast-message.error { background-color: #dc3545; }
+        
+        /* --- Modale d'édition de profil --- */
+        .modal-backdrop {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 50;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background: var(--secondary-bg);
+            padding: 20px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 350px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .modal-content h3 { margin: 0 0 10px 0; text-align: center; }
+        .modal-content label { font-size: 14px; font-weight: 600; }
+        .modal-content input, .modal-content textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        .modal-content textarea { resize: vertical; min-height: 60px; }
+        #edit-color-swatches { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+        .edit-color-swatch {
+            width: 30px; height: 30px; border-radius: 50%; cursor: pointer;
+            border: 2px solid transparent;
+            transition: border-color 0.2s;
+        }
+        .edit-color-swatch.selected { border-color: var(--highlight-color); }
+        .modal-actions { display: flex; gap: 10px; margin-top: 10px; }
+        .modal-actions button {
+            flex-grow: 1; padding: 10px; border-radius: 6px; border: none;
+            font-weight: 600; font-size: 16px; cursor: pointer;
+        }
+        #save-profile-btn { background-color: var(--highlight-color); color: white; }
+        #cancel-edit-btn { background-color: #f0f0f0; color: var(--text-color); }
+
+        /* NOUVEAU: Styles pour la création de post */
+        #post-creation-view .view-header {
+            justify-content: space-between;
+        }
+        #publish-button {
+            font-size: 16px; font-weight: 600; color: var(--highlight-color);
+            background: none; border: none; cursor: pointer;
+        }
+        #publish-button:disabled {
+            color: var(--last-seen-color);
+            cursor: not-allowed;
+        }
+        .post-input-area {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow-y: hidden;
+            background-color: var(--secondary-bg);
+        }
+        #square-content {
+            width: 100%;
+            padding-top: 100%; /* Ratio 1:1 */
+            position: relative;
+            background-color: #f1f1f1;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            transition: background-color 0.3s ease-in-out;
+            cursor: text;
+        }
+        #post-textarea {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            box-sizing: border-box; padding: 20px;
+            background: transparent; border: none;
+            resize: none; outline: none;
+            text-align: center;
+            font-size: 20px; line-height: 1.4;
+            color: var(--text-color);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .char-limit-indicator {
+            margin-top: 10px;
+            font-size: 12px;
+            color: var(--last-seen-color);
+            text-align: right;
+            width: 100%;
+        }
+        .char-limit-indicator.error {
+            color: var(--dislike-color);
+            font-weight: 600;
+        }
+        .post-controls {
+            padding: 15px 20px;
+            background-color: var(--secondary-bg);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .control-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .control-row label {
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .color-swatches-container {
+            display: flex;
+            gap: 8px;
+        }
+        .color-swatch {
+            width: 30px; height: 30px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+        .color-swatch.selected {
+            border-color: var(--highlight-color);
+            box-shadow: 0 0 0 2px white;
+        }
+        .control-button {
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            border: 1px solid var(--button-border);
+            background-color: var(--primary-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px; height: 24px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: var(--switch-off);
+            transition: .4s;
+            border-radius: 24px;
+        }
+        .slider:before {
+            position: absolute; content: "";
+            height: 18px; width: 18px;
+            left: 3px; bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--switch-on); }
+        input:checked + .slider:before { transform: translateX(20px); }
+
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- VUE FEED -->
-        <div id="feed-view" class="view feed-view visible">
-            <div class="view-header">
-                <div style="width: 40px;"></div> <!-- Placeholder -->
-                <h1 class="header-title">Flux</h1>
-                <!-- MODIFIÉ: Bouton Publier -->
-                <i id="create-post-header-btn" class="fas fa-feather-alt header-icon"></i>
+        <div id="view-wrapper">
+            <!-- VUE FEED -->
+            <div id="feed-view" class="view feed-view">
+                <div class="view-header">
+                    <div style="width: 40px;"></div>
+                    <h1 class="header-title">Flux</h1>
+                    <i id="create-post-header-btn" class="fas fa-feather-alt header-icon"></i>
+                </div>
+                <div id="feed-content" class="feed-content"></div>
             </div>
-            <div id="feed-content" class="feed-content">
-                <!-- Les posts seront injectés ici -->
+            
+            <!-- VUE AMIS -->
+            <div id="contacts-view" class="view contacts-view">
+                <div class="view-header">
+                    <div style="width: 40px;"></div>
+                    <h1 class="header-title">Amis</h1>
+                    <div style="width: 40px;"></div>
+                </div>
+                <div class="search-bar">
+                    <input type="text" id="search-input" placeholder="Rechercher un ami...">
+                </div>
+                <div id="friends-list" class="contacts-content"></div>
             </div>
-        </div>
 
-        <!-- VUE CONTACTS -->
-        <div id="contacts-view" class="view contacts-view">
-            <div class="view-header">
-                <!-- MODIFIÉ: Bouton Mon Profil -->
-                <i id="my-profile-nav-item" class="fas fa-user header-icon"></i>
-                <h1 class="header-title">Contacts</h1>
-                <div style="width: 40px;"></div> <!-- Placeholder -->
-            </div>
-            <div class="search-bar">
-                <input type="text" id="search-input" placeholder="Rechercher un utilisateur...">
-            </div>
-            <div id="friends-list" class="contacts-content">
-                <!-- La liste d'amis sera injectée ici -->
-            </div>
-        </div>
-
-        <!-- VUE PROFIL -->
-        <div id="profile-view" class="view profile-view">
-            <div class="view-header">
-                <i id="profile-back-btn" class="fas fa-arrow-left back-button"></i>
-                <h1 id="profile-username-header" class="header-title">Profil</h1>
-                <div style="width: 40px;"></div>
-            </div>
-            <div class="profile-content">
-                <div class="profile-header-card">
-                    <img id="profile-pic" src="https://placehold.co/100x100" alt="Photo de profil">
-                    <div class="profile-main-info">
-                        <h2 id="profile-username">Username</h2>
-                        <button id="edit-bio-btn">Modifier la bio</button>
-                        <button id="profile-dm-btn">Message</button>
+            <!-- VUE PROFIL -->
+            <div id="profile-view" class="view profile-view">
+                <div class="view-header">
+                     <i id="my-profile-nav-item" class="fas fa-users header-icon"></i>
+                    <h1 id="profile-username-header" class="header-title">Profil</h1>
+                    <div style="width: 40px;"></div>
+                </div>
+                <div class="profile-content">
+                    <div class="profile-header">
+                        <img id="profile-pic" src="" alt="Avatar">
+                        <div class="profile-info-main">
+                            <h2 id="profile-username">Nom d'utilisateur</h2>
+                            <div id="profile-actions-container">
+                                <button id="edit-bio-btn">Modifier le profil</button>
+                                <div id="profile-actions" style="display: none;">
+                                    <button id="toggle-friend-btn">Ajouter</button>
+                                    <button id="profile-dm-btn">Message</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="profile-stats">
+                        <div class="stat-item">
+                            <h3 id="posts-count">0</h3>
+                            <p>Posts</p>
+                        </div>
+                        <div class="stat-item">
+                            <h3 id="followers-count">0</h3>
+                            <p>Amis</p>
+                        </div>
+                    </div>
+                    <div class="profile-details">
+                        <h4>Bio</h4>
+                        <p id="profile-bio">Ceci est ma bio.</p>
+                        <h4>Membre depuis</h4>
+                        <p id="creation-date">1 janvier 2025</p>
                     </div>
                 </div>
-                <div class="profile-stats">
-                    <div class="stat-item"><h3 id="posts-count">0</h3><p>Publications</p></div>
-                    <div class="stat-item"><h3 id="followers-count">0</h3><p>Followers</p></div>
-                </div>
-                <div class="profile-details">
-                    <h4>Bio</h4>
-                    <p id="profile-bio">Pas de bio.</p>
-                    <h4>Membre depuis</h4>
-                    <p id="creation-date">Inconnue</p>
-                </div>
             </div>
         </div>
 
-        <!-- VUE CHAT -->
-        <div id="chat-view" class="view chat-view">
+        <!-- VUE CHAT (Secondaire) -->
+        <div id="chat-view" class="view chat-view secondary">
             <div class="view-header chat-header">
                 <i id="chat-back-btn" class="fas fa-arrow-left back-button"></i>
-                <img id="chat-user-pp" src="https://placehold.co/40x40" alt="">
+                <img id="chat-user-pp" src="" alt="Avatar du contact">
                 <h1 id="chat-username" class="header-title">Chat</h1>
                 <div style="width: 40px;"></div>
             </div>
@@ -408,52 +460,85 @@
             </div>
         </div>
         
-        <!-- VUE CREATION DE POST -->
-        <div id="post-creation-view" class="view post-creation-view">
+        <!-- NOUVEAU: VUE CRÉATION DE POST (Secondaire) -->
+        <div id="post-creation-view" class="view post-creation-view secondary">
             <div class="view-header">
-                <i id="creation-back-btn" class="fas fa-times back-button"></i>
+                <i id="post-creation-back-btn" class="fas fa-arrow-left back-button"></i>
                 <h1 class="header-title">Nouveau Post</h1>
-                <button id="post-submit-btn" style="background:none; border:none; color:var(--highlight-color); font-weight:600; font-size:16px; cursor:pointer;">Publier</button>
+                <button id="publish-button" disabled>Publier</button>
             </div>
-            <div class="post-creation-content">
-                <div class="post-input-area">
-                    <div id="square-content">
-                        <textarea id="post-textarea" placeholder="Exprimez-vous..." maxlength="280"></textarea>
+            <div class="post-input-area">
+                <div id="square-content">
+                    <textarea id="post-textarea" placeholder="Exprimez-vous..." maxlength="200"></textarea>
+                </div>
+                <div class="char-limit-indicator">
+                    <span id="char-count">0</span> / 200
+                </div>
+            </div>
+            <div class="post-controls">
+                <div class="control-row">
+                    <label>Couleur de fond</label>
+                    <div class="color-swatches-container" id="post-color-swatches">
+                        <!-- Swatches générés par JS -->
                     </div>
                 </div>
-                <div class="controls-area">
-                    <div class="control-row">
-                        <div id="color-swatches-container"></div>
-                        <div class="control-buttons">
-                            <button id="font-style-btn" class="control-btn"><i class="fas fa-font"></i></button>
-                        </div>
-                    </div>
-                    <div class="control-row">
-                        <span>Publier en anonyme</span>
-                        <label class="switch">
-                            <input type="checkbox" id="anonymous-switch-input">
-                            <span class="slider"></span>
-                        </label>
-                    </div>
+                <div class="control-row">
+                    <label>Style de police</label>
+                    <button class="control-button" id="font-style-button">
+                        <i class="fas fa-font"></i>
+                    </button>
+                </div>
+                <div class="control-row">
+                    <label>Publier en anonyme</label>
+                    <label class="switch">
+                        <input type="checkbox" id="anonymous-switch-input">
+                        <span class="slider"></span>
+                    </label>
                 </div>
             </div>
         </div>
 
-        <!-- BARRE DE NAVIGATION (MODIFIÉE) -->
-        <div class="bottom-nav">
-            <div class="nav-item active" data-view="feed-view"><i class="fas fa-home"></i><p>Flux</p></div>
-            <div class="nav-item" data-view="contacts-view"><i class="fas fa-users"></i><p>Contacts</p></div>
-        </div>
+        <div id="toast-message">Message</div>
         
-        <!-- MESSAGE TOAST -->
-        <div id="toast-message"></div>
+        <nav class="nav-bar">
+            <div class="nav-item active" data-view="feed-view"><i class="fas fa-home"></i><span>Flux</span></div>
+            <div class="nav-item" data-view="contacts-view"><i class="fas fa-users"></i><span>Amis</span></div>
+            <div class="nav-item" data-view="profile-view"><i class="fas fa-user"></i><span>Profil</span></div>
+        </nav>
     </div>
 
-    <script type="module">
+    <!-- Modale d'édition de profil -->
+    <div id="edit-profile-modal" class="modal-backdrop">
+        <div class="modal-content">
+            <h3>Modifier le profil</h3>
+            
+            <div>
+                <label for="edit-username-input">Nom d'utilisateur</label>
+                <input type="text" id="edit-username-input" maxlength="20">
+            </div>
+
+            <div>
+                <label for="edit-bio-textarea">Bio</label>
+                <textarea id="edit-bio-textarea" maxlength="150"></textarea>
+            </div>
+
+            <div>
+                <label>Couleur du profil</label>
+                <div id="edit-color-swatches"></div>
+            </div>
+
+            <div class="modal-actions">
+                <button id="cancel-edit-btn">Annuler</button>
+                <button id="save-profile-btn">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+
+<script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, serverTimestamp, query, orderBy, onSnapshot, doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
+        import { getFirestore, collection, doc, getDoc, setDoc, updateDoc, onSnapshot, query, orderBy, arrayUnion, arrayRemove, writeBatch, serverTimestamp, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
         // --- CONFIGURATION FIREBASE ---
         const firebaseConfig = {
             apiKey: "AIzaSyB_z5U4yKJERho93p9696NujcG5R5fvlD8",
@@ -470,31 +555,46 @@
         const db = getFirestore(app);
         
         const dbPath = `artifacts/${firebaseConfig.appId}/public/data`;
-        const postsCollectionRef = collection(db, dbPath, 'posts');
         const usersCollectionRef = collection(db, dbPath, 'users');
         const chatsCollectionRef = collection(db, dbPath, 'chats');
+        const postsCollectionRef = collection(db, dbPath, 'posts'); // NOUVEAU: Réf. Posts
+        
+        const PROFILE_COLORS = ['#e57373', '#81c784', '#64b5f6', '#f06292', '#ba68c8', '#ffd54f', '#7986cb', '#4db6ac', '#9575cd', '#4fc3f7', '#a1887f', '#90a4ae'];
+        // NOUVEAU: Constantes de Post
+        const POST_FONT_FAMILIES = ['font-inter', 'font-roboto', 'font-montserrat', 'font-pacifico'];
+        const POST_COLOR_PALETTE = ['#f1f1f1', '#D6E9F7', '#D1F7D1', '#FFF7D1', '#F7D1D1', '#A0D4FE', '#84E084', '#FEEA84', '#FE8484'];
+        const MAX_CHARS = 200;
 
         let currentUserId = null;
         let activeProfileUserId = null;
-        let activeChatId = null;
         let usersData = {};
-        let postsData = [];
-        let countdownInterval;
-
-        let unsubscribeFeedListener = null;
+        let postsData = []; // NOUVEAU: Cache pour les posts
+        
         let unsubscribeUsersListener = null;
-        let unsubscribeChat = null;
+        let unsubscribeFeedListener = null; // NOUVEAU
+        let countdownInterval = null; // NOUVEAU
 
         // --- REFERENCES DOM ---
-        const feedView = document.getElementById('feed-view');
-        const contactsView = document.getElementById('contacts-view');
-        const profileView = document.getElementById('profile-view');
-        const chatView = document.getElementById('chat-view');
-        const postCreationView = document.getElementById('post-creation-view');
-        
-        const feedContent = document.getElementById('feed-content');
+        const viewWrapper = document.getElementById('view-wrapper');
         const friendsList = document.getElementById('friends-list');
         const navItems = document.querySelectorAll('.nav-item');
+        const editProfileModal = document.getElementById('edit-profile-modal');
+        const viewOrder = ['feed-view', 'contacts-view', 'profile-view'];
+        const feedContent = document.getElementById('feed-content'); // NOUVEAU
+
+        // NOUVEAU: Refs. pour la création de post
+        const postCreationView = document.getElementById('post-creation-view');
+        const postTextarea = document.getElementById('post-textarea');
+        const charCountSpan = document.getElementById('char-count');
+        const publishButton = document.getElementById('publish-button');
+        const postColorSwatches = document.getElementById('post-color-swatches');
+        const fontStyleButton = document.getElementById('font-style-button');
+        const squareContent = document.getElementById('square-content');
+        const anonymousSwitch = document.getElementById('anonymous-switch-input');
+
+        let currentPostFontIndex = 0;
+        let currentPostColor = POST_COLOR_PALETTE[0];
+        let isAnonymousPost = false;
 
         // --- FONCTIONS UTILITAIRES ---
         let toastTimeout;
@@ -504,81 +604,80 @@
             toast.className = 'show';
             toast.classList.add(isSuccess ? 'success' : 'error');
             clearTimeout(toastTimeout);
-            toastTimeout = setTimeout(() => {
-                toast.className = toast.className.replace('show', '');
-            }, 3000);
+            toastTimeout = setTimeout(() => { toast.className = toast.className.replace('show', ''); }, 3000);
         }
 
-        // --- LOGIQUE DE NAVIGATION ---
-        let lastMainView = feedView;
         function navigateTo(viewId) {
-            const targetView = document.getElementById(viewId);
-            if (!targetView) return;
-            
-            navItems.forEach(item => item.classList.toggle('active', item.dataset.view === viewId));
-            
-            document.querySelectorAll('.view').forEach(v => v.classList.remove('visible'));
-            targetView.classList.add('visible');
-            lastMainView = targetView;
-        }
-
-        function showSecondaryView(view) {
-            lastMainView.classList.add('pushed-left');
-            view.classList.add('visible');
-        }
-
-        function hideSecondaryView(view) {
-            view.classList.remove('visible');
-            lastMainView.classList.remove('pushed-left');
-        }
-
-        // --- CRÉATION / MISE À JOUR D'UTILISATEUR ---
-        async function upsertUserDocument(user) {
-            const userRef = doc(usersCollectionRef, user.uid);
-            const userDoc = await getDoc(userRef);
-
-            if (!userDoc.exists()) {
-                const username = `User_${user.uid.substring(0, 6)}`;
-                await setDoc(userRef, {
-                    username: username,
-                    bio: "Bienvenue sur l'application !",
-                    pp: `https://placehold.co/100x100/3897f0/ffffff?text=${username.charAt(0)}`,
-                    accountCreatedAt: serverTimestamp(),
-                    postsCount: 0,
-                    followers: [],
-                });
+            const viewIndex = viewOrder.indexOf(viewId);
+            if (viewIndex === -1) return;
+            viewWrapper.style.transform = `translateX(-${viewIndex * 100}%)`;
+            navItems.forEach(item => { item.classList.toggle('active', item.dataset.view === viewId); });
+            if (viewId === 'profile-view' && !activeProfileUserId) {
+                showProfile(currentUserId);
             }
         }
         
-        // --- GESTION DES UTILISATEURS ET CONTACTS ---
-        function listenToUsers() {
+        function showSecondaryView(viewElement) { viewElement.classList.add('visible'); }
+        function hideSecondaryView(viewElement) { viewElement.classList.remove('visible'); }
+
+        function generateAvatarUrl(user) {
+            if (!user || !user.username) return '';
+            const name = user.username.charAt(0).toUpperCase();
+            const color = (user.profileColor || '8E8E8E').replace('#', '');
+            return `https://ui-avatars.com/api/?name=${name}&background=${color}&color=fff&size=128&bold=true`;
+        }
+
+        // --- AUTHENTIFICATION & GESTION UTILISATEUR ---
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUserId = user.uid;
+                await upsertUserDocument(user);
+                listenToAllUsers();
+                listenToFeed(); // NOUVEAU: Écouter le flux
+            }
+        });
+
+        async function upsertUserDocument(user) {
+            const userRef = doc(usersCollectionRef, user.uid);
+            const userDoc = await getDoc(userRef);
+            if (!userDoc.exists()) {
+                await setDoc(userRef, {
+                    username: `user_${user.uid.substring(0, 6)}`,
+                    bio: 'Bienvenue sur mon profil !',
+                    profileColor: PROFILE_COLORS[Math.floor(Math.random() * PROFILE_COLORS.length)],
+                    accountCreatedAt: serverTimestamp(),
+                    friends: [],
+                    postsCount: 0 // NOUVEAU: Initialiser le compteur de posts
+                });
+            }
+        }
+
+        function listenToAllUsers() {
             if (unsubscribeUsersListener) unsubscribeUsersListener();
             unsubscribeUsersListener = onSnapshot(usersCollectionRef, (snapshot) => {
-                snapshot.forEach(doc => {
-                    usersData[doc.id] = { id: doc.id, ...doc.data() };
+                snapshot.docChanges().forEach((change) => {
+                    usersData[change.doc.id] = { id: change.doc.id, ...change.doc.data() };
                 });
                 renderFriendsList();
-                if (profileView.classList.contains('visible') && activeProfileUserId) {
+                if (document.getElementById('profile-view').style.transform === 'translateX(0px)' && activeProfileUserId) {
                     showProfile(activeProfileUserId);
                 }
             });
         }
-        
+
+        // --- GESTION DES AMIS ---
         function renderFriendsList() {
             friendsList.innerHTML = '';
-            const otherUsers = Object.values(usersData).filter(u => u.id !== currentUserId);
+            const currentUser = usersData[currentUserId];
+            if (!currentUser) return; // NOUVEAU: Garde
+            const friends = (currentUser.friends || []).map(friendId => usersData[friendId]).filter(Boolean);
             
-            if (otherUsers.length === 0) {
-                friendsList.innerHTML = '<p style="text-align: center; color: var(--last-seen-color); padding: 40px 20px; font-size: 14px;">Vous êtes seul ici pour le moment.</p>';
-                return;
-            }
-            
-            otherUsers.forEach(user => {
+            friends.forEach(user => {
                 const friendItem = document.createElement('div');
                 friendItem.className = 'friend-item';
                 friendItem.dataset.userId = user.id;
                 friendItem.innerHTML = `
-                    <img class="friend-pp" src="${user.pp || 'https://placehold.co/50x50'}" alt="Avatar">
+                    <img class="friend-pp" src="${generateAvatarUrl(user)}" alt="Avatar">
                     <div class="friend-info">
                         <h4>${user.username}</h4>
                         <p>${user.bio || 'Aucune bio.'}</p>
@@ -593,285 +692,392 @@
         function showProfile(userId) {
             const user = usersData[userId];
             if (!user) return;
-            
             activeProfileUserId = userId;
             
-            document.getElementById('profile-pic').src = user.pp || 'https://placehold.co/100x100';
+            document.getElementById('profile-pic').src = generateAvatarUrl(user);
             document.getElementById('profile-username').textContent = user.username;
             document.getElementById('profile-username-header').textContent = user.username;
             document.getElementById('profile-bio').textContent = user.bio || "Pas de bio.";
-            document.getElementById('followers-count').textContent = user.followers?.length || 0;
-            document.getElementById('posts-count').textContent = user.postsCount || 0;
-            document.getElementById('creation-date').textContent = user.accountCreatedAt ? user.accountCreatedAt.toDate().toLocaleDateString('fr-FR') : 'Inconnue';
+            document.getElementById('followers-count').textContent = user.friends?.length || 0;
+            document.getElementById('posts-count').textContent = user.postsCount || 0; // NOUVEAU
             
-            const editBioBtn = document.getElementById('edit-bio-btn');
-            const dmBtn = document.getElementById('profile-dm-btn');
-            
-            if (userId === currentUserId) {
-                editBioBtn.style.display = 'block';
-                dmBtn.style.display = 'none';
-            } else {
-                editBioBtn.style.display = 'none';
-                dmBtn.style.display = 'block';
-                dmBtn.dataset.userId = userId;
-            }
+            const creationDate = user.accountCreatedAt?.toDate ? user.accountCreatedAt.toDate().toLocaleDateString('fr-FR') : 'Inconnue';
+            document.getElementById('creation-date').textContent = creationDate;
 
-            showSecondaryView(profileView);
+            const isMyProfile = userId === currentUserId;
+            document.getElementById('edit-bio-btn').style.display = isMyProfile ? 'block' : 'none';
+            document.getElementById('profile-actions').style.display = isMyProfile ? 'none' : 'flex';
+            
+            if (!isMyProfile) {
+                const toggleBtn = document.getElementById('toggle-friend-btn');
+                const isFriend = usersData[currentUserId]?.friends?.includes(userId);
+                toggleBtn.textContent = isFriend ? 'Retirer' : 'Ajouter';
+                toggleBtn.dataset.userId = userId;
+                document.getElementById('profile-dm-btn').dataset.userId = userId;
+            }
+            navigateTo('profile-view');
         }
 
-        // --- GESTION DU FEED ---
+        // --- Logique de la modale d'édition de profil ---
+        function openEditProfileModal() {
+            const user = usersData[currentUserId];
+            if (!user) return;
+            
+            document.getElementById('edit-username-input').value = user.username;
+            document.getElementById('edit-bio-textarea').value = user.bio;
+            
+            const swatchesContainer = document.getElementById('edit-color-swatches');
+            swatchesContainer.innerHTML = '';
+            PROFILE_COLORS.forEach(color => {
+                const swatch = document.createElement('div');
+                swatch.className = 'edit-color-swatch';
+                swatch.style.backgroundColor = color;
+                swatch.dataset.color = color;
+                if (color === user.profileColor) {
+                    swatch.classList.add('selected');
+                }
+                swatch.addEventListener('click', () => {
+                    swatchesContainer.querySelector('.selected')?.classList.remove('selected');
+                    swatch.classList.add('selected');
+                });
+                swatchesContainer.appendChild(swatch);
+            });
+            
+            editProfileModal.style.display = 'flex';
+        }
+
+        function closeEditProfileModal() {
+            editProfileModal.style.display = 'none';
+        }
+
+        async function saveProfileChanges() {
+            const newUsername = document.getElementById('edit-username-input').value.trim();
+            const newBio = document.getElementById('edit-bio-textarea').value.trim();
+            const selectedColor = document.getElementById('edit-color-swatches').querySelector('.selected')?.dataset.color;
+
+            if (!newUsername) {
+                showMessage("Le nom d'utilisateur ne peut pas être vide.", false);
+                return;
+            }
+
+            const updatedData = {
+                username: newUsername,
+                bio: newBio,
+                profileColor: selectedColor || usersData[currentUserId].profileColor
+            };
+
+            try {
+                const userRef = doc(usersCollectionRef, currentUserId);
+                await updateDoc(userRef, updatedData);
+                showMessage("Profil mis à jour avec succès !", true);
+                closeEditProfileModal();
+            } catch (error) {
+                console.error("Erreur de mise à jour du profil: ", error);
+                showMessage("Une erreur est survenue.", false);
+            }
+        }
+        
+        // --- CHAT ---
+        async function showChat(userId) {
+            const user = usersData[userId];
+            if (!user) return;
+
+            document.getElementById('chat-user-pp').src = generateAvatarUrl(user);
+            document.getElementById('chat-username').textContent = user.username;
+            // ... reste de la logique du chat ...
+            showSecondaryView(document.getElementById('chat-view'));
+        }
+
+        // --- NOUVEAU: LOGIQUE DE FLUX (FEED) ---
+
         function listenToFeed() {
             if (unsubscribeFeedListener) unsubscribeFeedListener();
+            
             const q = query(postsCollectionRef, orderBy('createdAt', 'desc'));
 
             unsubscribeFeedListener = onSnapshot(q, (snapshot) => {
-                const twentyFourHoursAgo = Date.now() - (24 * 60 * 60 * 1000);
+                const now = new Date();
+                const twentyFourHoursAgo = now.getTime() - (24 * 60 * 60 * 1000);
+                
                 postsData = [];
-                snapshot.forEach(doc => {
+                snapshot.forEach((doc) => {
                     const post = { id: doc.id, ...doc.data() };
                     const createdAt = post.createdAt?.toDate();
-                    if (!createdAt || createdAt.getTime() < twentyFourHoursAgo) return;
+                    
+                    if (!createdAt || createdAt.getTime() < twentyFourHoursAgo) {
+                        return; // Post trop vieux ou invalide
+                    }
+                    
                     post.expiresAt = new Date(createdAt.getTime() + (24 * 60 * 60 * 1000));
                     postsData.push(post);
                 });
-                renderFeedDOM();
+                
+                renderFeed();
+            }, (error) => {
+                console.error("Erreur d'écoute du flux: ", error);
+                feedContent.innerHTML = "<p style='text-align: center; color: var(--dislike-color);'>Erreur de chargement du flux.</p>";
             });
         }
-        
-        function renderFeedDOM() {
+
+        function renderFeed() {
+            if (countdownInterval) clearInterval(countdownInterval);
+            
             if (postsData.length === 0) {
-                feedContent.innerHTML = '<p style="text-align: center; color: var(--last-seen-color); padding: 40px 20px; font-size: 14px;">Le flux est vide. Soyez le premier à publier !</p>';
+                feedContent.innerHTML = "<p style='text-align: center; color: var(--last-seen-color); padding: 40px 0;'>Le flux est vide. Soyez le premier à publier !</p>";
                 return;
             }
             
-            feedContent.innerHTML = postsData.map(createPostHTML).join('');
-            startCountdownTimer();
+            feedContent.innerHTML = postsData.map(createPostElement).join('');
+            countdownInterval = setInterval(updateAllCountdowns, 1000);
         }
-        
-        function createPostHTML(post) {
-            const publisher = usersData[post.publisherId];
-            const publisherDisplay = post.isAnonymous ? "Anonyme" : (publisher?.username || "Utilisateur inconnu");
-            const isLiked = post.likers?.includes(currentUserId);
-            const isDisliked = post.dislikers?.includes(currentUserId);
+
+        function createPostElement(post) {
+            const publisherDisplay = post.isAnon ? "Anonyme" : (usersData[post.publisherId]?.username || "Utilisateur");
+            
+            // Countdown
+            const remainingMs = post.expiresAt.getTime() - new Date().getTime();
+            const countdownText = remainingMs > 0 ? formatCountdown(remainingMs) : "Expiré";
+            
+            // Likes/Dislikes
+            const likesCount = post.likedBy?.length || 0;
+            const dislikesCount = post.dislikedBy?.length || 0;
+            const isLiked = post.likedBy?.includes(currentUserId);
+            const isDisliked = post.dislikedBy?.includes(currentUserId);
 
             return `
-                <div class="post-card" data-post-id="${post.id}" data-expires-at="${post.expiresAt.toISOString()}">
-                    <header class="post-header">
-                        <span class="post-publisher" data-user-id="${post.isAnonymous ? '' : post.publisherId}">${publisherDisplay}</span>
-                        <span class="post-countdown">--:--:--</span>
-                    </header>
+                <div class="post-card" data-post-id="${post.id}">
+                    <div class="post-header">
+                        <span class="post-publisher" data-user-id="${post.publisherId}">${publisherDisplay}</span>
+                        <span class="post-countdown" data-expires-at="${post.expiresAt.getTime()}">${countdownText}</span>
+                    </div>
                     <div class="post-image-wrapper">
-                        <div class="post-content-inner" style="background-color: ${post.backgroundColor || '#EFEFEF'};">
-                            <p class="post-message ${post.fontClass || 'font-inter'}">${post.message}</p>
+                        <div class="post-content-inner" style="background-color: ${post.backgroundColor};">
+                            <p class="post-message ${post.fontClass}">${post.message}</p>
                         </div>
                     </div>
                     <div class="post-actions">
-                        <div class="action-button ${isLiked ? 'liked' : ''}" data-action="like"><i class="fas fa-thumbs-up"></i><span>${post.likers?.length || 0}</span></div>
-                        <div class="action-button ${isDisliked ? 'disliked' : ''}" data-action="dislike"><i class="fas fa-thumbs-down"></i><span>${post.dislikers?.length || 0}</span></div>
+                        <div class="action-button ${isLiked ? 'liked' : ''}" data-action="like">
+                            <i class="fas fa-thumbs-up"></i>
+                            <span>${likesCount}</span>
+                        </div>
+                        <div class="action-button ${isDisliked ? 'disliked' : ''}" data-action="dislike">
+                            <i class="fas fa-thumbs-down"></i>
+                            <span>${dislikesCount}</span>
+                        </div>
                     </div>
-                </div>`;
+                </div>
+            `;
         }
 
-        async function handlePostAction(postId, action) {
+        function formatCountdown(totalMs) {
+            if (totalMs <= 0) return "0:00:00";
+            let totalSeconds = Math.floor(totalMs / 1000);
+            let hours = Math.floor(totalSeconds / 3600);
+            totalSeconds %= 3600;
+            let minutes = Math.floor(totalSeconds / 60);
+            let seconds = totalSeconds % 60;
+            return `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        function updateAllCountdowns() {
+            document.querySelectorAll('.post-countdown[data-expires-at]').forEach(span => {
+                const expiresAt = parseInt(span.dataset.expiresAt, 10);
+                const remainingMs = expiresAt - new Date().getTime();
+                
+                if (remainingMs > 0) {
+                    span.textContent = formatCountdown(remainingMs);
+                } else {
+                    span.textContent = "Expiré";
+                    span.style.background = 'none';
+                    span.style.color = 'var(--last-seen-color)';
+                }
+            });
+        }
+
+        async function handlePostAction(e) {
+            const button = e.target.closest('.action-button');
+            if (!button || !currentUserId) return;
+            
+            const action = button.dataset.action; // 'like' or 'dislike'
+            const otherAction = action === 'like' ? 'dislike' : 'like';
+            const postId = e.target.closest('.post-card').dataset.postId;
             const postRef = doc(postsCollectionRef, postId);
+
+            const firestoreAction = action === 'like' ? 'likedBy' : 'dislikedBy';
+            const firestoreOtherAction = otherAction === 'like' ? 'likedBy' : 'dislikedBy';
+
+            const post = postsData.find(p => p.id === postId);
+            const hasAction = post[firestoreAction]?.includes(currentUserId);
+            const hasOtherAction = post[firestoreOtherAction]?.includes(currentUserId);
+
             const batch = writeBatch(db);
-            if (action === 'like') {
-                batch.update(postRef, { likers: arrayUnion(currentUserId), dislikers: arrayRemove(currentUserId) });
-            } else if (action === 'dislike') {
-                batch.update(postRef, { dislikers: arrayUnion(currentUserId), likers: arrayRemove(currentUserId) });
+            
+            if (hasAction) {
+                batch.update(postRef, { [firestoreAction]: arrayRemove(currentUserId) });
+            } else {
+                batch.update(postRef, { [firestoreAction]: arrayUnion(currentUserId) });
+                if (hasOtherAction) {
+                    batch.update(postRef, { [firestoreOtherAction]: arrayRemove(currentUserId) });
+                }
             }
             await batch.commit();
         }
 
-        function startCountdownTimer() {
-            if (countdownInterval) clearInterval(countdownInterval);
-            countdownInterval = setInterval(() => {
-                document.querySelectorAll('.post-card').forEach(card => {
-                    const expiresAt = new Date(card.dataset.expiresAt);
-                    const diff = expiresAt - new Date();
-                    if (diff <= 0) {
-                        card.style.display = 'none';
-                    } else {
-                        const h = Math.floor(diff / 3600000);
-                        const m = Math.floor((diff % 3600000) / 60000);
-                        const s = Math.floor((diff % 60000) / 1000);
-                        card.querySelector('.post-countdown').textContent = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-                    }
+        // --- NOUVEAU: LOGIQUE DE CRÉATION DE POST ---
+
+        function showPostCreationView() {
+            postTextarea.value = '';
+            currentPostFontIndex = 0;
+            postTextarea.className = `post-message ${POST_FONT_FAMILIES[0]}`;
+            currentPostColor = POST_COLOR_PALETTE[0];
+            squareContent.style.backgroundColor = currentPostColor;
+            anonymousSwitch.checked = false;
+            isAnonymousPost = false;
+            updateCharCount();
+            generatePostColorSwatches();
+            showSecondaryView(postCreationView);
+        }
+
+        function updateCharCount() {
+            const count = postTextarea.value.length;
+            charCountSpan.textContent = count;
+            publishButton.disabled = count === 0 || count > MAX_CHARS;
+            document.querySelector('.char-limit-indicator').classList.toggle('error', count > MAX_CHARS);
+        }
+        
+        function generatePostColorSwatches() {
+            postColorSwatches.innerHTML = '';
+            POST_COLOR_PALETTE.forEach(color => {
+                const swatch = document.createElement('div');
+                swatch.className = 'color-swatch';
+                swatch.style.backgroundColor = color;
+                swatch.dataset.color = color;
+                if (color === currentPostColor) {
+                    swatch.classList.add('selected');
+                }
+                swatch.addEventListener('click', () => {
+                    currentPostColor = color;
+                    squareContent.style.backgroundColor = color;
+                    postColorSwatches.querySelector('.selected')?.classList.remove('selected');
+                    swatch.classList.add('selected');
                 });
-            }, 1000);
-        }
-
-        // --- GESTION DU CHAT ---
-        async function showChat(otherUserId) {
-            const otherUser = usersData[otherUserId];
-            if (!otherUser) return;
-            
-            activeChatId = [currentUserId, otherUserId].sort().join('_');
-            const chatRef = doc(chatsCollectionRef, activeChatId);
-            
-            const chatDoc = await getDoc(chatRef);
-            if (!chatDoc.exists()) {
-                await setDoc(chatRef, { participants: [currentUserId, otherUserId] });
-            }
-
-            document.getElementById('chat-username').textContent = otherUser.username;
-            document.getElementById('chat-user-pp').src = otherUser.pp || 'https://placehold.co/40x40';
-            listenToChatMessages(activeChatId);
-            showSecondaryView(chatView);
-        }
-
-        function listenToChatMessages(chatId) {
-            if (unsubscribeChat) unsubscribeChat();
-            const messagesRef = collection(db, `${dbPath}/chats/${chatId}/messages`);
-            const q = query(messagesRef, orderBy('timestamp', 'desc'));
-            const chatBody = document.getElementById('chat-body');
-            
-            unsubscribeChat = onSnapshot(q, (snapshot) => {
-                chatBody.innerHTML = snapshot.empty ? '<p style="text-align: center; color: var(--last-seen-color);">Commencez la conversation !</p>' : '';
-                snapshot.docs.reverse().forEach(doc => addMessageToChatDOM(doc.data()));
+                postColorSwatches.appendChild(swatch);
             });
         }
         
-        async function sendMessage() {
-            const messageInput = document.getElementById('message-input');
-            const text = messageInput.value.trim();
-            if (!text || !activeChatId) return;
-            const messagesRef = collection(db, `${dbPath}/chats/${activeChatId}/messages`);
-            await addDoc(messagesRef, { text, senderId: currentUserId, timestamp: serverTimestamp() });
-            messageInput.value = '';
+        function handlePostFontChange() {
+            currentPostFontIndex = (currentPostFontIndex + 1) % POST_FONT_FAMILIES.length;
+            postTextarea.className = `post-message ${POST_FONT_FAMILIES[currentPostFontIndex]}`;
         }
         
-        function addMessageToChatDOM(msg) {
-            const chatBody = document.getElementById('chat-body');
-            const type = msg.senderId === currentUserId ? 'sent' : 'received';
-            const time = msg.timestamp ? msg.timestamp.toDate().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '';
-            const msgContainer = document.createElement('div');
-            msgContainer.className = `message-container ${type}`;
-            msgContainer.innerHTML = `<div class="message-row"><div class="message ${type}">${msg.text}</div><span class="message-time">${time}</span></div>`;
-            chatBody.appendChild(msgContainer);
-            chatBody.parentElement.scrollTop = chatBody.parentElement.scrollHeight;
-        }
-
-        // --- GESTION DE LA CRÉATION DE PUBLICATION ---
-        const postTextarea = document.getElementById('post-textarea');
-        const squareContent = document.getElementById('square-content');
-        const colorSwatchesContainer = document.getElementById('color-swatches-container');
-        const COLOR_PALETTE = ['#FFFFFF', '#FFDDC1', '#FFD1DC', '#D1FFDC', '#D1DCFF', '#F1D1FF'];
-        const FONT_FAMILIES = ['font-inter', 'font-roboto', 'font-montserrat', 'font-pacifico'];
-        let currentBackgroundColor = COLOR_PALETTE[0];
-        let currentFontIndex = 0;
-
-        function handleColorSelect(color) {
-            currentBackgroundColor = color;
-            squareContent.style.backgroundColor = color;
-            document.querySelectorAll('.color-swatch').forEach(sw => sw.classList.toggle('selected', sw.dataset.color === color));
-        }
-
-        function generateColorSwatches() {
-            colorSwatchesContainer.innerHTML = COLOR_PALETTE.map(c => `<div class="color-swatch ${c===currentBackgroundColor?'selected':''}" style="background-color:${c};" data-color="${c}"></div>`).join('');
-        }
-
-        function handleFontStyleChange() {
-            postTextarea.classList.remove(FONT_FAMILIES[currentFontIndex]);
-            currentFontIndex = (currentFontIndex + 1) % FONT_FAMILIES.length;
-            postTextarea.classList.add(FONT_FAMILIES[currentFontIndex]);
-            showMessage(`Police: ${FONT_FAMILIES[currentFontIndex].replace('font-','')}`, true);
-        }
-
-        async function handlePostSubmit() {
+        async function handlePublish() {
             const message = postTextarea.value.trim();
-            if (!message) return showMessage("La publication ne peut pas être vide.", false);
-            const isAnonymous = document.getElementById('anonymous-switch-input').checked;
-            
-            try {
-                await addDoc(postsCollectionRef, { message, publisherId: currentUserId, isAnonymous, createdAt: serverTimestamp(), backgroundColor: currentBackgroundColor, fontClass: FONT_FAMILIES[currentFontIndex], likers: [], dislikers: [] });
-                if (!isAnonymous) {
-                    const userRef = doc(usersCollectionRef, currentUserId);
-                    const count = (await getDoc(userRef)).data().postsCount || 0;
-                    await updateDoc(userRef, { postsCount: count + 1 });
-                }
-                showMessage("Publication envoyée !", true);
-                postTextarea.value = '';
-                handleColorSelect(COLOR_PALETTE[0]);
-                document.getElementById('anonymous-switch-input').checked = false;
-                hideSecondaryView(postCreationView);
-            } catch (e) { showMessage("Échec de la publication.", false); }
-        }
-        
-        // --- AUTHENTIFICATION & INITIALISATION ---
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                currentUserId = user.uid;
-                await upsertUserDocument(user);
-                listenToFeed();
-                listenToUsers();
-            } else {
-                currentUserId = null;
-                if (unsubscribeFeedListener) unsubscribeFeedListener();
-                if (unsubscribeUsersListener) unsubscribeUsersListener();
-                if (unsubscribeChat) unsubscribeChat();
+            if (!message || message.length > MAX_CHARS) {
+                showMessage("Message invalide.", false);
+                return;
             }
-        });
 
+            publishButton.disabled = true;
+            try {
+                const newPost = {
+                    publisherId: isAnonymousPost ? null : currentUserId,
+                    publisherName: isAnonymousPost ? "Anonyme" : usersData[currentUserId].username,
+                    message: message,
+                    isAnon: isAnonymousPost,
+                    backgroundColor: currentPostColor,
+                    fontClass: POST_FONT_FAMILIES[currentPostFontIndex],
+                    createdAt: serverTimestamp(),
+                    likedBy: [],
+                    dislikedBy: []
+                };
+
+                await addDoc(postsCollectionRef, newPost);
+
+                if (!isAnonymousPost) {
+                    const userRef = doc(usersCollectionRef, currentUserId);
+                    const newCount = (usersData[currentUserId].postsCount || 0) + 1;
+                    await updateDoc(userRef, { postsCount: newCount });
+                }
+                
+                showMessage("Publication réussie !", true);
+                hideSecondaryView(postCreationView);
+                navigateTo('feed-view');
+
+            } catch (error) {
+                console.error("Erreur de publication: ", error);
+                showMessage("Échec de la publication.", false);
+            } finally {
+                publishButton.disabled = false;
+            }
+        }
+
+        // --- INITIALISATION ---
         async function initializeAppLogic() {
-            try { await signInAnonymously(auth); } 
-            catch (e) { document.body.innerHTML = "Impossible de se connecter. Vérifiez votre configuration Firebase."; }
+            try { 
+                await signInAnonymously(auth);
+            } catch (e) { 
+                document.body.innerHTML = "Impossible de se connecter. Vérifiez votre configuration Firebase.";
+                console.error(e);
+            }
         }
 
         // --- ATTACHEMENT DES ÉVÉNEMENTS ---
         document.addEventListener('DOMContentLoaded', () => {
-            navItems.forEach(item => item.addEventListener('click', () => navigateTo(item.dataset.view)));
-            document.getElementById('create-post-header-btn').addEventListener('click', () => showSecondaryView(postCreationView));
-            document.getElementById('my-profile-nav-item').addEventListener('click', () => showProfile(currentUserId));
-            
-            document.getElementById('profile-back-btn').addEventListener('click', () => hideSecondaryView(profileView));
-            document.getElementById('chat-back-btn').addEventListener('click', () => hideSecondaryView(chatView));
-            document.getElementById('creation-back-btn').addEventListener('click', () => hideSecondaryView(postCreationView));
-            
-            friendsList.addEventListener('click', e => {
-                const userItem = e.target.closest('.friend-item');
-                const dmButton = e.target.closest('.dm-button');
-                if (dmButton) { showChat(dmButton.dataset.userId); }
-                else if (userItem) { showProfile(userItem.dataset.userId); }
-            });
+            initializeAppLogic();
 
-            feedContent.addEventListener('click', e => {
-                const publisher = e.target.closest('.post-publisher');
-                const actionBtn = e.target.closest('.action-button');
-                if (publisher && publisher.dataset.userId) { showProfile(publisher.dataset.userId); }
-                else if (actionBtn) { handlePostAction(actionBtn.closest('.post-card').dataset.postId, actionBtn.dataset.action); }
-            });
-
-            document.getElementById('post-submit-btn').addEventListener('click', handlePostSubmit);
-            document.getElementById('font-style-btn').addEventListener('click', handleFontStyleChange);
-            colorSwatchesContainer.addEventListener('click', e => { if (e.target.classList.contains('color-swatch')) handleColorSelect(e.target.dataset.color); });
-            generateColorSwatches();
-
-            document.getElementById('send-button').addEventListener('click', sendMessage);
-            document.getElementById('message-input').addEventListener('keyup', e => { if (e.key === 'Enter') sendMessage(); });
-            
-            document.getElementById('profile-dm-btn').addEventListener('click', e => showChat(e.currentTarget.dataset.userId));
-            document.getElementById('edit-bio-btn').addEventListener('click', async () => {
-                const newBio = prompt("Entrez votre nouvelle bio :", usersData[currentUserId]?.bio || '');
-                if (newBio !== null) {
-                    try {
-                        await updateDoc(doc(usersCollectionRef, currentUserId), { bio: newBio });
-                        showMessage("Bio mise à jour !", true);
-                    } catch (e) { showMessage("Échec de la mise à jour.", false); }
-                }
-            });
-            
-            document.getElementById('search-input').addEventListener('input', e => {
-                const term = e.target.value.toLowerCase();
-                document.querySelectorAll('#friends-list .friend-item').forEach(item => {
-                    const name = usersData[item.dataset.userId]?.username.toLowerCase() || '';
-                    item.style.display = name.includes(term) ? 'flex' : 'none';
+            navItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    if (item.dataset.view === 'profile-view') {
+                        activeProfileUserId = null; // Réinitialiser pour forcer l'affichage de notre profil
+                        showProfile(currentUserId);
+                    } else {
+                        navigateTo(item.dataset.view);
+                    }
                 });
             });
 
-            initializeAppLogic();
+            document.getElementById('my-profile-nav-item').addEventListener('click', () => navigateTo('contacts-view'));
+            
+            friendsList.addEventListener('click', e => {
+                const friendItem = e.target.closest('.friend-item');
+                const dmButton = e.target.closest('.dm-button');
+                if (dmButton) {
+                    showChat(dmButton.dataset.userId);
+                } else if (friendItem) {
+                    showProfile(friendItem.dataset.userId);
+                }
+            });
+
+            // Événements pour la modale
+            document.getElementById('edit-bio-btn').addEventListener('click', openEditProfileModal);
+            document.getElementById('cancel-edit-btn').addEventListener('click', closeEditProfileModal);
+            document.getElementById('save-profile-btn').addEventListener('click', saveProfileChanges);
+
+            // NOUVEAU: Événements de création de post
+            document.getElementById('create-post-header-btn').addEventListener('click', showPostCreationView);
+            document.getElementById('post-creation-back-btn').addEventListener('click', () => hideSecondaryView(postCreationView));
+            postTextarea.addEventListener('input', updateCharCount);
+            fontStyleButton.addEventListener('click', handlePostFontChange);
+            anonymousSwitch.addEventListener('change', () => { isAnonymousPost = anonymousSwitch.checked; });
+            publishButton.addEventListener('click', handlePublish);
+            
+            // NOUVEAU: Événements du flux (délégation)
+            feedContent.addEventListener('click', e => {
+                const publisher = e.target.closest('.post-publisher');
+                const actionButton = e.target.closest('.action-button');
+                
+                if (publisher) {
+                    const userId = publisher.dataset.userId;
+                    if (userId && userId !== 'null') {
+                        showProfile(userId);
+                    }
+                } else if (actionButton) {
+                    handlePostAction(e);
+                }
+            });
+
+            navigateTo('feed-view');
         });
     </script>
 </body>
 </html>
-
