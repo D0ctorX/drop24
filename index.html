@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Réseau Social (Fonctionnel)</title>
+    <title>Drop</title>
     <!-- Utilisation de Font Awesome pour les icônes -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Bibliothèque pour générer les QR Codes -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.1/qrcode.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Montserrat:wght@700&family=Pacifico&display=swap');
@@ -23,6 +25,7 @@
             --action-color: #8e8e8e;
             --switch-off: #ccc;
             --switch-on: #5cb85c;
+            --page-bg: #f0f2f5; 
         }
 
         .font-inter { font-family: 'Inter', sans-serif; }
@@ -40,7 +43,7 @@
             margin: 0;
             padding: 0;
             font-family: 'Inter', sans-serif;
-            background-color: #000; /* MODIFIÉ: Fond noir pour l'extérieur */
+            background-color: var(--page-bg); 
             color: var(--text-color);
             overscroll-behavior-y: contain;
         }
@@ -50,11 +53,11 @@
             height: 100%;
             max-width: 480px;
             margin: 0 auto;
-            background-color: var(--primary-bg); /* Garde le fond de l'app */
+            background-color: var(--primary-bg);
             display: flex;
             flex-direction: column;
             position: relative;
-            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             overflow: hidden;
         }
 
@@ -76,10 +79,7 @@
 
         .view.secondary {
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            top: 0; left: 0; right: 0; bottom: 0;
             transform: translateX(100%);
             transition: transform 0.3s ease-in-out;
             z-index: 20;
@@ -102,24 +102,66 @@
             position: sticky;
             top: 0;
             z-index: 10;
+            gap: 10px; 
+        }
+        
+        .feed-view .view-header {
+            flex-wrap: wrap;
+        }
+        #feed-search-bar {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            background-color: var(--page-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0 10px;
+            order: 3; 
+        }
+        #feed-search-icon {
+            color: var(--last-seen-color);
+            font-size: 14px;
+        }
+        #feed-search-input {
+            width: 100%;
+            padding: 8px 5px;
+            border: none;
+            background: transparent;
+            outline: none;
+            font-size: 14px;
         }
 
-        .header-title { font-size: 20px; font-weight: 600; margin: 0; }
-        .header-icon { font-size: 22px; cursor: pointer; color: var(--text-color); }
+        .header-title { font-size: 20px; font-weight: 600; margin: 0; text-align: center; flex-grow: 1; }
+        .header-icon { font-size: 22px; cursor: pointer; color: var(--text-color); width: 40px; text-align: right; }
+        .header-placeholder { width: 40px; } 
         .back-button { font-size: 20px; cursor: pointer; width: 40px; text-align: left; }
 
-        .feed-content, .contacts-content, .chat-content, .profile-content {
+        /* MODIFIÉ: Force le défilement et cache la barre */
+        .feed-content, .contacts-content, .chat-content, .profile-content, #friend-requests-list {
             flex-grow: 1;
-            overflow-y: auto;
+            overflow-y: scroll;
             padding-bottom: 60px;
+            /* Cache la barre de défilement */
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
         }
+        /* Cache la barre de défilement pour Webkit (Chrome, Safari) */
+        .feed-content::-webkit-scrollbar, .contacts-content::-webkit-scrollbar, 
+        .chat-content::-webkit-scrollbar, .profile-content::-webkit-scrollbar,
+        #friend-requests-list::-webkit-scrollbar {
+            display: none;
+        }
+        
+        #friend-requests-list {
+            padding: 0;
+            max-height: 300px; /* Limite la hauteur de la liste */
+        }
+
 
         /* --- Barre de Navigation --- */
         .nav-bar {
             position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
+            bottom: 0; left: 0; right: 0;
             display: flex;
             justify-content: space-around;
             background-color: var(--secondary-bg);
@@ -138,7 +180,7 @@
         .post-publisher { font-weight: 600; cursor: pointer; }
         .post-countdown { 
             font-size: 12px; 
-            color: var(--dislike-color); /* MODIFIÉ: Couleur rouge pour le temps */
+            color: var(--dislike-color);
             font-family: 'Roboto Mono', monospace;
             font-weight: 700;
             background-color: #fcebeb;
@@ -151,12 +193,12 @@
         .post-actions { display: flex; padding: 8px 15px; gap: 20px; }
         .action-button { display: flex; align-items: center; gap: 8px; font-size: 18px; color: var(--action-color); cursor: pointer; }
         .action-button span { font-size: 14px; font-weight: 600; }
-        .action-button.liked i { color: var(--like-color); }
-        .action-button.liked span { color: var(--like-color); } /* NOUVEAU */
-        .action-button.disliked i { color: var(--dislike-color); }
-        .action-button.disliked span { color: var(--dislike-color); } /* NOUVEAU */
+        .action-button.liked i, .action-button.liked span { color: var(--like-color); }
+        .action-button.disliked i, .action-button.disliked span { color: var(--dislike-color); }
+        .action-button.share-btn { margin-left: auto; } 
 
         /* --- Amis --- */
+        .contacts-view { position: relative; } 
         .search-bar { padding: 10px; background-color: var(--primary-bg); }
         #search-input { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--secondary-bg); font-size: 14px; }
         .friend-item { display: flex; align-items: center; padding: 10px 15px; border-bottom: 1px solid var(--border-color); cursor: pointer; transition: background-color 0.2s; }
@@ -167,12 +209,63 @@
         .friend-info p { margin: 0; font-size: 12px; color: var(--last-seen-color); }
         .dm-button { background-color: var(--highlight-color); color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: 600; }
         
+        /* Bouton Flottant (FAB) */
+        #add-friend-fab {
+            position: absolute;
+            bottom: 80px; /* Au-dessus de la nav-bar */
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            background-color: var(--highlight-color);
+            color: white;
+            border-radius: 50%;
+            border: none;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            cursor: pointer;
+            z-index: 12;
+        }
+        
+        /* Badge de notification sur le FAB */
+        .request-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: var(--dislike-color);
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            border: 2px solid var(--secondary-bg);
+            z-index: 13;
+        }
+        
+        /* Badge de notification dans la modale */
+        .request-count-badge {
+            background-color: var(--dislike-color);
+            color: white;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 12px;
+            margin-left: 8px;
+        }
+        
         /* --- Chat --- */
         .chat-view .view-header { gap: 10px; }
         #chat-user-pp { width: 40px; height: 40px; border-radius: 50%; }
         .chat-view .header-title { flex-grow: 1; text-align: left; }
         .chat-content { background-color: #f0f2f5; padding: 10px; }
         #chat-body { display: flex; flex-direction: column; gap: 10px; }
+        /* ... (styles de chat inchangés) ... */
         .message-container { display: flex; width: 100%; }
         .message-row { max-width: 75%; display: flex; align-items: flex-end; gap: 8px; }
         .message { padding: 10px 15px; border-radius: 18px; font-size: 15px; line-height: 1.4; word-wrap: break-word; }
@@ -184,6 +277,7 @@
         .chat-input { display: flex; padding: 10px; background-color: var(--secondary-bg); border-top: 1px solid var(--border-color); }
         #message-input { flex-grow: 1; border: 1px solid var(--border-color); border-radius: 20px; padding: 10px 15px; font-size: 15px; }
         #send-button { background: none; border: none; font-size: 22px; color: var(--highlight-color); cursor: pointer; padding: 0 10px; }
+        
         
         /* --- Profil --- */
         .profile-header { display: flex; align-items: center; padding: 15px; gap: 15px; background-color: var(--secondary-bg); border-bottom: 1px solid var(--border-color); }
@@ -207,21 +301,22 @@
         #toast-message.success { background-color: #28a745; }
         #toast-message.error { background-color: #dc3545; }
         
-        /* --- Modale d'édition de profil --- */
+        /* --- Modales --- */
         .modal-backdrop {
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
             background-color: rgba(0,0,0,0.5);
             z-index: 50;
-            display: none;
+            display: none; /* Caché par défaut */
             align-items: center;
             justify-content: center;
+            padding: 15px;
         }
         .modal-content {
             background: var(--secondary-bg);
             padding: 20px;
             border-radius: 12px;
-            width: 90%;
+            width: 100%;
             max-width: 350px;
             display: flex;
             flex-direction: column;
@@ -250,20 +345,110 @@
             font-weight: 600; font-size: 16px; cursor: pointer;
         }
         #save-profile-btn { background-color: var(--highlight-color); color: white; }
-        #cancel-edit-btn { background-color: #f0f0f0; color: var(--text-color); }
-
-        /* NOUVEAU: Styles pour la création de post */
-        #post-creation-view .view-header {
-            justify-content: space-between;
+        #cancel-edit-btn, #cancel-friend-options-btn, #cancel-friend-requests-btn, #cancel-paste-id-btn { 
+            background-color: #f0f0f0; color: var(--text-color); 
         }
+
+        /* Modale d'options d'amis */
+        #friend-options-modal .modal-content {
+            gap: 10px;
+        }
+        .friend-option-button {
+            display: flex;
+            align-items: center;
+            justify-content: space-between; /* MODIFIÉ */
+            gap: 15px;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .friend-option-button:hover {
+            background-color: #f9f9f9;
+        }
+        .friend-option-button i {
+            width: 20px;
+            text-align: center;
+            color: var(--action-color);
+        }
+        .friend-option-button-text {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        /* Modale QR Code */
+        #qr-code-modal .modal-content {
+            align-items: center;
+            gap: 20px;
+        }
+        #qr-code-canvas {
+            border: 5px solid var(--secondary-bg);
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        
+        /* NOUVEAU: Modale des demandes d'amis */
+        #friend-requests-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .friend-request-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+        .friend-request-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .friend-request-info img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+        }
+        .friend-request-info span {
+            font-weight: 600;
+        }
+        .friend-request-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .friend-request-actions button {
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .request-accept-btn {
+            background-color: var(--switch-on);
+            color: white;
+        }
+        .request-reject-btn {
+            background-color: var(--dislike-color);
+            color: white;
+        }
+
+
+        /* --- Styles Création de post --- */
+        /* ... (inchangés) ... */
+        #post-creation-view .view-header { justify-content: space-between; }
         #publish-button {
             font-size: 16px; font-weight: 600; color: var(--highlight-color);
             background: none; border: none; cursor: pointer;
         }
-        #publish-button:disabled {
-            color: var(--last-seen-color);
-            cursor: not-allowed;
-        }
+        #publish-button:disabled { color: var(--last-seen-color); cursor: not-allowed; }
         .post-input-area {
             flex-grow: 1;
             display: flex;
@@ -302,10 +487,7 @@
             text-align: right;
             width: 100%;
         }
-        .char-limit-indicator.error {
-            color: var(--dislike-color);
-            font-weight: 600;
-        }
+        .char-limit-indicator.error { color: var(--dislike-color); font-weight: 600; }
         .post-controls {
             padding: 15px 20px;
             background-color: var(--secondary-bg);
@@ -319,14 +501,8 @@
             align-items: center;
             justify-content: space-between;
         }
-        .control-row label {
-            font-size: 14px;
-            font-weight: 600;
-        }
-        .color-swatches-container {
-            display: flex;
-            gap: 8px;
-        }
+        .control-row label { font-size: 14px; font-weight: 600; }
+        .color-swatches-container { display: flex; gap: 8px; }
         .color-swatch {
             width: 30px; height: 30px;
             border-radius: 50%;
@@ -334,10 +510,7 @@
             cursor: pointer;
             transition: border-color 0.2s;
         }
-        .color-swatch.selected {
-            border-color: var(--highlight-color);
-            box-shadow: 0 0 0 2px white;
-        }
+        .color-swatch.selected { border-color: var(--highlight-color); box-shadow: 0 0 0 2px white; }
         .control-button {
             width: 40px; height: 40px;
             border-radius: 50%;
@@ -382,9 +555,13 @@
             <!-- VUE FEED -->
             <div id="feed-view" class="view feed-view">
                 <div class="view-header">
-                    <div style="width: 40px;"></div>
+                    <div class="header-placeholder"></div> 
                     <h1 class="header-title">Flux</h1>
                     <i id="create-post-header-btn" class="fas fa-feather-alt header-icon"></i>
+                    <div id="feed-search-bar">
+                        <i id="feed-search-icon" class="fas fa-search"></i>
+                        <input type="text" id="feed-search-input" placeholder="Rechercher des posts...">
+                    </div>
                 </div>
                 <div id="feed-content" class="feed-content"></div>
             </div>
@@ -392,14 +569,18 @@
             <!-- VUE AMIS -->
             <div id="contacts-view" class="view contacts-view">
                 <div class="view-header">
-                    <div style="width: 40px;"></div>
+                    <div class="header-placeholder"></div>
                     <h1 class="header-title">Amis</h1>
-                    <div style="width: 40px;"></div>
+                    <div class="header-placeholder"></div>
                 </div>
                 <div class="search-bar">
                     <input type="text" id="search-input" placeholder="Rechercher un ami...">
                 </div>
                 <div id="friends-list" class="contacts-content"></div>
+                <!-- Bouton FAB (avec badge géré par JS) -->
+                <button id="add-friend-fab">
+                    <i class="fas fa-user-plus"></i>
+                </button>
             </div>
 
             <!-- VUE PROFIL -->
@@ -407,7 +588,7 @@
                 <div class="view-header">
                      <i id="my-profile-nav-item" class="fas fa-users header-icon"></i>
                     <h1 id="profile-username-header" class="header-title">Profil</h1>
-                    <div style="width: 40px;"></div>
+                    <div class="header-placeholder"></div>
                 </div>
                 <div class="profile-content">
                     <div class="profile-header">
@@ -449,7 +630,7 @@
                 <i id="chat-back-btn" class="fas fa-arrow-left back-button"></i>
                 <img id="chat-user-pp" src="" alt="Avatar du contact">
                 <h1 id="chat-username" class="header-title">Chat</h1>
-                <div style="width: 40px;"></div>
+                <div class="header-placeholder"></div>
             </div>
             <div class="chat-content">
                 <div id="chat-body"></div>
@@ -460,7 +641,7 @@
             </div>
         </div>
         
-        <!-- NOUVEAU: VUE CRÉATION DE POST (Secondaire) -->
+        <!-- VUE CRÉATION DE POST (Secondaire) -->
         <div id="post-creation-view" class="view post-creation-view secondary">
             <div class="view-header">
                 <i id="post-creation-back-btn" class="fas fa-arrow-left back-button"></i>
@@ -511,25 +692,103 @@
     <div id="edit-profile-modal" class="modal-backdrop">
         <div class="modal-content">
             <h3>Modifier le profil</h3>
-            
             <div>
                 <label for="edit-username-input">Nom d'utilisateur</label>
                 <input type="text" id="edit-username-input" maxlength="20">
             </div>
-
             <div>
                 <label for="edit-bio-textarea">Bio</label>
                 <textarea id="edit-bio-textarea" maxlength="150"></textarea>
             </div>
-
             <div>
                 <label>Couleur du profil</label>
                 <div id="edit-color-swatches"></div>
             </div>
-
             <div class="modal-actions">
                 <button id="cancel-edit-btn">Annuler</button>
                 <button id="save-profile-btn">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modale d'options d'amis (MODIFIÉE) -->
+    <div id="friend-options-modal" class="modal-backdrop">
+        <div class="modal-content">
+            <h3>Options d'amis</h3>
+            <!-- NOUVEAU: Bouton Demandes d'amis -->
+            <button id="show-friend-requests" class="friend-option-button">
+                <div class="friend-option-button-text">
+                    <i class="fas fa-bell"></i>
+                    <span>Demandes d'amis</span>
+                </div>
+                <span id="pending-requests-count-badge" class="request-count-badge" style="display: none;">0</span>
+            </button>
+            <button id="scan-qr-code" class="friend-option-button">
+                 <div class="friend-option-button-text">
+                    <i class="fas fa-id-card"></i>
+                    <span>Ajouter par ID</span>
+                </div>
+            </button>
+            <button id="share-profile-link" class="friend-option-button">
+                <div class="friend-option-button-text">
+                    <i class="fas fa-share-alt"></i>
+                    <span>Inviter un ami (Lien)</span>
+                </div>
+            </button>
+            <button id="show-my-qr" class="friend-option-button">
+                 <div class="friend-option-button-text">
+                    <i class="fas fa-qrcode"></i>
+                    <span>Mon QR Code</span>
+                </div>
+            </button>
+            
+            <div class="modal-actions">
+                <button id="cancel-friend-options-btn">Annuler</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modale d'affichage du QR Code -->
+    <div id="qr-code-modal" class="modal-backdrop">
+        <div class="modal-content">
+            <h3>Mon QR Code Drop</h3>
+            <canvas id="qr-code-canvas"></canvas>
+            <p style="font-size: 14px; text-align: center; color: var(--last-seen-color);">
+                Partagez ce code ou votre ID : <strong id="qr-user-id" style="color: var(--text-color);"></strong>
+            </p>
+            <div class="modal-actions">
+                <button id="close-qr-modal-btn" style="background-color: var(--highlight-color); color: white;">Fermer</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- NOUVEAU: Modale pour coller l'ID (simule le scan) -->
+    <div id="paste-id-modal" class="modal-backdrop">
+        <div class="modal-content">
+            <h3>Ajouter un ami par ID</h3>
+            <p style="font-size: 14px; color: var(--last-seen-color); text-align: center; margin: -5px 0 5px;">
+                Collez l'ID de l'utilisateur que vous souhaitez ajouter (obtenu via QR code ou lien).
+            </p>
+            <div>
+                <label for="paste-id-input">ID de l'utilisateur</label>
+                <input type="text" id="paste-id-input" placeholder="Coller l'ID ici...">
+            </div>
+            <div class="modal-actions">
+                <button id="cancel-paste-id-btn">Annuler</button>
+                <button id="send-friend-request-btn" style="background-color: var(--highlight-color); color: white;">Envoyer</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- NOUVEAU: Modale des demandes d'amis en attente -->
+    <div id="friend-requests-modal" class="modal-backdrop">
+        <div class="modal-content">
+            <h3>Demandes d'amis</h3>
+            <div id="friend-requests-list">
+                <!-- Les demandes seront insérées ici par JS -->
+            </div>
+            <div class="modal-actions">
+                <button id="cancel-friend-requests-btn">Fermer</button>
             </div>
         </div>
     </div>
@@ -537,7 +796,7 @@
 <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, doc, getDoc, setDoc, updateDoc, onSnapshot, query, orderBy, arrayUnion, arrayRemove, writeBatch, serverTimestamp, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, getDoc, setDoc, updateDoc, onSnapshot, query, orderBy, arrayUnion, arrayRemove, writeBatch, serverTimestamp, addDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         // --- CONFIGURATION FIREBASE ---
         const firebaseConfig = {
@@ -556,11 +815,10 @@
         
         const dbPath = `artifacts/${firebaseConfig.appId}/public/data`;
         const usersCollectionRef = collection(db, dbPath, 'users');
-        const chatsCollectionRef = collection(db, dbPath, 'chats');
-        const postsCollectionRef = collection(db, dbPath, 'posts'); // NOUVEAU: Réf. Posts
+        // NOUVEAU: Pas besoin de ref globale pour les sous-collections
+        const postsCollectionRef = collection(db, dbPath, 'posts');
         
         const PROFILE_COLORS = ['#e57373', '#81c784', '#64b5f6', '#f06292', '#ba68c8', '#ffd54f', '#7986cb', '#4db6ac', '#9575cd', '#4fc3f7', '#a1887f', '#90a4ae'];
-        // NOUVEAU: Constantes de Post
         const POST_FONT_FAMILIES = ['font-inter', 'font-roboto', 'font-montserrat', 'font-pacifico'];
         const POST_COLOR_PALETTE = ['#f1f1f1', '#D6E9F7', '#D1F7D1', '#FFF7D1', '#F7D1D1', '#A0D4FE', '#84E084', '#FEEA84', '#FE8484'];
         const MAX_CHARS = 200;
@@ -568,11 +826,14 @@
         let currentUserId = null;
         let activeProfileUserId = null;
         let usersData = {};
-        let postsData = []; // NOUVEAU: Cache pour les posts
+        let postsData = [];
+        let filteredPostsData = []; 
+        let pendingRequests = []; // NOUVEAU
         
         let unsubscribeUsersListener = null;
-        let unsubscribeFeedListener = null; // NOUVEAU
-        let countdownInterval = null; // NOUVEAU
+        let unsubscribeFeedListener = null;
+        let unsubscribeFriendRequestsListener = null; // NOUVEAU
+        let countdownInterval = null;
 
         // --- REFERENCES DOM ---
         const viewWrapper = document.getElementById('view-wrapper');
@@ -580,10 +841,22 @@
         const navItems = document.querySelectorAll('.nav-item');
         const editProfileModal = document.getElementById('edit-profile-modal');
         const viewOrder = ['feed-view', 'contacts-view', 'profile-view'];
-        const feedContent = document.getElementById('feed-content'); // NOUVEAU
+        const feedContent = document.getElementById('feed-content');
+        
+        const friendSearchInput = document.getElementById('search-input'); 
+        const feedSearchInput = document.getElementById('feed-search-input'); 
 
-        // NOUVEAU: Refs. pour la création de post
+        // Refs. Modales Amis (MODIFIÉES)
+        const addFriendFab = document.getElementById('add-friend-fab');
+        const friendOptionsModal = document.getElementById('friend-options-modal');
+        const qrCodeModal = document.getElementById('qr-code-modal');
+        const pasteIdModal = document.getElementById('paste-id-modal'); // NOUVEAU
+        const friendRequestsModal = document.getElementById('friend-requests-modal'); // NOUVEAU
+        const friendRequestsList = document.getElementById('friend-requests-list'); // NOUVEAU
+
+        // Refs. pour la création de post (inchangées)
         const postCreationView = document.getElementById('post-creation-view');
+        // ... (autres refs inchangées) ...
         const postTextarea = document.getElementById('post-textarea');
         const charCountSpan = document.getElementById('char-count');
         const publishButton = document.getElementById('publish-button');
@@ -599,6 +872,7 @@
         // --- FONCTIONS UTILITAIRES ---
         let toastTimeout;
         function showMessage(message, isSuccess) {
+            // ... (inchangé) ...
             const toast = document.getElementById('toast-message');
             toast.textContent = message;
             toast.className = 'show';
@@ -608,6 +882,7 @@
         }
 
         function navigateTo(viewId) {
+            // ... (inchangé) ...
             const viewIndex = viewOrder.indexOf(viewId);
             if (viewIndex === -1) return;
             viewWrapper.style.transform = `translateX(-${viewIndex * 100}%)`;
@@ -621,11 +896,15 @@
         function hideSecondaryView(viewElement) { viewElement.classList.remove('visible'); }
 
         function generateAvatarUrl(user) {
-            if (!user || !user.username) return '';
+            // ... (inchangé) ...
+            if (!user || !user.username) return 'https://ui-avatars.com/api/?name=?&background=8E8E8E&color=fff&size=128&bold=true';
             const name = user.username.charAt(0).toUpperCase();
             const color = (user.profileColor || '8E8E8E').replace('#', '');
             return `https://ui-avatars.com/api/?name=${name}&background=${color}&color=fff&size=128&bold=true`;
         }
+        
+        function showModal(modalElement) { modalElement.style.display = 'flex'; }
+        function hideModal(modalElement) { modalElement.style.display = 'none'; }
 
         // --- AUTHENTIFICATION & GESTION UTILISATEUR ---
         onAuthStateChanged(auth, async (user) => {
@@ -633,11 +912,13 @@
                 currentUserId = user.uid;
                 await upsertUserDocument(user);
                 listenToAllUsers();
-                listenToFeed(); // NOUVEAU: Écouter le flux
+                listenToFeed();
+                listenToFriendRequests(); // NOUVEAU
             }
         });
 
         async function upsertUserDocument(user) {
+            // ... (inchangé) ...
             const userRef = doc(usersCollectionRef, user.uid);
             const userDoc = await getDoc(userRef);
             if (!userDoc.exists()) {
@@ -647,32 +928,196 @@
                     profileColor: PROFILE_COLORS[Math.floor(Math.random() * PROFILE_COLORS.length)],
                     accountCreatedAt: serverTimestamp(),
                     friends: [],
-                    postsCount: 0 // NOUVEAU: Initialiser le compteur de posts
+                    postsCount: 0
                 });
             }
         }
 
         function listenToAllUsers() {
+            // ... (inchangé) ...
             if (unsubscribeUsersListener) unsubscribeUsersListener();
             unsubscribeUsersListener = onSnapshot(usersCollectionRef, (snapshot) => {
                 snapshot.docChanges().forEach((change) => {
                     usersData[change.doc.id] = { id: change.doc.id, ...change.doc.data() };
                 });
-                renderFriendsList();
+                renderFriendsList(); 
                 if (document.getElementById('profile-view').style.transform === 'translateX(0px)' && activeProfileUserId) {
-                    showProfile(activeProfileUserId);
+                    showProfile(activeProfileUserId); 
                 }
+                renderFriendRequestsList(); // NOUVEAU: Mettre à jour les noms dans la liste des demandes
+            });
+        }
+        
+        // --- NOUVEAU: SYSTÈME DE DEMANDES D'AMIS ---
+
+        function listenToFriendRequests() {
+            if (unsubscribeFriendRequestsListener) unsubscribeFriendRequestsListener();
+            if (!currentUserId) return;
+            
+            const requestsRef = collection(db, dbPath, 'users', currentUserId, 'friendRequests');
+            unsubscribeFriendRequestsListener = onSnapshot(requestsRef, (snapshot) => {
+                pendingRequests = [];
+                snapshot.forEach(doc => {
+                    pendingRequests.push({ id: doc.id, ...doc.data() });
+                });
+                
+                updateFriendRequestBadge(pendingRequests.length);
+                renderFriendRequestsList();
+            }, (error) => {
+                console.error("Erreur d'écoute des demandes d'amis: ", error);
             });
         }
 
+        function updateFriendRequestBadge(count) {
+            const fabBadge = document.querySelector('#add-friend-fab .request-badge');
+            const modalBadge = document.getElementById('pending-requests-count-badge');
+            
+            if (count > 0) {
+                // Badge sur le FAB
+                if (!fabBadge) {
+                    const newBadge = document.createElement('div');
+                    newBadge.className = 'request-badge';
+                    newBadge.textContent = count;
+                    addFriendFab.appendChild(newBadge);
+                } else {
+                    fabBadge.textContent = count;
+                }
+                // Badge dans la modale
+                modalBadge.textContent = count;
+                modalBadge.style.display = 'inline-block';
+            } else {
+                // Cacher les badges
+                if (fabBadge) {
+                    fabBadge.remove();
+                }
+                modalBadge.style.display = 'none';
+            }
+        }
+        
+        // CORRECTION MAJEURE ICI: Suppression de la condition qui bloquait le rendu
+        function renderFriendRequestsList() {
+            // ON A RETIRÉ LE BLOCAGE : if (!friendRequestsModal.style.display ...)
+            
+            friendRequestsList.innerHTML = ''; // Vider la liste
+            
+            if (pendingRequests.length === 0) {
+                friendRequestsList.innerHTML = '<p style="text-align: center; color: var(--last-seen-color); padding: 20px 0;">Aucune demande en attente.</p>';
+                return;
+            }
+            
+            pendingRequests.forEach(req => {
+                const sender = usersData[req.senderId];
+                const senderName = sender ? sender.username : 'Chargement...';
+                const senderAvatar = sender ? generateAvatarUrl(sender) : '';
+                
+                const item = document.createElement('div');
+                item.className = 'friend-request-item';
+                item.innerHTML = `
+                    <div class="friend-request-info">
+                        <img src="${senderAvatar}" alt="Avatar">
+                        <span>${senderName}</span>
+                    </div>
+                    <div class="friend-request-actions">
+                        <button class="request-accept-btn" data-sender-id="${req.senderId}"><i class="fas fa-check"></i></button>
+                        <button class="request-reject-btn" data-sender-id="${req.senderId}"><i class="fas fa-times"></i></button>
+                    </div>
+                `;
+                friendRequestsList.appendChild(item);
+            });
+        }
+        
+        async function sendFriendRequest(recipientId) {
+            if (!recipientId || recipientId === currentUserId) {
+                showMessage("ID utilisateur invalide.", false);
+                return;
+            }
+            if (usersData[currentUserId]?.friends?.includes(recipientId)) {
+                showMessage("Vous êtes déjà amis.", false);
+                return;
+            }
+            
+            try {
+                // Vérifier si une demande existe déjà
+                const requestRef = doc(db, dbPath, 'users', recipientId, 'friendRequests', currentUserId);
+                const requestDoc = await getDoc(requestRef);
+                
+                if (requestDoc.exists()) {
+                    showMessage("Une demande est déjà en attente.", false);
+                    return;
+                }
+                
+                // Envoyer la demande
+                await setDoc(requestRef, {
+                    senderId: currentUserId,
+                    timestamp: serverTimestamp(),
+                    status: 'pending'
+                });
+                showMessage("Demande d'ami envoyée !", true);
+                
+            } catch (error) {
+                console.error("Erreur envoi demande: ", error);
+                showMessage("Erreur: " + error.message, false);
+            }
+        }
+        
+        async function acceptFriendRequest(senderId) {
+            if (!currentUserId || !senderId) return;
+            
+            const batch = writeBatch(db);
+            
+            // 1. Ajouter l'ami chez l'utilisateur actuel
+            const currentUserRef = doc(usersCollectionRef, currentUserId);
+            batch.update(currentUserRef, { friends: arrayUnion(senderId) });
+            
+            // 2. Ajouter l'utilisateur actuel chez le nouvel ami
+            const senderUserRef = doc(usersCollectionRef, senderId);
+            batch.update(senderUserRef, { friends: arrayUnion(currentUserId) });
+            
+            // 3. Supprimer la demande d'ami
+            const requestRef = doc(db, dbPath, 'users', currentUserId, 'friendRequests', senderId);
+            batch.delete(requestRef);
+            
+            try {
+                await batch.commit();
+                showMessage("Ami ajouté !", true);
+            } catch (error) {
+                console.error("Erreur acceptation ami: ", error);
+                showMessage("Erreur: " + error.message, false);
+            }
+        }
+        
+        async function rejectFriendRequest(senderId) {
+            if (!currentUserId || !senderId) return;
+            
+            try {
+                const requestRef = doc(db, dbPath, 'users', currentUserId, 'friendRequests', senderId);
+                await deleteDoc(requestRef);
+                showMessage("Demande rejetée.", true);
+            } catch (error) {
+                console.error("Erreur rejet ami: ", error);
+                showMessage("Erreur: " + error.message, false);
+            }
+        }
+
+
         // --- GESTION DES AMIS ---
         function renderFriendsList() {
+            // ... (inchangé) ...
+            const searchTerm = friendSearchInput.value.toLowerCase();
             friendsList.innerHTML = '';
             const currentUser = usersData[currentUserId];
-            if (!currentUser) return; // NOUVEAU: Garde
-            const friends = (currentUser.friends || []).map(friendId => usersData[friendId]).filter(Boolean);
+            if (!currentUser) return;
             
-            friends.forEach(user => {
+            const friends = (currentUser.friends || [])
+                .map(friendId => usersData[friendId])
+                .filter(Boolean); 
+            
+            const filteredFriends = friends.filter(user => 
+                user.username.toLowerCase().includes(searchTerm) ||
+                (user.bio || '').toLowerCase().includes(searchTerm)
+            );
+            
+            filteredFriends.forEach(user => {
                 const friendItem = document.createElement('div');
                 friendItem.className = 'friend-item';
                 friendItem.dataset.userId = user.id;
@@ -684,12 +1129,55 @@
                     </div>
                     <button class="dm-button" data-user-id="${user.id}">Message</button>
                 `;
+                friendItem.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('dm-button')) {
+                        showChat(user.id);
+                    } else {
+                        showProfile(user.id);
+                    }
+                });
                 friendsList.appendChild(friendItem);
             });
         }
         
+        async function toggleFriendship(userIdToAdd) {
+            // ... (inchangé, gère le retrait d'ami) ...
+            if (!currentUserId || !userIdToAdd) return;
+            
+            const toggleBtn = document.getElementById('toggle-friend-btn');
+            toggleBtn.disabled = true;
+            
+            const currentUserRef = doc(usersCollectionRef, currentUserId);
+            const targetUserRef = doc(usersCollectionRef, userIdToAdd);
+            const isFriend = usersData[currentUserId]?.friends?.includes(userIdToAdd);
+            
+            // Ne gère que la suppression, l'ajout se fait par demande
+            if (!isFriend) {
+                showMessage("Veuillez envoyer une demande d'ami.", false);
+                toggleBtn.disabled = false;
+                return;
+            }
+            
+            const action = arrayRemove; // Ne peut que supprimer
+            const batch = writeBatch(db);
+
+            try {
+                batch.update(currentUserRef, { friends: action(userIdToAdd) });
+                batch.update(targetUserRef, { friends: action(currentUserId) });
+                await batch.commit();
+                showMessage("Ami retiré.", true);
+                
+            } catch (error) {
+                console.error("Erreur lors de la suppression d'ami: ", error);
+                showMessage("Une erreur est survenue.", false);
+            } finally {
+                toggleBtn.disabled = false;
+            }
+        }
+        
         // --- GESTION DU PROFIL ---
         function showProfile(userId) {
+            // ... (légèrement modifié pour le bouton ami) ...
             const user = usersData[userId];
             if (!user) return;
             activeProfileUserId = userId;
@@ -699,7 +1187,7 @@
             document.getElementById('profile-username-header').textContent = user.username;
             document.getElementById('profile-bio').textContent = user.bio || "Pas de bio.";
             document.getElementById('followers-count').textContent = user.friends?.length || 0;
-            document.getElementById('posts-count').textContent = user.postsCount || 0; // NOUVEAU
+            document.getElementById('posts-count').textContent = user.postsCount || 0;
             
             const creationDate = user.accountCreatedAt?.toDate ? user.accountCreatedAt.toDate().toLocaleDateString('fr-FR') : 'Inconnue';
             document.getElementById('creation-date').textContent = creationDate;
@@ -712,6 +1200,15 @@
                 const toggleBtn = document.getElementById('toggle-friend-btn');
                 const isFriend = usersData[currentUserId]?.friends?.includes(userId);
                 toggleBtn.textContent = isFriend ? 'Retirer' : 'Ajouter';
+                // NOUVEAU: Désactiver "Ajouter" car il faut passer par une demande
+                if (!isFriend) {
+                    toggleBtn.disabled = true;
+                    toggleBtn.textContent = 'Ajouter'; // L'utilisateur doit utiliser le FAB
+                } else {
+                    toggleBtn.disabled = false;
+                    toggleBtn.textContent = 'Retirer';
+                }
+                
                 toggleBtn.dataset.userId = userId;
                 document.getElementById('profile-dm-btn').dataset.userId = userId;
             }
@@ -720,6 +1217,7 @@
 
         // --- Logique de la modale d'édition de profil ---
         function openEditProfileModal() {
+            // ... (inchangé) ...
             const user = usersData[currentUserId];
             if (!user) return;
             
@@ -742,34 +1240,30 @@
                 });
                 swatchesContainer.appendChild(swatch);
             });
-            
-            editProfileModal.style.display = 'flex';
+            showModal(editProfileModal);
         }
 
-        function closeEditProfileModal() {
-            editProfileModal.style.display = 'none';
-        }
+        function closeEditProfileModal() { hideModal(editProfileModal); }
 
         async function saveProfileChanges() {
+            // ... (inchangé) ...
             const newUsername = document.getElementById('edit-username-input').value.trim();
             const newBio = document.getElementById('edit-bio-textarea').value.trim();
-            const selectedColor = document.getElementById('edit-color-swatches').querySelector('.selected')?.dataset.color;
-
-            if (!newUsername) {
-                showMessage("Le nom d'utilisateur ne peut pas être vide.", false);
+            const selectedColor = document.querySelector('#edit-color-swatches .selected')?.dataset.color;
+            
+            if (!newUsername || newUsername.length < 3) {
+                showMessage("Le nom d'utilisateur doit contenir au moins 3 caractères.", false);
                 return;
             }
-
-            const updatedData = {
-                username: newUsername,
-                bio: newBio,
-                profileColor: selectedColor || usersData[currentUserId].profileColor
-            };
-
+            
+            const userRef = doc(usersCollectionRef, currentUserId);
             try {
-                const userRef = doc(usersCollectionRef, currentUserId);
-                await updateDoc(userRef, updatedData);
-                showMessage("Profil mis à jour avec succès !", true);
+                await updateDoc(userRef, {
+                    username: newUsername,
+                    bio: newBio,
+                    profileColor: selectedColor || usersData[currentUserId].profileColor
+                });
+                showMessage("Profil mis à jour !", true);
                 closeEditProfileModal();
             } catch (error) {
                 console.error("Erreur de mise à jour du profil: ", error);
@@ -779,22 +1273,20 @@
         
         // --- CHAT ---
         async function showChat(userId) {
+            // ... (inchangé, mais à implémenter) ...
             const user = usersData[userId];
             if (!user) return;
-
             document.getElementById('chat-user-pp').src = generateAvatarUrl(user);
             document.getElementById('chat-username').textContent = user.username;
-            // ... reste de la logique du chat ...
-            showSecondaryView(document.getElementById('chat-view'));
+            showMessage("La messagerie n'est pas encore implémentée.", false);
+            // showSecondaryView(document.getElementById('chat-view'));
         }
 
-        // --- NOUVEAU: LOGIQUE DE FLUX (FEED) ---
-
+        // --- LOGIQUE DE FLUX (FEED) ---
         function listenToFeed() {
+            // ... (inchangé) ...
             if (unsubscribeFeedListener) unsubscribeFeedListener();
-            
             const q = query(postsCollectionRef, orderBy('createdAt', 'desc'));
-
             unsubscribeFeedListener = onSnapshot(q, (snapshot) => {
                 const now = new Date();
                 const twentyFourHoursAgo = now.getTime() - (24 * 60 * 60 * 1000);
@@ -803,42 +1295,53 @@
                 snapshot.forEach((doc) => {
                     const post = { id: doc.id, ...doc.data() };
                     const createdAt = post.createdAt?.toDate();
-                    
-                    if (!createdAt || createdAt.getTime() < twentyFourHoursAgo) {
-                        return; // Post trop vieux ou invalide
-                    }
-                    
+                    if (!createdAt || createdAt.getTime() < twentyFourHoursAgo) return;
                     post.expiresAt = new Date(createdAt.getTime() + (24 * 60 * 60 * 1000));
                     postsData.push(post);
                 });
                 
-                renderFeed();
+                filterAndRenderFeed(); 
             }, (error) => {
                 console.error("Erreur d'écoute du flux: ", error);
                 feedContent.innerHTML = "<p style='text-align: center; color: var(--dislike-color);'>Erreur de chargement du flux.</p>";
             });
         }
+        
+        function filterAndRenderFeed() {
+            // ... (inchangé) ...
+            const searchTerm = feedSearchInput.value.toLowerCase();
+            
+            if (searchTerm === '') {
+                filteredPostsData = postsData;
+            } else {
+                filteredPostsData = postsData.filter(post => {
+                    const messageMatch = post.message.toLowerCase().includes(searchTerm);
+                    const publisherName = post.isAnon ? "anonyme" : (usersData[post.publisherId]?.username || '').toLowerCase();
+                    const publisherMatch = publisherName.includes(searchTerm);
+                    return messageMatch || publisherMatch;
+                });
+            }
+            renderFeed();
+        }
 
         function renderFeed() {
+            // ... (inchangé) ...
             if (countdownInterval) clearInterval(countdownInterval);
             
-            if (postsData.length === 0) {
-                feedContent.innerHTML = "<p style='text-align: center; color: var(--last-seen-color); padding: 40px 0;'>Le flux est vide. Soyez le premier à publier !</p>";
+            if (filteredPostsData.length === 0) {
+                feedContent.innerHTML = "<p style='text-align: center; color: var(--last-seen-color); padding: 40px 0;'>Aucun post trouvé.</p>";
                 return;
             }
             
-            feedContent.innerHTML = postsData.map(createPostElement).join('');
+            feedContent.innerHTML = filteredPostsData.map(createPostElement).join('');
             countdownInterval = setInterval(updateAllCountdowns, 1000);
         }
 
         function createPostElement(post) {
+            // ... (inchangé) ...
             const publisherDisplay = post.isAnon ? "Anonyme" : (usersData[post.publisherId]?.username || "Utilisateur");
-            
-            // Countdown
             const remainingMs = post.expiresAt.getTime() - new Date().getTime();
             const countdownText = remainingMs > 0 ? formatCountdown(remainingMs) : "Expiré";
-            
-            // Likes/Dislikes
             const likesCount = post.likedBy?.length || 0;
             const dislikesCount = post.dislikedBy?.length || 0;
             const isLiked = post.likedBy?.includes(currentUserId);
@@ -864,54 +1367,70 @@
                             <i class="fas fa-thumbs-down"></i>
                             <span>${dislikesCount}</span>
                         </div>
+                        <div class="action-button share-btn" data-action="share">
+                            <i class="fas fa-share-square"></i>
+                        </div>
                     </div>
                 </div>
             `;
         }
 
-        function formatCountdown(totalMs) {
-            if (totalMs <= 0) return "0:00:00";
-            let totalSeconds = Math.floor(totalMs / 1000);
-            let hours = Math.floor(totalSeconds / 3600);
-            totalSeconds %= 3600;
-            let minutes = Math.floor(totalSeconds / 60);
-            let seconds = totalSeconds % 60;
-            return `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        function formatCountdown(totalMs) { 
+            // ... (inchangé) ...
+            const totalSeconds = Math.floor(totalMs / 1000);
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
         }
-
-        function updateAllCountdowns() {
-            document.querySelectorAll('.post-countdown[data-expires-at]').forEach(span => {
-                const expiresAt = parseInt(span.dataset.expiresAt, 10);
+        function updateAllCountdowns() { 
+            // ... (inchangé) ...
+             const countdownElements = document.querySelectorAll('.post-countdown');
+            countdownElements.forEach(el => {
+                const expiresAt = parseInt(el.dataset.expiresAt, 10);
                 const remainingMs = expiresAt - new Date().getTime();
-                
                 if (remainingMs > 0) {
-                    span.textContent = formatCountdown(remainingMs);
+                    el.textContent = formatCountdown(remainingMs);
                 } else {
-                    span.textContent = "Expiré";
-                    span.style.background = 'none';
-                    span.style.color = 'var(--last-seen-color)';
+                    el.textContent = "Expiré";
+                    el.closest('.post-card')?.remove(); // Supprime le post du DOM
                 }
             });
         }
 
         async function handlePostAction(e) {
+            // ... (inchangé) ...
             const button = e.target.closest('.action-button');
             if (!button || !currentUserId) return;
             
-            const action = button.dataset.action; // 'like' or 'dislike'
-            const otherAction = action === 'like' ? 'dislike' : 'like';
-            const postId = e.target.closest('.post-card').dataset.postId;
-            const postRef = doc(postsCollectionRef, postId);
+            const action = button.dataset.action;
+            const postCard = e.target.closest('.post-card');
+            const postId = postCard.dataset.postId;
+            const post = postsData.find(p => p.id === postId);
 
+            if (action === 'share') {
+                try {
+                    await navigator.share({
+                        title: 'Post de Drop',
+                        text: `Regarde ce post de ${post.isAnon ? 'Anonyme' : (usersData[post.publisherId]?.username || 'Utilisateur')} sur Drop:\n\n"${post.message}"`,
+                    });
+                } catch (err) {
+                    console.warn("Erreur de partage: ", err);
+                    if (err.name !== 'AbortError') {
+                        showMessage("Le partage a échoué.", false);
+                    }
+                }
+                return;
+            }
+
+            const otherAction = action === 'like' ? 'dislike' : 'like';
+            const postRef = doc(postsCollectionRef, postId);
             const firestoreAction = action === 'like' ? 'likedBy' : 'dislikedBy';
             const firestoreOtherAction = otherAction === 'like' ? 'likedBy' : 'dislikedBy';
-
-            const post = postsData.find(p => p.id === postId);
             const hasAction = post[firestoreAction]?.includes(currentUserId);
             const hasOtherAction = post[firestoreOtherAction]?.includes(currentUserId);
 
             const batch = writeBatch(db);
-            
             if (hasAction) {
                 batch.update(postRef, { [firestoreAction]: arrayRemove(currentUserId) });
             } else {
@@ -923,35 +1442,23 @@
             await batch.commit();
         }
 
-        // --- NOUVEAU: LOGIQUE DE CRÉATION DE POST ---
-
-        function showPostCreationView() {
-            postTextarea.value = '';
-            currentPostFontIndex = 0;
-            postTextarea.className = `post-message ${POST_FONT_FAMILIES[0]}`;
-            currentPostColor = POST_COLOR_PALETTE[0];
-            squareContent.style.backgroundColor = currentPostColor;
-            anonymousSwitch.checked = false;
-            isAnonymousPost = false;
-            updateCharCount();
+        // --- LOGIQUE DE CRÉATION DE POST --- (Inchangée)
+        function showPostCreationView() { 
             generatePostColorSwatches();
             showSecondaryView(postCreationView);
         }
-
         function updateCharCount() {
             const count = postTextarea.value.length;
             charCountSpan.textContent = count;
+            charCountSpan.parentElement.classList.toggle('error', count > MAX_CHARS);
             publishButton.disabled = count === 0 || count > MAX_CHARS;
-            document.querySelector('.char-limit-indicator').classList.toggle('error', count > MAX_CHARS);
         }
-        
         function generatePostColorSwatches() {
             postColorSwatches.innerHTML = '';
             POST_COLOR_PALETTE.forEach(color => {
                 const swatch = document.createElement('div');
                 swatch.className = 'color-swatch';
                 swatch.style.backgroundColor = color;
-                swatch.dataset.color = color;
                 if (color === currentPostColor) {
                     swatch.classList.add('selected');
                 }
@@ -963,53 +1470,104 @@
                 });
                 postColorSwatches.appendChild(swatch);
             });
+            squareContent.style.backgroundColor = currentPostColor;
         }
-        
         function handlePostFontChange() {
+            squareContent.classList.remove(POST_FONT_FAMILIES[currentPostFontIndex]);
             currentPostFontIndex = (currentPostFontIndex + 1) % POST_FONT_FAMILIES.length;
-            postTextarea.className = `post-message ${POST_FONT_FAMILIES[currentPostFontIndex]}`;
+            squareContent.classList.add(POST_FONT_FAMILIES[currentPostFontIndex]);
         }
-        
         async function handlePublish() {
             const message = postTextarea.value.trim();
-            if (!message || message.length > MAX_CHARS) {
-                showMessage("Message invalide.", false);
-                return;
-            }
+            if (message.length === 0 || message.length > MAX_CHARS) return;
 
             publishButton.disabled = true;
             try {
-                const newPost = {
-                    publisherId: isAnonymousPost ? null : currentUserId,
-                    publisherName: isAnonymousPost ? "Anonyme" : usersData[currentUserId].username,
+                await addDoc(postsCollectionRef, {
                     message: message,
+                    publisherId: isAnonymousPost ? null : currentUserId,
                     isAnon: isAnonymousPost,
+                    createdAt: serverTimestamp(),
                     backgroundColor: currentPostColor,
                     fontClass: POST_FONT_FAMILIES[currentPostFontIndex],
-                    createdAt: serverTimestamp(),
                     likedBy: [],
                     dislikedBy: []
-                };
-
-                await addDoc(postsCollectionRef, newPost);
-
-                if (!isAnonymousPost) {
-                    const userRef = doc(usersCollectionRef, currentUserId);
-                    const newCount = (usersData[currentUserId].postsCount || 0) + 1;
-                    await updateDoc(userRef, { postsCount: newCount });
-                }
+                });
                 
-                showMessage("Publication réussie !", true);
+                // Mettre à jour le compteur de posts de l'utilisateur
+                const userRef = doc(usersCollectionRef, currentUserId);
+                const userDoc = await getDoc(userRef);
+                const currentPostCount = userDoc.data().postsCount || 0;
+                await updateDoc(userRef, { postsCount: currentPostCount + 1 });
+                
+                // Réinitialiser et fermer
+                postTextarea.value = '';
+                isAnonymousPost = false;
+                anonymousSwitch.checked = false;
                 hideSecondaryView(postCreationView);
-                navigateTo('feed-view');
+                showMessage("Post publié !", true);
 
             } catch (error) {
                 console.error("Erreur de publication: ", error);
-                showMessage("Échec de la publication.", false);
+                showMessage("La publication a échoué.", false);
             } finally {
                 publishButton.disabled = false;
             }
         }
+        
+        // --- LOGIQUE MODIFIÉE DES MODALES D'AMIS ---
+        
+        // CORRECTION: On appelle le render APRES avoir affiché la modale
+        function openFriendRequestsModal() {
+            hideModal(friendOptionsModal);
+            showModal(friendRequestsModal); // Affiche la modale d'abord
+            renderFriendRequestsList(); // Puis remplit la liste
+        }
+        
+        function openFriendOptionsMenu() { showModal(friendOptionsModal); }
+        function closeFriendOptionsMenu() { hideModal(friendOptionsModal); }
+
+        async function shareProfileLink() {
+            try {
+                await navigator.share({
+                    title: 'Rejoins-moi sur Drop !',
+                    text: `Ajoute-moi sur Drop avec mon ID: ${currentUserId}`, 
+                });
+            } catch (err) {
+                 if (err.name !== 'AbortError') {
+                    showMessage("Le partage a échoué.", false);
+                 }
+            }
+        }
+        
+        function showMyQrCode() {
+            const canvas = document.getElementById('qr-code-canvas');
+            if (!currentUserId) {
+                showMessage("ID utilisateur non trouvé.", false);
+                return;
+            }
+            
+            document.getElementById('qr-user-id').textContent = currentUserId; // Afficher l'ID
+            
+            QRCode.toCanvas(canvas, currentUserId, { width: 200, margin: 2 }, function (error) {
+                if (error) {
+                    console.error(error);
+                    showMessage("Erreur de génération QR.", false);
+                    return;
+                }
+                closeFriendOptionsMenu();
+                showModal(qrCodeModal);
+            });
+        }
+        function closeQrModal() { hideModal(qrCodeModal); }
+        
+        // NOUVEAU: Ouvre les modales
+        function openPasteIdModal() {
+            hideModal(friendOptionsModal);
+            document.getElementById('paste-id-input').value = '';
+            showModal(pasteIdModal);
+        }
+
 
         // --- INITIALISATION ---
         async function initializeAppLogic() {
@@ -1028,7 +1586,7 @@
             navItems.forEach(item => {
                 item.addEventListener('click', () => {
                     if (item.dataset.view === 'profile-view') {
-                        activeProfileUserId = null; // Réinitialiser pour forcer l'affichage de notre profil
+                        activeProfileUserId = null;
                         showProfile(currentUserId);
                     } else {
                         navigateTo(item.dataset.view);
@@ -1038,22 +1596,23 @@
 
             document.getElementById('my-profile-nav-item').addEventListener('click', () => navigateTo('contacts-view'));
             
-            friendsList.addEventListener('click', e => {
-                const friendItem = e.target.closest('.friend-item');
-                const dmButton = e.target.closest('.dm-button');
-                if (dmButton) {
-                    showChat(dmButton.dataset.userId);
-                } else if (friendItem) {
-                    showProfile(friendItem.dataset.userId);
-                }
-            });
+            friendSearchInput.addEventListener('input', renderFriendsList);
+            feedSearchInput.addEventListener('input', filterAndRenderFeed);
 
-            // Événements pour la modale
+            // Modale d'édition
             document.getElementById('edit-bio-btn').addEventListener('click', openEditProfileModal);
             document.getElementById('cancel-edit-btn').addEventListener('click', closeEditProfileModal);
             document.getElementById('save-profile-btn').addEventListener('click', saveProfileChanges);
+            
+            // Boutons de profil
+            document.getElementById('toggle-friend-btn').addEventListener('click', (e) => {
+                toggleFriendship(e.target.dataset.userId);
+            });
+            document.getElementById('profile-dm-btn').addEventListener('click', (e) => {
+                showChat(e.target.dataset.userId);
+            });
 
-            // NOUVEAU: Événements de création de post
+            // Création de post
             document.getElementById('create-post-header-btn').addEventListener('click', showPostCreationView);
             document.getElementById('post-creation-back-btn').addEventListener('click', () => hideSecondaryView(postCreationView));
             postTextarea.addEventListener('input', updateCharCount);
@@ -1061,18 +1620,50 @@
             anonymousSwitch.addEventListener('change', () => { isAnonymousPost = anonymousSwitch.checked; });
             publishButton.addEventListener('click', handlePublish);
             
-            // NOUVEAU: Événements du flux (délégation)
+            // Événements du flux (délégation)
             feedContent.addEventListener('click', e => {
                 const publisher = e.target.closest('.post-publisher');
                 const actionButton = e.target.closest('.action-button');
                 
                 if (publisher) {
-                    const userId = publisher.dataset.userId;
-                    if (userId && userId !== 'null') {
-                        showProfile(userId);
-                    }
+                    // Clic sur le nom ne fait rien, comme demandé
                 } else if (actionButton) {
                     handlePostAction(e);
+                }
+            });
+            
+            // NOUVEAU: Événements modales amis
+            addFriendFab.addEventListener('click', openFriendOptionsMenu);
+            document.getElementById('cancel-friend-options-btn').addEventListener('click', closeFriendOptionsMenu);
+            document.getElementById('share-profile-link').addEventListener('click', shareProfileLink);
+            document.getElementById('show-my-qr').addEventListener('click', showMyQrCode);
+            document.getElementById('close-qr-modal-btn').addEventListener('click', closeQrModal);
+            
+            // NOUVEAU: Boutons de la modale d'options
+            document.getElementById('show-friend-requests').addEventListener('click', openFriendRequestsModal);
+            document.getElementById('scan-qr-code').addEventListener('click', openPasteIdModal);
+            
+            // NOUVEAU: Modale "Coller ID"
+            document.getElementById('cancel-paste-id-btn').addEventListener('click', () => hideModal(pasteIdModal));
+            document.getElementById('send-friend-request-btn').addEventListener('click', async () => {
+                const recipientId = document.getElementById('paste-id-input').value.trim();
+                await sendFriendRequest(recipientId);
+                hideModal(pasteIdModal);
+            });
+            
+            // NOUVEAU: Modale "Demandes d'amis"
+            document.getElementById('cancel-friend-requests-btn').addEventListener('click', () => hideModal(friendRequestsModal));
+            // Délégation d'événements pour les boutons Accepter/Rejeter
+            friendRequestsList.addEventListener('click', (e) => {
+                const acceptBtn = e.target.closest('.request-accept-btn');
+                const rejectBtn = e.target.closest('.request-reject-btn');
+                
+                if (acceptBtn) {
+                    acceptBtn.disabled = true; // Empêche le double-clic
+                    acceptFriendRequest(acceptBtn.dataset.senderId);
+                } else if (rejectBtn) {
+                    rejectBtn.disabled = true; // Empêche le double-clic
+                    rejectFriendRequest(rejectBtn.dataset.senderId);
                 }
             });
 
