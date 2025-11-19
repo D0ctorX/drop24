@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Drop</title>
     <!-- Utilisation de Font Awesome pour les icônes -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -40,12 +40,13 @@
 
         html, body {
             height: 100%;
+            width: 100%;
             margin: 0;
             padding: 0;
             font-family: 'Inter', sans-serif;
             background-color: var(--page-bg); 
             color: var(--text-color);
-            overscroll-behavior-y: contain;
+            overflow: hidden; /* Empêche le scroll global du body */
         }
 
         .container {
@@ -63,8 +64,9 @@
 
         #view-wrapper {
             display: flex;
-            flex-grow: 1;
+            flex: 1; /* Occupe tout l'espace disponible */
             width: 100%;
+            height: 100%;
             transition: transform 0.3s ease-in-out;
         }
         
@@ -75,6 +77,7 @@
             width: 100%;
             height: 100%;
             flex-shrink: 0;
+            overflow: hidden; /* Contient le contenu scrollable */
         }
 
         .view.secondary {
@@ -99,8 +102,7 @@
             background-color: var(--secondary-bg);
             border-bottom: 1px solid var(--border-color);
             min-height: 60px;
-            position: sticky;
-            top: 0;
+            flex-shrink: 0; /* Ne rétrécit pas */
             z-index: 10;
             gap: 10px; 
         }
@@ -136,16 +138,19 @@
         .header-placeholder { width: 40px; } 
         .back-button { font-size: 20px; cursor: pointer; width: 40px; text-align: left; }
 
-        /* MODIFIÉ: Force le défilement et cache la barre */
+        /* MODIFIÉ: Correction du scroll */
         .feed-content, .contacts-content, .chat-content, .profile-content, #friend-requests-list {
-            flex-grow: 1;
-            overflow-y: scroll;
-            padding-bottom: 60px;
-            /* Cache la barre de défilement */
-            -ms-overflow-style: none;  /* IE and Edge */
-            scrollbar-width: none;  /* Firefox */
+            flex: 1 1 0; /* Force le calcul de hauteur correct pour le scroll */
+            overflow-y: auto; /* Standard scroll */
+            padding-bottom: 80px; /* Espace pour la nav bar */
+            -webkit-overflow-scrolling: touch; /* Fluidité iOS */
+            
+            /* Cache la barre de défilement mais garde la fonctionnalité */
+            -ms-overflow-style: none;  
+            scrollbar-width: none;  
         }
-        /* Cache la barre de défilement pour Webkit (Chrome, Safari) */
+        
+        /* Cache la barre de défilement pour Webkit */
         .feed-content::-webkit-scrollbar, .contacts-content::-webkit-scrollbar, 
         .chat-content::-webkit-scrollbar, .profile-content::-webkit-scrollbar,
         #friend-requests-list::-webkit-scrollbar {
@@ -153,8 +158,8 @@
         }
         
         #friend-requests-list {
-            padding: 0;
-            max-height: 300px; /* Limite la hauteur de la liste */
+            max-height: 300px; 
+            flex: initial; /* Pour la liste dans la modale, on garde la hauteur auto */
         }
 
 
@@ -168,6 +173,7 @@
             border-top: 1px solid var(--border-color);
             z-index: 15;
             padding-bottom: env(safe-area-inset-bottom);
+            height: 60px; /* Hauteur fixe */
         }
         .nav-item { padding: 10px 15px; font-size: 24px; color: var(--action-color); cursor: pointer; text-align: center; transition: color 0.2s, transform 0.2s; }
         .nav-item.active { color: var(--highlight-color); transform: scale(1.1); }
@@ -199,7 +205,7 @@
 
         /* --- Amis --- */
         .contacts-view { position: relative; } 
-        .search-bar { padding: 10px; background-color: var(--primary-bg); }
+        .search-bar { padding: 10px; background-color: var(--primary-bg); flex-shrink: 0; }
         #search-input { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--secondary-bg); font-size: 14px; }
         .friend-item { display: flex; align-items: center; padding: 10px 15px; border-bottom: 1px solid var(--border-color); cursor: pointer; transition: background-color 0.2s; }
         .friend-item:hover { background-color: #f9f9f9; }
@@ -209,10 +215,10 @@
         .friend-info p { margin: 0; font-size: 12px; color: var(--last-seen-color); }
         .dm-button { background-color: var(--highlight-color); color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: 600; }
         
-        /* Bouton Flottant (FAB) */
+        /* MODIFIÉ: Bouton Flottant (FAB) fixé et z-index augmenté */
         #add-friend-fab {
             position: absolute;
-            bottom: 80px; /* Au-dessus de la nav-bar */
+            bottom: calc(80px + env(safe-area-inset-bottom)); /* Ajusté pour éviter le recouvrement */
             right: 20px;
             width: 56px;
             height: 56px;
@@ -224,9 +230,9 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
             cursor: pointer;
-            z-index: 12;
+            z-index: 100; /* Très haut pour rester au-dessus */
         }
         
         /* Badge de notification sur le FAB */
@@ -245,7 +251,7 @@
             font-size: 12px;
             font-weight: 700;
             border: 2px solid var(--secondary-bg);
-            z-index: 13;
+            z-index: 101;
         }
         
         /* Badge de notification dans la modale */
@@ -274,7 +280,7 @@
         .message.sent { background-color: var(--highlight-color); color: white; border-bottom-right-radius: 4px; }
         .message-container.received { justify-content: flex-start; }
         .message.received { background-color: var(--secondary-bg); border-bottom-left-radius: 4px; }
-        .chat-input { display: flex; padding: 10px; background-color: var(--secondary-bg); border-top: 1px solid var(--border-color); }
+        .chat-input { display: flex; padding: 10px; background-color: var(--secondary-bg); border-top: 1px solid var(--border-color); flex-shrink: 0; }
         #message-input { flex-grow: 1; border: 1px solid var(--border-color); border-radius: 20px; padding: 10px 15px; font-size: 15px; }
         #send-button { background: none; border: none; font-size: 22px; color: var(--highlight-color); cursor: pointer; padding: 0 10px; }
         
@@ -994,9 +1000,10 @@
             }
         }
         
-        // CORRECTION MAJEURE ICI: Suppression de la condition qui bloquait le rendu
         function renderFriendRequestsList() {
-            // ON A RETIRÉ LE BLOCAGE : if (!friendRequestsModal.style.display ...)
+            if (!friendRequestsModal.style.display || friendRequestsModal.style.display === 'none') {
+                //return; // CORRECTION : Ne pas bloquer le rendu
+            }
             
             friendRequestsList.innerHTML = ''; // Vider la liste
             
