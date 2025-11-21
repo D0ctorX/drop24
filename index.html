@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <!-- QR Code Generator -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.1/qrcode.min.js"></script>
-    <!-- HTML2Canvas -->
+    <!-- HTML2Canvas pour la génération d'image -->
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 
     <style>
@@ -51,7 +51,7 @@
             font-family: 'Inter', sans-serif;
             background-color: var(--page-bg); 
             color: var(--text-color);
-            overflow: hidden;
+            overflow: hidden; /* Empêche le scroll global du body */
         }
 
         /* --- VUE AUTHENTIFICATION --- */
@@ -143,6 +143,7 @@
         }
 
         /* --- APPLICATION PRINCIPALE --- */
+        /* Caché par défaut, affiché par JS après auth */
         #app-container {
             display: none; 
             width: 100%;
@@ -350,168 +351,23 @@
             margin-left: 8px;
         }
         
-        /* --- Chat Styles (Nouveau Design) --- */
+        /* --- Chat --- */
         .chat-view .view-header { gap: 10px; }
-        
-        /* Header Chat Personnalisé */
-        .friend-info-header {
-            display: flex;
-            align-items: center;
-            flex-grow: 1;
-            cursor: pointer;
-        }
-        .friend-info-header img {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            margin-right: 10px;
-        }
-        .friend-info-header span {
-            font-size: 18px;
-            font-weight: 600;
-        }
-
-        .chat-content { 
-            background-color: #f0f2f5; 
-            padding: 20px; 
-            display: flex;
-            flex-direction: column;
-            padding-bottom: 80px; /* Espace pour input */
-        }
-        
-        #chat-body { 
-            display: flex; 
-            flex-direction: column; 
-            gap: 10px; 
-        }
-
-        /* Messages Bulles */
-        .message {
-            display: flex;
-            margin-bottom: 5px;
-            max-width: 85%;
-            flex-direction: column;
-        }
-        .message.sent { align-self: flex-end; }
-        .message.received { align-self: flex-start; }
-
-        .message-row {
-            display: flex;
-            align-items: flex-end;
-        }
-        .sent .message-row { justify-content: flex-end; }
-
-        .message-content {
-            padding: 10px 15px;
-            border-radius: 20px;
-            font-size: 15px;
-            line-height: 1.4;
-            word-wrap: break-word;
-            position: relative;
-        }
-        .sent .message-content {
-            background-color: var(--highlight-color);
-            color: white;
-            border-bottom-right-radius: 4px;
-        }
-        .received .message-content {
-            background-color: var(--secondary-bg);
-            color: var(--text-color);
-            border-bottom-left-radius: 4px;
-        }
-
-        .message-time {
-            font-size: 10px;
-            color: var(--last-seen-color);
-            margin: 2px 5px;
-            align-self: flex-end;
-        }
-        .sent .message-time { align-self: flex-end; text-align: right; }
-        .received .message-time { align-self: flex-start; }
-
-        /* Zone de saisie chat */
-        .chat-input-container {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            display: flex;
-            align-items: center;
-            padding: 10px 15px;
-            gap: 10px;
-            background-color: var(--secondary-bg);
-            border-top: 1px solid var(--border-color);
-            z-index: 10;
-            padding-bottom: max(10px, env(safe-area-inset-bottom));
-        }
-        .chat-input-container input {
-            flex-grow: 1;
-            padding: 12px;
-            border-radius: 20px;
-            border: 1px solid var(--border-color);
-            font-size: 14px;
-            min-width: 0;
-            background-color: var(--primary-bg);
-        }
-        .chat-input-container .action-icon {
-            font-size: 24px;
-            color: var(--last-seen-color);
-            cursor: pointer;
-        }
-        .send-button {
-            background-color: var(--highlight-color);
-            border: none;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            color: white;
-            transition: background-color 0.2s ease-in-out;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            flex-shrink: 0;
-        }
-
-        /* Emoji Popup */
-        .emoji-popup {
-            position: absolute;
-            bottom: 70px;
-            left: 10px;
-            right: 10px;
-            background-color: var(--secondary-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            z-index: 15;
-            flex-direction: column;
-            display: none;
-            max-height: 300px;
-            overflow: hidden;
-        }
-        .emoji-popup.active { display: flex; }
-        .emoji-header {
-            display: flex;
-            align-items: center;
-            padding: 10px 15px;
-            border-bottom: 1px solid var(--border-color);
-        }
-        #emoji-back-button {
-            background: none; border: none; font-size: 20px; cursor: pointer; margin-right: 10px;
-        }
-        .emoji-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
-            gap: 5px;
-            padding: 10px;
-            overflow-y: auto;
-            flex-grow: 1;
-        }
-        .emoji-item {
-            font-size: 30px; text-align: center; cursor: pointer; transition: transform 0.2s;
-        }
-        .emoji-item:hover { transform: scale(1.2); }
+        #chat-user-pp { width: 40px; height: 40px; border-radius: 50%; }
+        .chat-view .header-title { flex-grow: 1; text-align: left; }
+        .chat-content { background-color: #f0f2f5; padding: 10px; }
+        #chat-body { display: flex; flex-direction: column; gap: 10px; }
+        .message-container { display: flex; width: 100%; }
+        .message-row { max-width: 75%; display: flex; align-items: flex-end; gap: 8px; }
+        .message { padding: 10px 15px; border-radius: 18px; font-size: 15px; line-height: 1.4; word-wrap: break-word; }
+        .message-time { font-size: 11px; color: var(--last-seen-color); white-space: nowrap; }
+        .message-container.sent { justify-content: flex-end; }
+        .message.sent { background-color: var(--highlight-color); color: white; border-bottom-right-radius: 4px; }
+        .message-container.received { justify-content: flex-start; }
+        .message.received { background-color: var(--secondary-bg); border-bottom-left-radius: 4px; }
+        .chat-input { display: flex; padding: 10px; background-color: var(--secondary-bg); border-top: 1px solid var(--border-color); flex-shrink: 0; }
+        #message-input { flex-grow: 1; border: 1px solid var(--border-color); border-radius: 20px; padding: 10px 15px; font-size: 15px; }
+        #send-button { background: none; border: none; font-size: 22px; color: var(--highlight-color); cursor: pointer; padding: 0 10px; }
         
         
         /* --- Profil --- */
@@ -613,7 +469,7 @@
             font-weight: 600; font-size: 16px; cursor: pointer;
         }
         #save-profile-btn { background-color: var(--highlight-color); color: white; }
-        #cancel-edit-btn, #cancel-friend-options-btn, #cancel-friend-requests-btn, #cancel-paste-id-btn, #cancel-scan-btn { 
+        #cancel-edit-btn, #cancel-friend-options-btn, #cancel-friend-requests-btn, #cancel-paste-id-btn { 
             background-color: #f0f0f0; color: var(--text-color); 
         }
 
@@ -657,19 +513,6 @@
             border: 5px solid var(--secondary-bg);
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        
-        /* NOUVEAU: Scanner QR */
-        #scanner-modal .modal-content {
-            padding: 0;
-            overflow: hidden;
-            background-color: black;
-            justify-content: center;
-        }
-        #reader {
-            width: 100%;
-            height: 300px;
-            background-color: black;
         }
         
         /* NOUVEAU: Modale des demandes d'amis */
@@ -983,34 +826,19 @@
         </div>
 
         <!-- VUES SECONDAIRES (Chat, Création Post...) -->
-        <!-- NOUVEAU DESIGN CHAT -->
         <div id="chat-view" class="view chat-view secondary">
             <div class="view-header chat-header">
                 <i id="chat-back-btn" class="fas fa-arrow-left back-button"></i>
-                <div class="friend-info-header" id="chat-friend-info">
-                    <img id="chat-user-pp" src="" alt="Avatar">
-                    <span id="chat-username" class="friend-name">Chat</span>
-                </div>
+                <img id="chat-user-pp" src="" alt="Avatar du contact">
+                <h1 id="chat-username" class="header-title">Chat</h1>
                 <div class="header-placeholder"></div>
             </div>
-            
             <div class="chat-content">
                 <div id="chat-body"></div>
             </div>
-
-            <!-- Emoji Popup (Copie exacte de la maquette) -->
-            <div id="emoji-popup" class="emoji-popup">
-                <header class="emoji-header">
-                    <button id="emoji-back-button"><i class="fas fa-arrow-down"></i></button>
-                    <h2 style="flex-grow: 1; text-align: center; margin: 0; font-size: 16px;">Sélectionner un émoji</h2>
-                </header>
-                <div class="emoji-grid" id="emoji-grid"></div>
-            </div>
-
-            <div class="chat-input-container">
-                <i class="fas fa-smile action-icon" id="emoji-btn-trigger"></i>
-                <input type="text" id="message-input" placeholder="Envoyer un message...">
-                <button id="send-button" class="send-button"><i class="fas fa-arrow-up"></i></button>
+            <div class="chat-input">
+                <input type="text" id="message-input" placeholder="Votre message...">
+                <button id="send-button"><i class="fas fa-paper-plane"></i></button>
             </div>
         </div>
         
@@ -1144,13 +972,9 @@
         const POST_COLOR_PALETTE = ['#f1f1f1', '#D6E9F7', '#D1F7D1', '#FFF7D1', '#F7D1D1', '#A0D4FE', '#84E084', '#FEEA84', '#FE8484'];
         const MAX_CHARS = 200;
         const BASE_URL = 'https://drop-24.netlify.app/';
-        const EMOJIS = ['😊', '😂', '😍', '🤩', '👍', '🙏', '❤️', '🔥', '🎉', '💡', '👋', '🚀', '🌈', '💯', '🤔', '😎', '🥳', '🤯', '😭', '😜', '🤣', '😁', '🤗', '😉', '🥰', '😘', '😋', '🤫', '😶', '😴'];
 
         let currentUserId = null;
         let activeProfileUserId = null;
-        let currentChatId = null; // ID de la conversation active
-        let unsubscribeChat = null; // Listener pour le chat actif
-        
         let usersData = {};
         let postsData = [];
         let filteredPostsData = []; 
@@ -1208,16 +1032,6 @@
         let currentPostColor = POST_COLOR_PALETTE[0];
         let isAnonymousPost = false;
 
-        // Refs Chat
-        const chatView = document.getElementById('chat-view');
-        const chatBody = document.getElementById('chat-body');
-        const messageInput = document.getElementById('message-input');
-        const sendButton = document.getElementById('send-button');
-        const emojiPopup = document.getElementById('emoji-popup');
-        const emojiGrid = document.getElementById('emoji-grid');
-        const emojiBtnTrigger = document.getElementById('emoji-btn-trigger');
-        const emojiBackButton = document.getElementById('emoji-back-button');
-
         // --- UTILS ---
         let toastTimeout;
         function showMessage(message, isSuccess) {
@@ -1248,7 +1062,7 @@
                 listenToFriendRequests();
                 navigateTo('feed-view');
                 
-                // --- AUTO ADD FRIEND VIA URL ---
+                // --- NOUVEAU: AUTO ADD FRIEND VIA URL ---
                 const urlParams = new URLSearchParams(window.location.search);
                 const targetUid = urlParams.get('uid');
                 if(targetUid && targetUid !== currentUserId) {
@@ -1444,10 +1258,16 @@
             if (!currentUserId || !senderId) return;
             
             const batch = writeBatch(db);
+            
+            // 1. Mettre à jour MON profil
             const currentUserRef = doc(usersCollectionRef, currentUserId);
             batch.update(currentUserRef, { friends: arrayUnion(senderId) });
+            
+            // 2. Supprimer la demande
             const requestRef = doc(db, dbPath, 'users', currentUserId, 'friendRequests', senderId);
             batch.delete(requestRef);
+
+            // 3. Mettre à jour le profil de l'AUTRE
             const senderUserRef = doc(usersCollectionRef, senderId);
             batch.update(senderUserRef, { friends: arrayUnion(currentUserId) });
 
@@ -1456,6 +1276,7 @@
                 showMessage("Ami ajouté !", true); 
             } catch (error) { 
                 console.error("Erreur acceptation (Probablement permissions Firestore):", error);
+                
                 if (error.code === 'permission-denied') {
                     console.warn("Tentative de fallback : mise à jour locale uniquement.");
                     try {
@@ -1464,7 +1285,7 @@
                         batch2.delete(requestRef);
                         await batch2.commit();
                         showMessage("Ami ajouté (Vérifiez les règles pour la réciprocité) !", true);
-                        alert("Note: L'ami a été ajouté de votre côté, mais vos règles de sécurité empêchent de vous ajouter automatiquement à sa liste.");
+                        alert("Note: L'ami a été ajouté de votre côté, mais vos règles de sécurité empêchent de vous ajouter automatiquement à sa liste. Veuillez mettre à jour vos règles Firestore pour autoriser 'write' si 'request.auth != null'.");
                     } catch (err2) {
                         showMessage("Erreur critique d'ajout.", false);
                     }
@@ -1552,93 +1373,6 @@
             navigateTo('profile-view');
         }
 
-        // --- LOGIQUE DU CHAT (NOUVEAU) ---
-        function showChat(friendId) {
-            const friend = usersData[friendId];
-            if (!friend) return;
-
-            // Mise à jour UI Header
-            document.getElementById('chat-user-pp').src = generateAvatarUrl(friend);
-            document.getElementById('chat-username').textContent = friend.username;
-            document.getElementById('chat-friend-info').onclick = () => showProfile(friendId); // Lien vers profil
-
-            // Générer un ID de chat unique (les 2 UIDs triés par ordre alphabétique)
-            const participants = [currentUserId, friendId].sort();
-            currentChatId = participants.join('_');
-
-            // Nettoyer l'ancien listener si on change de chat
-            if (unsubscribeChat) {
-                unsubscribeChat();
-                unsubscribeChat = null;
-            }
-
-            // Vider l'écran de chat
-            chatBody.innerHTML = '';
-
-            // Écouter les messages en temps réel
-            const messagesRef = collection(db, dbPath, 'chats', currentChatId, 'messages');
-            const q = query(messagesRef, orderBy('timestamp', 'asc'));
-
-            unsubscribeChat = onSnapshot(q, (snapshot) => {
-                chatBody.innerHTML = ''; // On pourrait optimiser en n'ajoutant que les nouveaux
-                snapshot.forEach((doc) => {
-                    const msg = doc.data();
-                    renderMessage(msg);
-                });
-                // Scroll en bas
-                chatBody.scrollTop = chatBody.scrollHeight;
-            });
-
-            showSecondaryView(chatView);
-        }
-
-        async function sendMessage() {
-            const text = messageInput.value.trim();
-            if (!text || !currentChatId) return;
-
-            messageInput.value = ''; // Vider input tout de suite (UX)
-
-            try {
-                const messagesRef = collection(db, dbPath, 'chats', currentChatId, 'messages');
-                await addDoc(messagesRef, {
-                    text: text,
-                    senderId: currentUserId,
-                    timestamp: serverTimestamp()
-                });
-            } catch (error) {
-                console.error("Erreur envoi message:", error);
-                showMessage("Échec d'envoi.", false);
-            }
-        }
-
-        function renderMessage(msg) {
-            const isMe = msg.senderId === currentUserId;
-            const date = msg.timestamp ? msg.timestamp.toDate() : new Date();
-            const timeStr = `${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
-
-            const msgDiv = document.createElement('div');
-            msgDiv.className = `message ${isMe ? 'sent' : 'received'}`;
-            
-            msgDiv.innerHTML = `
-                <div class="message-row">
-                    <div class="message-content">${msg.text}</div>
-                </div>
-                <div class="message-time">${timeStr}</div>
-            `;
-            chatBody.appendChild(msgDiv);
-        }
-
-        // --- GESTION EMOJIS (NOUVEAU) ---
-        function renderEmojis() {
-            emojiGrid.innerHTML = EMOJIS.map(emoji => `<span class="emoji-item">${emoji}</span>`).join('');
-            
-            emojiGrid.onclick = (e) => {
-                if (e.target.classList.contains('emoji-item')) {
-                    messageInput.value += e.target.textContent;
-                }
-            };
-        }
-
         // --- FLUX & POSTS ---
         function listenToFeed() {
             if (unsubscribeFeedListener) unsubscribeFeedListener();
@@ -1692,8 +1426,6 @@
         
         // --- HANDLERS ---
         document.addEventListener('DOMContentLoaded', () => {
-            renderEmojis(); // Init Emojis
-
             navItems.forEach(i => i.addEventListener('click', () => {
                 if(i.dataset.view === 'profile-view') { activeProfileUserId = null; showProfile(currentUserId); }
                 else navigateTo(i.dataset.view);
@@ -1744,18 +1476,6 @@
                 if(acc) { acc.disabled=true; acceptFriendRequest(acc.dataset.senderId); }
                 else if(rej) { rej.disabled=true; rejectFriendRequest(rej.dataset.senderId); }
             });
-
-            // Chat Listeners
-            document.getElementById('chat-back-btn').addEventListener('click', () => hideSecondaryView(chatView));
-            sendButton.addEventListener('click', sendMessage);
-            messageInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') sendMessage(); });
-            
-            // Emoji Listeners
-            emojiBtnTrigger.addEventListener('click', () => {
-                if(emojiPopup.classList.contains('active')) emojiPopup.classList.remove('active');
-                else emojiPopup.classList.add('active');
-            });
-            emojiBackButton.addEventListener('click', () => emojiPopup.classList.remove('active'));
         });
         
         // --- FUNCTIONS ---
@@ -1778,6 +1498,7 @@
         function closeFriendOptionsMenu() { hideModal(friendOptionsModal); }
         function openPasteIdModal() { hideModal(friendOptionsModal); document.getElementById('paste-id-input').value=''; showModal(pasteIdModal); }
         function openFriendRequestsModal() { hideModal(friendOptionsModal); showModal(friendRequestsModal); renderFriendRequestsList(); }
+        function showChat(uid) { showMessage("Chat bientôt dispo !", false); }
         function updateCharCount() {
             const l = postTextarea.value.length; charCountSpan.textContent=l;
             publishButton.disabled = l===0 || l>MAX_CHARS;
@@ -1847,6 +1568,7 @@
             const post = postsData.find(p => p.id === postId);
 
             if (action === 'share') {
+                // --- NOUVEAU: Partage d'image avec html2canvas ---
                 generateAndShareImage(post);
                 return;
             }
@@ -1867,19 +1589,22 @@
             await batch.commit();
         }
 
+        // --- GENERATION ET PARTAGE IMAGE ---
         async function generateAndShareImage(post) {
             showMessage("Génération de l'image...", true);
             
+            // 1. Préparer le contenu visuel (sans chrono ni likes)
             captureContainer.innerHTML = '';
             const pub = post.isAnon ? "Anonyme" : (usersData[post.publisherId]?.username || "...");
             
+            // On recrée la structure visuelle
             const card = document.createElement('div');
             card.className = 'capture-card';
             card.style.backgroundColor = post.backgroundColor;
             
             const text = document.createElement('p');
             text.className = `post-message ${post.fontClass}`;
-            text.style.position = 'relative'; 
+            text.style.position = 'relative'; // Reset position for capture context
             text.innerText = post.message;
             
             const publisher = document.createElement('div');
@@ -1895,10 +1620,11 @@
             card.appendChild(watermark);
             captureContainer.appendChild(card);
             
+            // 2. Convertir en canvas puis blob
             try {
                 const canvas = await html2canvas(card, { 
                     useCORS: true, 
-                    scale: 2 
+                    scale: 2 // Meilleure qualité
                 });
                 
                 canvas.toBlob(async (blob) => {
@@ -1906,6 +1632,7 @@
                     
                     const file = new File([blob], 'drop_post.png', { type: 'image/png' });
                     
+                    // 3. Partager
                     if (navigator.canShare && navigator.canShare({ files: [file] })) {
                         try {
                             await navigator.share({
@@ -1917,12 +1644,14 @@
                             if (err.name !== 'AbortError') showMessage("Partage annulé ou impossible.", false);
                         }
                     } else {
+                        // Fallback: télécharger
                         const a = document.createElement('a');
                         a.href = canvas.toDataURL();
                         a.download = 'drop_post.png';
                         a.click();
                         showMessage("Image téléchargée (Partage non supporté).", true);
                     }
+                    // Nettoyage
                     captureContainer.innerHTML = '';
                 });
             } catch (e) {
@@ -1931,6 +1660,7 @@
             }
         }
 
+        // --- LIENS ET QR CODES ---
         async function shareProfileLink() {
             const link = `${BASE_URL}?uid=${currentUserId}`;
             try {
@@ -1941,6 +1671,7 @@
                 });
             } catch (err) {
                  if (err.name !== 'AbortError') {
+                     // Fallback copie presse papier
                     navigator.clipboard.writeText(link).then(() => showMessage("Lien copié !", true));
                  }
             }
@@ -1950,6 +1681,7 @@
             const canvas = document.getElementById('qr-code-canvas');
             if (!currentUserId) return showMessage("Erreur ID.", false);
             
+            // Générer le QR avec l'URL complète
             const link = `${BASE_URL}?uid=${currentUserId}`;
             document.getElementById('qr-user-id').textContent = currentUserId; 
             
