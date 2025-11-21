@@ -971,11 +971,20 @@
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, getDoc, setDoc, updateDoc, onSnapshot, query, orderBy, arrayUnion, arrayRemove, writeBatch, serverTimestamp, addDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
-        const firebaseConfig = JSON.parse(__firebase_config);
+        // --- CONFIGURATION FIREBASE ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyB_z5U4yKJERho93p9696NujcG5R5fvlD8",
+            authDomain: "studio-3374032724-f28d6.firebaseapp.com",
+            projectId: "studio-3374032724-f28d6",
+            storageBucket: "studio-3374032724-f28d6.appspot.com",
+            messagingSenderId: "541715107757",
+            appId: "1:541715107757:web:0141b71ee3cd1ce5ec5b24"
+        };
+
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const appId = firebaseConfig.appId;
         const dbPath = `artifacts/${appId}/public/data`;
         const usersCollectionRef = collection(db, dbPath, 'users');
         const postsCollectionRef = collection(db, dbPath, 'posts');
