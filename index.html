@@ -375,8 +375,28 @@
         #profile-username { font-size: 22px; font-weight: 600; margin: 0; }
         #edit-bio-btn { background: none; border: 1px solid var(--button-border); border-radius: 6px; padding: 6px 12px; margin-top: 10px; cursor: pointer; font-weight: 600; width: 100%; }
         #profile-actions { display: flex; gap: 10px; margin-top: 10px; }
-        #toggle-friend-btn, #profile-dm-btn { background: none; border: 1px solid var(--button-border); border-radius: 6px; padding: 8px 12px; cursor: pointer; font-weight: 600; flex-grow: 1; }
-        #profile-dm-btn { background-color: var(--highlight-color); color: white; border-color: var(--highlight-color); }
+        
+        /* NOUVEAU STYLE POUR LES BOUTONS D'ACTION PROFIL */
+        .profile-action-btn {
+            flex-grow: 1;
+            padding: 8px 12px;
+            border: 1px solid var(--button-border);
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            background: none;
+        }
+        .profile-action-btn.primary {
+            background-color: var(--highlight-color);
+            color: white;
+            border-color: var(--highlight-color);
+        }
+        .profile-action-btn.danger {
+            background-color: var(--dislike-color);
+            color: white;
+            border-color: var(--dislike-color);
+        }
+
         .profile-stats { display: flex; justify-content: space-around; text-align: center; padding: 15px 0; border-bottom: 1px solid var(--border-color); }
         .stat-item h3 { margin: 0; font-size: 18px; }
         .stat-item p { margin: 2px 0 0; font-size: 12px; color: var(--last-seen-color); }
@@ -729,10 +749,14 @@
                             <h2 id="profile-username">Nom d'utilisateur</h2>
                             <div id="profile-actions-container">
                                 <button id="edit-bio-btn">Modifier le profil</button>
+                                
+                                <!-- NOUVEAUX BOUTONS D'ACTIONS -->
                                 <div id="profile-actions" style="display: none;">
-                                    <button id="toggle-friend-btn">Ajouter</button>
-                                    <button id="profile-dm-btn">Message</button>
+                                    <button id="action-add-friend" class="profile-action-btn">Ajouter</button>
+                                    <button id="action-block-user" class="profile-action-btn danger">Bloquer</button>
+                                    <button id="action-message-user" class="profile-action-btn primary">Message</button>
                                 </div>
+
                             </div>
                         </div>
                     </div>
@@ -1225,11 +1249,15 @@
         async function toggleFriendship(userIdToAdd) {
             if (!currentUserId || !userIdToAdd) return;
             const isFriend = usersData[currentUserId]?.friends?.includes(userIdToAdd);
+            // Note: Le backend "Block" n'existe pas vraiment, on utilise le retrait d'ami ici comme action de blocage/retrait.
             if (!isFriend) return showMessage("Envoyez une demande.", false);
-            const batch = writeBatch(db);
-            batch.update(doc(usersCollectionRef, currentUserId), { friends: arrayRemove(userIdToAdd) });
-            batch.update(doc(usersCollectionRef, userIdToAdd), { friends: arrayRemove(currentUserId) });
-            try { await batch.commit(); showMessage("Ami retiré.", true); } catch(e) { console.error(e); showMessage("Erreur.", false); }
+            
+            if(confirm("Voulez-vous vraiment retirer cet ami ?")) {
+                const batch = writeBatch(db);
+                batch.update(doc(usersCollectionRef, currentUserId), { friends: arrayRemove(userIdToAdd) });
+                batch.update(doc(usersCollectionRef, userIdToAdd), { friends: arrayRemove(currentUserId) });
+                try { await batch.commit(); showMessage("Ami retiré.", true); } catch(e) { console.error(e); showMessage("Erreur.", false); }
+            }
         }
         
         function showProfile(userId) {
@@ -1243,17 +1271,35 @@
             document.getElementById('followers-count').textContent = user.friends?.length || 0;
             document.getElementById('posts-count').textContent = user.postsCount || 0;
             document.getElementById('creation-date').textContent = user.accountCreatedAt?.toDate ? user.accountCreatedAt.toDate().toLocaleDateString('fr-FR') : '...';
+            
             const isMyProfile = userId === currentUserId;
             document.getElementById('edit-bio-btn').style.display = isMyProfile ? 'block' : 'none';
-            logoutBtn.style.display = isMyProfile ? 'block' : 'none'; // Show Logout only on my profile
+            logoutBtn.style.display = isMyProfile ? 'block' : 'none';
             document.getElementById('profile-actions').style.display = isMyProfile ? 'none' : 'flex';
+            
             if (!isMyProfile) {
-                const btn = document.getElementById('toggle-friend-btn');
                 const isFriend = usersData[currentUserId]?.friends?.includes(userId);
-                btn.textContent = isFriend ? 'Retirer' : 'Ajouter';
-                if(!isFriend) btn.disabled = true; else btn.disabled = false;
-                btn.dataset.userId = userId;
-                document.getElementById('profile-dm-btn').dataset.userId = userId;
+                
+                const addBtn = document.getElementById('action-add-friend');
+                const blockBtn = document.getElementById('action-block-user');
+                const messageBtn = document.getElementById('action-message-user');
+                
+                if (isFriend) {
+                    // SI AMI: Afficher Message et Bloquer
+                    addBtn.style.display = 'none';
+                    blockBtn.style.display = 'block';
+                    messageBtn.style.display = 'block';
+                    
+                    blockBtn.onclick = () => toggleFriendship(userId);
+                    messageBtn.onclick = () => showChat(userId);
+                } else {
+                    // SI PAS AMI: Afficher seulement Ajouter
+                    addBtn.style.display = 'block';
+                    blockBtn.style.display = 'none';
+                    messageBtn.style.display = 'none';
+                    
+                    addBtn.onclick = () => sendFriendRequest(userId);
+                }
             }
             navigateTo('profile-view');
         }
@@ -1289,11 +1335,15 @@
         }
         function createPostElement(post) {
             const pub = post.isAnon ? "Anonyme" : (usersData[post.publisherId]?.username || "...");
+            // On ajoute data-publisher-id si ce n'est pas anonyme
+            const publisherAttr = !post.isAnon && post.publisherId ? `data-publisher-id="${post.publisherId}"` : '';
+            
             const rem = post.expiresAt - new Date();
             const txt = rem > 0 ? formatCountdown(rem) : "Fini";
             const l = (post.likedBy||[]).length, d = (post.dislikedBy||[]).length;
             const il = (post.likedBy||[]).includes(currentUserId), id = (post.dislikedBy||[]).includes(currentUserId);
-            return `<div class="post-card" data-post-id="${post.id}"><div class="post-header"><span class="post-publisher">${pub}</span><span class="post-countdown" data-expires="${post.expiresAt.getTime()}">${txt}</span></div><div class="post-image-wrapper"><div class="post-content-inner" style="background-color:${post.backgroundColor}"><p class="post-message ${post.fontClass}">${post.message}</p></div></div><div class="post-actions"><div class="action-button ${il?'liked':''}" data-action="like"><i class="fas fa-thumbs-up"></i><span>${l}</span></div><div class="action-button ${id?'disliked':''}" data-action="dislike"><i class="fas fa-thumbs-down"></i><span>${d}</span></div><div class="action-button share-btn" data-action="share"><i class="fas fa-share-square"></i></div></div></div>`;
+            
+            return `<div class="post-card" data-post-id="${post.id}"><div class="post-header"><span class="post-publisher" ${publisherAttr}>${pub}</span><span class="post-countdown" data-expires="${post.expiresAt.getTime()}">${txt}</span></div><div class="post-image-wrapper"><div class="post-content-inner" style="background-color:${post.backgroundColor}"><p class="post-message ${post.fontClass}">${post.message}</p></div></div><div class="post-actions"><div class="action-button ${il?'liked':''}" data-action="like"><i class="fas fa-thumbs-up"></i><span>${l}</span></div><div class="action-button ${id?'disliked':''}" data-action="dislike"><i class="fas fa-thumbs-down"></i><span>${d}</span></div><div class="action-button share-btn" data-action="share"><i class="fas fa-share-square"></i></div></div></div>`;
         }
         function formatCountdown(ms) {
             const s = Math.floor(ms/1000);
@@ -1324,10 +1374,8 @@
             document.getElementById('cancel-edit-btn').addEventListener('click', closeEditProfileModal);
             document.getElementById('save-profile-btn').addEventListener('click', saveProfileChanges);
             
-            // Friend Actions
-            document.getElementById('toggle-friend-btn').addEventListener('click', e => toggleFriendship(e.target.dataset.userId));
-            document.getElementById('profile-dm-btn').addEventListener('click', e => showChat(e.target.dataset.userId));
-
+            // Friend Actions (Supprimés ici car gérés dynamiquement dans showProfile maintenant)
+            
             // Post Creation
             document.getElementById('create-post-header-btn').addEventListener('click', () => { generatePostColorSwatches(); showSecondaryView(postCreationView); });
             document.getElementById('post-creation-back-btn').addEventListener('click', () => hideSecondaryView(postCreationView));
@@ -1338,8 +1386,16 @@
             
             // Feed Delegation
             feedContent.addEventListener('click', e => {
+                // Gestion des actions sur les posts (Like/Share)
                 const btn = e.target.closest('.action-button');
                 if(btn) handlePostAction(e);
+
+                // GESTION CLIC SUR LE NOM DE L'AUTEUR (NOUVEAU)
+                const publisher = e.target.closest('.post-publisher');
+                if(publisher && publisher.dataset.publisherId) {
+                    e.stopPropagation(); // Empêcher d'autres clics
+                    showProfile(publisher.dataset.publisherId);
+                }
             });
             
             // Friend Modals
