@@ -544,7 +544,6 @@
 
 
         /* --- Styles Création de post --- */
-        /* ... (inchangés) ... */
         #post-creation-view .view-header { justify-content: space-between; }
         #publish-button {
             font-size: 16px; font-weight: 600; color: var(--highlight-color);
@@ -679,9 +678,6 @@
             <button id="google-btn" class="auth-btn btn-google">
                 <i class="fab fa-google"></i> Continuer avec Google
             </button>
-            <button id="apple-btn" class="auth-btn btn-apple">
-                <i class="fab fa-apple"></i> Continuer avec Apple
-            </button>
         </div>
     </div>
 
@@ -764,7 +760,6 @@
         </div>
 
         <!-- VUES SECONDAIRES (Chat, Création Post...) -->
-        <!-- ... (Le reste du HTML des vues secondaires est identique à avant mais inclus pour la complétude) -->
         <div id="chat-view" class="view chat-view secondary">
             <div class="view-header chat-header">
                 <i id="chat-back-btn" class="fas fa-arrow-left back-button"></i>
@@ -887,21 +882,15 @@
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, getDoc, setDoc, updateDoc, onSnapshot, query, orderBy, arrayUnion, arrayRemove, writeBatch, serverTimestamp, addDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
-        // --- CONFIGURATION FIREBASE ---
-        const firebaseConfig = {
-            apiKey: "AIzaSyB_z5U4yKJERho93p9696NujcG5R5fvlD8",
-            authDomain: "studio-3374032724-f28d6.firebaseapp.com",
-            projectId: "studio-3374032724-f28d6",
-            storageBucket: "studio-3374032724-f28d6.appspot.com",
-            messagingSenderId: "541715107757",
-            appId: "1:541715107757:web:0141b71ee3cd1ce5ec5b24"
-        };
-        
+        // --- CONFIGURATION FIREBASE (Adaptée pour l'environnement Canevas) ---
+        const firebaseConfig = JSON.parse(__firebase_config);
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
         
-        const dbPath = `artifacts/${firebaseConfig.appId}/public/data`;
+        // Utilisation de l'ID d'app fourni par l'environnement
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const dbPath = `artifacts/${appId}/public/data`;
         const usersCollectionRef = collection(db, dbPath, 'users');
         const postsCollectionRef = collection(db, dbPath, 'posts');
         
@@ -935,7 +924,6 @@
         const authPasswordInput = document.getElementById('auth-password');
         const loginBtn = document.getElementById('login-btn');
         const googleBtn = document.getElementById('google-btn');
-        const appleBtn = document.getElementById('apple-btn');
         const authToggleText = document.getElementById('auth-toggle-text');
         const authToggleLink = document.getElementById('auth-toggle-link');
         const logoutBtn = document.getElementById('logout-btn');
@@ -1072,22 +1060,6 @@
             }
         });
 
-        // Apple Auth
-        appleBtn.addEventListener('click', async () => {
-            const provider = new OAuthProvider('apple.com');
-            try {
-                await signInWithPopup(auth, provider);
-            } catch (error) {
-                console.error(error);
-                if (error.code === 'auth/unauthorized-domain') {
-                     const currentDomain = window.location.hostname;
-                    showMessage(`Erreur de domaine ! Ajoutez "${currentDomain}" dans Firebase Console > Auth > Settings > Authorized domains`, false);
-                } else {
-                    showMessage("Erreur Apple: " + error.message, false);
-                }
-            }
-        });
-
         // Logout
         logoutBtn.addEventListener('click', async () => {
             try {
@@ -1115,8 +1087,6 @@
             }
         }
         
-        // --- (Reste du code identique à V2 pour la logique interne) ---
-
         function navigateTo(viewId) {
             const viewIndex = ['feed-view', 'contacts-view', 'profile-view'].indexOf(viewId);
             if (viewIndex === -1) return;
@@ -1137,8 +1107,9 @@
         function listenToAllUsers() {
             if (unsubscribeUsersListener) unsubscribeUsersListener();
             unsubscribeUsersListener = onSnapshot(usersCollectionRef, (snapshot) => {
-                snapshot.docChanges().forEach((change) => {
-                    usersData[change.doc.id] = { id: change.doc.id, ...change.doc.data() };
+                usersData = {};
+                snapshot.forEach((doc) => {
+                    usersData[doc.id] = { id: doc.id, ...doc.data() };
                 });
                 renderFriendsList(); 
                 if (document.getElementById('profile-view').getBoundingClientRect().x === 0 && activeProfileUserId) {
