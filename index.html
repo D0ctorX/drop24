@@ -4,10 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Drop</title>
-    <!-- Utilisation de Font Awesome pour les icônes -->
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <!-- Bibliothèque pour générer les QR Codes -->
+    <!-- QR Code Generator -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.1/qrcode.min.js"></script>
+    <!-- QR Code Scanner -->
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <!-- HTML2Canvas pour la génération d'image -->
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Montserrat:wght@700&family=Pacifico&display=swap');
@@ -112,7 +117,6 @@
 
         .btn-primary { background-color: var(--highlight-color); color: white; }
         .btn-google { background-color: var(--google-btn); color: white; }
-        .btn-apple { background-color: var(--apple-btn); color: white; }
         
         .or-divider {
             display: flex;
@@ -467,7 +471,7 @@
             font-weight: 600; font-size: 16px; cursor: pointer;
         }
         #save-profile-btn { background-color: var(--highlight-color); color: white; }
-        #cancel-edit-btn, #cancel-friend-options-btn, #cancel-friend-requests-btn, #cancel-paste-id-btn { 
+        #cancel-edit-btn, #cancel-friend-options-btn, #cancel-friend-requests-btn, #cancel-paste-id-btn, #cancel-scan-btn { 
             background-color: #f0f0f0; color: var(--text-color); 
         }
 
@@ -511,6 +515,19 @@
             border: 5px solid var(--secondary-bg);
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        
+        /* NOUVEAU: Scanner QR */
+        #scanner-modal .modal-content {
+            padding: 0;
+            overflow: hidden;
+            background-color: black;
+            justify-content: center;
+        }
+        #reader {
+            width: 100%;
+            height: 300px;
+            background-color: black;
         }
         
         /* NOUVEAU: Modale des demandes d'amis */
@@ -667,6 +684,46 @@
         }
         input:checked + .slider { background-color: var(--switch-on); }
         input:checked + .slider:before { transform: translateX(20px); }
+
+        /* Styles pour la capture d'image (caché) */
+        #share-capture-container {
+            position: fixed;
+            top: -9999px;
+            left: -9999px;
+            width: 400px;
+            height: 400px;
+            z-index: -1;
+        }
+        .capture-card {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            text-align: center;
+        }
+        .capture-publisher {
+            position: absolute;
+            top: 20px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-weight: 700;
+            font-size: 24px;
+            color: rgba(0,0,0,0.5);
+            z-index: 10;
+        }
+        .capture-watermark {
+            position: absolute;
+            bottom: 10px;
+            right: 15px;
+            font-size: 12px;
+            font-weight: 600;
+            color: rgba(0,0,0,0.3);
+            font-family: 'Pacifico', cursive;
+        }
 
     </style>
 </head>
@@ -836,6 +893,7 @@
         </div>
 
         <div id="toast-message">Message</div>
+        <div id="share-capture-container"></div>
         
         <nav class="nav-bar">
             <div class="nav-item active" data-view="feed-view"><i class="fas fa-home"></i><span>Flux</span></div>
@@ -859,7 +917,8 @@
         <div class="modal-content">
             <h3>Options d'amis</h3>
             <button id="show-friend-requests" class="friend-option-button"><div class="friend-option-button-text"><i class="fas fa-bell"></i><span>Demandes d'amis</span></div><span id="pending-requests-count-badge" class="request-count-badge" style="display: none;">0</span></button>
-            <button id="scan-qr-code" class="friend-option-button"><div class="friend-option-button-text"><i class="fas fa-id-card"></i><span>Ajouter par ID</span></div></button>
+            <button id="scan-qr-code" class="friend-option-button"><div class="friend-option-button-text"><i class="fas fa-camera"></i><span>Scanner QR Code</span></div></button>
+            <button id="enter-id-manually" class="friend-option-button"><div class="friend-option-button-text"><i class="fas fa-id-card"></i><span>Ajouter par ID</span></div></button>
             <button id="share-profile-link" class="friend-option-button"><div class="friend-option-button-text"><i class="fas fa-share-alt"></i><span>Inviter un ami (Lien)</span></div></button>
             <button id="show-my-qr" class="friend-option-button"><div class="friend-option-button-text"><i class="fas fa-qrcode"></i><span>Mon QR Code</span></div></button>
             <div class="modal-actions"><button id="cancel-friend-options-btn">Annuler</button></div>
@@ -871,6 +930,14 @@
             <h3>Mon QR Code Drop</h3><canvas id="qr-code-canvas"></canvas>
             <p style="font-size: 14px; text-align: center; color: var(--last-seen-color);">Partagez ce code ou votre ID : <strong id="qr-user-id" style="color: var(--text-color);"></strong></p>
             <div class="modal-actions"><button id="close-qr-modal-btn" style="background-color: var(--highlight-color); color: white;">Fermer</button></div>
+        </div>
+    </div>
+
+    <div id="scanner-modal" class="modal-backdrop">
+        <div class="modal-content" style="background: #000; color: white;">
+            <h3>Scanner un QR Code Drop</h3>
+            <div id="reader"></div>
+            <div class="modal-actions"><button id="cancel-scan-btn" style="background: #333; color: white;">Fermer</button></div>
         </div>
     </div>
     
@@ -893,12 +960,10 @@
 
 <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        // Imports AUTH mis à jour
         import { 
             getAuth, 
             signInWithPopup, 
             GoogleAuthProvider, 
-            OAuthProvider, // Pour Apple
             createUserWithEmailAndPassword,
             signInWithEmailAndPassword,
             signOut,
@@ -906,22 +971,12 @@
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, getDoc, setDoc, updateDoc, onSnapshot, query, orderBy, arrayUnion, arrayRemove, writeBatch, serverTimestamp, addDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
-        // --- CONFIGURATION FIREBASE (Remise en place pour votre site) ---
-        const firebaseConfig = {
-            apiKey: "AIzaSyB_z5U4yKJERho93p9696NujcG5R5fvlD8",
-            authDomain: "studio-3374032724-f28d6.firebaseapp.com",
-            projectId: "studio-3374032724-f28d6",
-            storageBucket: "studio-3374032724-f28d6.appspot.com",
-            messagingSenderId: "541715107757",
-            appId: "1:541715107757:web:0141b71ee3cd1ce5ec5b24"
-        };
-
+        const firebaseConfig = JSON.parse(__firebase_config);
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        
-        // Utilisation de l'ID de l'app directement depuis la config
-        const dbPath = `artifacts/${firebaseConfig.appId}/public/data`;
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const dbPath = `artifacts/${appId}/public/data`;
         const usersCollectionRef = collection(db, dbPath, 'users');
         const postsCollectionRef = collection(db, dbPath, 'posts');
         
@@ -930,6 +985,7 @@
         const POST_FONT_FAMILIES = ['font-inter', 'font-roboto', 'font-montserrat', 'font-pacifico'];
         const POST_COLOR_PALETTE = ['#f1f1f1', '#D6E9F7', '#D1F7D1', '#FFF7D1', '#F7D1D1', '#A0D4FE', '#84E084', '#FEEA84', '#FE8484'];
         const MAX_CHARS = 200;
+        const BASE_URL = 'https://drop-24.netlify.app/';
 
         let currentUserId = null;
         let activeProfileUserId = null;
@@ -937,6 +993,7 @@
         let postsData = [];
         let filteredPostsData = []; 
         let pendingRequests = []; 
+        let html5QrcodeScanner = null;
         
         let unsubscribeUsersListener = null;
         let unsubscribeFeedListener = null;
@@ -972,9 +1029,11 @@
         const addFriendFab = document.getElementById('add-friend-fab');
         const friendOptionsModal = document.getElementById('friend-options-modal');
         const qrCodeModal = document.getElementById('qr-code-modal');
+        const scannerModal = document.getElementById('scanner-modal');
         const pasteIdModal = document.getElementById('paste-id-modal'); 
         const friendRequestsModal = document.getElementById('friend-requests-modal'); 
         const friendRequestsList = document.getElementById('friend-requests-list'); 
+        const captureContainer = document.getElementById('share-capture-container');
         
         // Refs Post
         const postCreationView = document.getElementById('post-creation-view');
@@ -1018,13 +1077,28 @@
                 listenToFeed();
                 listenToFriendRequests();
                 navigateTo('feed-view');
+                
+                // --- NOUVEAU: AUTO ADD FRIEND VIA URL ---
+                const urlParams = new URLSearchParams(window.location.search);
+                const targetUid = urlParams.get('uid');
+                if(targetUid && targetUid !== currentUserId) {
+                    // Petit délai pour s'assurer que les données sont chargées
+                    setTimeout(() => {
+                         // Nettoyer l'URL pour éviter de spammer la demande au refresh
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                        // Demander confirmation ou envoyer directement
+                        if(confirm("Voulez-vous envoyer une demande d'ami à cet utilisateur ?")) {
+                            sendFriendRequest(targetUid);
+                        }
+                    }, 2000);
+                }
+
             } else {
                 console.log("No user connected");
                 currentUserId = null;
                 authView.style.display = 'flex';
                 appContainer.style.display = 'none'; // Cacher l'app
                 
-                // Nettoyage listeners
                 if(unsubscribeUsersListener) unsubscribeUsersListener();
                 if(unsubscribeFeedListener) unsubscribeFeedListener();
                 if(unsubscribeFriendRequestsListener) unsubscribeFriendRequestsListener();
@@ -1053,24 +1127,16 @@
                 showMessage("Veuillez remplir tous les champs", false);
                 return;
             }
-            
             try {
                 if (isLoginMode) {
                     await signInWithEmailAndPassword(auth, email, password);
-                    // onAuthStateChanged gère la redirection
                 } else {
                     await createUserWithEmailAndPassword(auth, email, password);
                     showMessage("Compte créé !", true);
                 }
             } catch (error) {
                 console.error(error);
-                let msg = "Erreur d'authentification";
-                if (error.code === 'auth/email-already-in-use') msg = "Cet email est déjà utilisé.";
-                if (error.code === 'auth/invalid-email') msg = "Email invalide.";
-                if (error.code === 'auth/weak-password') msg = "Mot de passe trop faible.";
-                if (error.code === 'auth/wrong-password') msg = "Mot de passe incorrect.";
-                if (error.code === 'auth/user-not-found') msg = "Utilisateur non trouvé.";
-                showMessage(msg, false);
+                showMessage("Erreur d'authentification", false);
             }
         });
 
@@ -1081,10 +1147,8 @@
                 await signInWithPopup(auth, provider);
             } catch (error) {
                 console.error(error);
-                if (error.code === 'auth/unauthorized-domain') {
-                    const currentDomain = window.location.hostname;
-                    showMessage(`Erreur de domaine ! Ajoutez "${currentDomain}" dans Firebase Console > Auth > Settings > Authorized domains`, false);
-                    console.log(`URGENT: Ajoutez ce domaine à votre liste blanche Firebase : ${currentDomain}`);
+                 if (error.code === 'auth/unauthorized-domain') {
+                    showMessage("Erreur de domaine (voir console)", false);
                 } else {
                     showMessage("Erreur Google: " + error.message, false);
                 }
@@ -1108,7 +1172,7 @@
             const userDoc = await getDoc(userRef);
             if (!userDoc.exists()) {
                 await setDoc(userRef, {
-                    username: user.displayName || `user_${user.uid.substring(0, 6)}`, // Utilise le nom Google si dispo
+                    username: user.displayName || `user_${user.uid.substring(0, 6)}`, 
                     bio: 'Bienvenue sur mon profil !',
                     profileColor: PROFILE_COLORS[Math.floor(Math.random() * PROFILE_COLORS.length)],
                     accountCreatedAt: serverTimestamp(),
@@ -1146,7 +1210,6 @@
                 if (document.getElementById('profile-view').getBoundingClientRect().x === 0 && activeProfileUserId) {
                     showProfile(activeProfileUserId); 
                 }
-                // Update noms dans les requêtes si nécessaire
                 if(document.getElementById('friend-requests-modal').style.display === 'flex') renderFriendRequestsList();
             });
         }
@@ -1199,7 +1262,7 @@
         }
         
         async function sendFriendRequest(recipientId) {
-            if (!recipientId || recipientId === currentUserId) return showMessage("ID invalide.", false);
+            if (!recipientId || recipientId === currentUserId) return showMessage("Impossible de s'ajouter soi-même.", false);
             if (usersData[currentUserId]?.friends?.includes(recipientId)) return showMessage("Déjà amis.", false);
             try {
                 const requestRef = doc(db, dbPath, 'users', recipientId, 'friendRequests', currentUserId);
@@ -1249,7 +1312,6 @@
         async function toggleFriendship(userIdToAdd) {
             if (!currentUserId || !userIdToAdd) return;
             const isFriend = usersData[currentUserId]?.friends?.includes(userIdToAdd);
-            // Note: Le backend "Block" n'existe pas vraiment, on utilise le retrait d'ami ici comme action de blocage/retrait.
             if (!isFriend) return showMessage("Envoyez une demande.", false);
             
             if(confirm("Voulez-vous vraiment retirer cet ami ?")) {
@@ -1285,7 +1347,6 @@
                 const messageBtn = document.getElementById('action-message-user');
                 
                 if (isFriend) {
-                    // SI AMI: Afficher Message et Bloquer
                     addBtn.style.display = 'none';
                     blockBtn.style.display = 'block';
                     messageBtn.style.display = 'block';
@@ -1293,7 +1354,6 @@
                     blockBtn.onclick = () => toggleFriendship(userId);
                     messageBtn.onclick = () => showChat(userId);
                 } else {
-                    // SI PAS AMI: Afficher seulement Ajouter
                     addBtn.style.display = 'block';
                     blockBtn.style.display = 'none';
                     messageBtn.style.display = 'none';
@@ -1304,7 +1364,7 @@
             navigateTo('profile-view');
         }
 
-        // --- FLUX & POSTS (Identique) ---
+        // --- FLUX & POSTS ---
         function listenToFeed() {
             if (unsubscribeFeedListener) unsubscribeFeedListener();
             const q = query(postsCollectionRef, orderBy('createdAt', 'desc'));
@@ -1335,7 +1395,6 @@
         }
         function createPostElement(post) {
             const pub = post.isAnon ? "Anonyme" : (usersData[post.publisherId]?.username || "...");
-            // On ajoute data-publisher-id si ce n'est pas anonyme
             const publisherAttr = !post.isAnon && post.publisherId ? `data-publisher-id="${post.publisherId}"` : '';
             
             const rem = post.expiresAt - new Date();
@@ -1358,25 +1417,19 @@
         
         // --- HANDLERS ---
         document.addEventListener('DOMContentLoaded', () => {
-            // Nav
             navItems.forEach(i => i.addEventListener('click', () => {
                 if(i.dataset.view === 'profile-view') { activeProfileUserId = null; showProfile(currentUserId); }
                 else navigateTo(i.dataset.view);
             }));
             document.getElementById('my-profile-nav-item').addEventListener('click', () => navigateTo('contacts-view'));
             
-            // Search
             friendSearchInput.addEventListener('input', renderFriendsList);
             feedSearchInput.addEventListener('input', filterAndRenderFeed);
 
-            // Edit Profile
             document.getElementById('edit-bio-btn').addEventListener('click', openEditProfileModal);
             document.getElementById('cancel-edit-btn').addEventListener('click', closeEditProfileModal);
             document.getElementById('save-profile-btn').addEventListener('click', saveProfileChanges);
             
-            // Friend Actions (Supprimés ici car gérés dynamiquement dans showProfile maintenant)
-            
-            // Post Creation
             document.getElementById('create-post-header-btn').addEventListener('click', () => { generatePostColorSwatches(); showSecondaryView(postCreationView); });
             document.getElementById('post-creation-back-btn').addEventListener('click', () => hideSecondaryView(postCreationView));
             postTextarea.addEventListener('input', updateCharCount);
@@ -1384,35 +1437,32 @@
             anonymousSwitch.addEventListener('change', () => isAnonymousPost = anonymousSwitch.checked);
             publishButton.addEventListener('click', handlePublish);
             
-            // Feed Delegation
             feedContent.addEventListener('click', e => {
-                // Gestion des actions sur les posts (Like/Share)
                 const btn = e.target.closest('.action-button');
                 if(btn) handlePostAction(e);
 
-                // GESTION CLIC SUR LE NOM DE L'AUTEUR (NOUVEAU)
                 const publisher = e.target.closest('.post-publisher');
                 if(publisher && publisher.dataset.publisherId) {
-                    e.stopPropagation(); // Empêcher d'autres clics
+                    e.stopPropagation(); 
                     showProfile(publisher.dataset.publisherId);
                 }
             });
             
-            // Friend Modals
             addFriendFab.addEventListener('click', openFriendOptionsMenu);
             document.getElementById('cancel-friend-options-btn').addEventListener('click', closeFriendOptionsMenu);
             document.getElementById('share-profile-link').addEventListener('click', shareProfileLink);
             document.getElementById('show-my-qr').addEventListener('click', showMyQrCode);
             document.getElementById('close-qr-modal-btn').addEventListener('click', closeQrModal);
             document.getElementById('show-friend-requests').addEventListener('click', openFriendRequestsModal);
-            document.getElementById('scan-qr-code').addEventListener('click', openPasteIdModal);
+            document.getElementById('scan-qr-code').addEventListener('click', openScannerModal);
+            document.getElementById('enter-id-manually').addEventListener('click', openPasteIdModal);
             document.getElementById('cancel-paste-id-btn').addEventListener('click', () => hideModal(pasteIdModal));
             document.getElementById('send-friend-request-btn').addEventListener('click', async () => {
                 await sendFriendRequest(document.getElementById('paste-id-input').value.trim()); hideModal(pasteIdModal);
             });
             document.getElementById('cancel-friend-requests-btn').addEventListener('click', () => hideModal(friendRequestsModal));
+            document.getElementById('cancel-scan-btn').addEventListener('click', closeScannerModal);
             
-            // Request Actions
             friendRequestsList.addEventListener('click', e => {
                 const acc = e.target.closest('.request-accept-btn');
                 const rej = e.target.closest('.request-reject-btn');
@@ -1421,7 +1471,7 @@
             });
         });
         
-        // Functions called by event listeners needing declaration
+        // --- FUNCTIONS ---
         function openEditProfileModal() {
             const u = usersData[currentUserId];
             if(!u) return;
@@ -1462,37 +1512,22 @@
             squareContent.classList.add(POST_FONT_FAMILIES[currentPostFontIndex]);
         }
         
-        // AJOUT DE LA FONCTION MANQUANTE
         async function saveProfileChanges() {
             const newUsername = document.getElementById('edit-username-input').value.trim();
             const newBio = document.getElementById('edit-bio-textarea').value.trim();
             const selectedColor = document.querySelector('#edit-color-swatches .selected')?.dataset.color;
-
-            if (!newUsername || newUsername.length < 3) {
-                showMessage("Le nom d'utilisateur doit contenir au moins 3 caractères.", false);
-                return;
-            }
-
+            if (!newUsername || newUsername.length < 3) return showMessage("Pseudo trop court.", false);
             const userRef = doc(usersCollectionRef, currentUserId);
             try {
-                await updateDoc(userRef, {
-                    username: newUsername,
-                    bio: newBio,
-                    profileColor: selectedColor || usersData[currentUserId].profileColor
-                });
+                await updateDoc(userRef, { username: newUsername, bio: newBio, profileColor: selectedColor || usersData[currentUserId].profileColor });
                 showMessage("Profil mis à jour !", true);
                 closeEditProfileModal();
-            } catch (error) {
-                console.error("Erreur de mise à jour du profil: ", error);
-                showMessage("Une erreur est survenue.", false);
-            }
+            } catch (error) { console.error(error); showMessage("Erreur maj profil.", false); }
         }
         
-        // REINTEGRATION DE HANDLEPUBLISH
         async function handlePublish() {
             const message = postTextarea.value.trim();
             if (message.length === 0 || message.length > MAX_CHARS) return;
-
             publishButton.disabled = true;
             try {
                 await addDoc(postsCollectionRef, {
@@ -1505,27 +1540,17 @@
                     likedBy: [],
                     dislikedBy: []
                 });
-                
                 const userRef = doc(usersCollectionRef, currentUserId);
                 const userDoc = await getDoc(userRef);
-                const currentPostCount = userDoc.data().postsCount || 0;
-                await updateDoc(userRef, { postsCount: currentPostCount + 1 });
-                
+                await updateDoc(userRef, { postsCount: (userDoc.data().postsCount || 0) + 1 });
                 postTextarea.value = '';
                 isAnonymousPost = false;
                 anonymousSwitch.checked = false;
                 hideSecondaryView(postCreationView);
                 showMessage("Post publié !", true);
-
-            } catch (error) {
-                console.error("Erreur de publication: ", error);
-                showMessage("La publication a échoué.", false);
-            } finally {
-                publishButton.disabled = false;
-            }
+            } catch (error) { console.error(error); showMessage("Echec publication.", false); } finally { publishButton.disabled = false; }
         }
 
-        // REINTEGRATION DE HANDLEPOSTACTION
         async function handlePostAction(e) {
             const button = e.target.closest('.action-button');
             if (!button || !currentUserId) return;
@@ -1536,17 +1561,8 @@
             const post = postsData.find(p => p.id === postId);
 
             if (action === 'share') {
-                try {
-                    await navigator.share({
-                        title: 'Post de Drop',
-                        text: `Regarde ce post de ${post.isAnon ? 'Anonyme' : (usersData[post.publisherId]?.username || 'Utilisateur')} sur Drop:\n\n"${post.message}"`,
-                    });
-                } catch (err) {
-                    console.warn("Erreur de partage: ", err);
-                    if (err.name !== 'AbortError') {
-                        showMessage("Le partage a échoué.", false);
-                    }
-                }
+                // --- NOUVEAU: Partage d'image avec html2canvas ---
+                generateAndShareImage(post);
                 return;
             }
 
@@ -1558,52 +1574,174 @@
             const hasOtherAction = post[firestoreOtherAction]?.includes(currentUserId);
 
             const batch = writeBatch(db);
-            if (hasAction) {
-                batch.update(postRef, { [firestoreAction]: arrayRemove(currentUserId) });
-            } else {
+            if (hasAction) batch.update(postRef, { [firestoreAction]: arrayRemove(currentUserId) });
+            else {
                 batch.update(postRef, { [firestoreAction]: arrayUnion(currentUserId) });
-                if (hasOtherAction) {
-                    batch.update(postRef, { [firestoreOtherAction]: arrayRemove(currentUserId) });
-                }
+                if (hasOtherAction) batch.update(postRef, { [firestoreOtherAction]: arrayRemove(currentUserId) });
             }
             await batch.commit();
         }
 
-        // AJOUT DES FONCTIONS MANQUANTES
+        // --- GENERATION ET PARTAGE IMAGE ---
+        async function generateAndShareImage(post) {
+            showMessage("Génération de l'image...", true);
+            
+            // 1. Préparer le contenu visuel (sans chrono ni likes)
+            captureContainer.innerHTML = '';
+            const pub = post.isAnon ? "Anonyme" : (usersData[post.publisherId]?.username || "...");
+            
+            // On recrée la structure visuelle
+            const card = document.createElement('div');
+            card.className = 'capture-card';
+            card.style.backgroundColor = post.backgroundColor;
+            
+            const text = document.createElement('p');
+            text.className = `post-message ${post.fontClass}`;
+            text.style.position = 'relative'; // Reset position for capture context
+            text.innerText = post.message;
+            
+            const publisher = document.createElement('div');
+            publisher.className = 'capture-publisher';
+            publisher.innerText = pub;
+            
+            const watermark = document.createElement('div');
+            watermark.className = 'capture-watermark';
+            watermark.innerText = 'Drop';
+            
+            card.appendChild(publisher);
+            card.appendChild(text);
+            card.appendChild(watermark);
+            captureContainer.appendChild(card);
+            
+            // 2. Convertir en canvas puis blob
+            try {
+                const canvas = await html2canvas(card, { 
+                    useCORS: true, 
+                    scale: 2 // Meilleure qualité
+                });
+                
+                canvas.toBlob(async (blob) => {
+                    if (!blob) { showMessage("Erreur image.", false); return; }
+                    
+                    const file = new File([blob], 'drop_post.png', { type: 'image/png' });
+                    
+                    // 3. Partager
+                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                        try {
+                            await navigator.share({
+                                files: [file],
+                                title: 'Drop Post',
+                                text: `Regarde ce post de ${pub} sur Drop !`
+                            });
+                        } catch (err) {
+                            if (err.name !== 'AbortError') showMessage("Partage annulé ou impossible.", false);
+                        }
+                    } else {
+                        // Fallback: télécharger
+                        const a = document.createElement('a');
+                        a.href = canvas.toDataURL();
+                        a.download = 'drop_post.png';
+                        a.click();
+                        showMessage("Image téléchargée (Partage non supporté).", true);
+                    }
+                    // Nettoyage
+                    captureContainer.innerHTML = '';
+                });
+            } catch (e) {
+                console.error(e);
+                showMessage("Erreur lors de la capture.", false);
+            }
+        }
+
+        // --- LIENS ET QR CODES ---
         async function shareProfileLink() {
+            const link = `${BASE_URL}?uid=${currentUserId}`;
             try {
                 await navigator.share({
                     title: 'Rejoins-moi sur Drop !',
-                    text: `Ajoute-moi sur Drop avec mon ID: ${currentUserId}`, 
+                    text: `Ajoute-moi sur Drop !`,
+                    url: link
                 });
             } catch (err) {
                  if (err.name !== 'AbortError') {
-                    showMessage("Le partage a échoué.", false);
+                     // Fallback copie presse papier
+                    navigator.clipboard.writeText(link).then(() => showMessage("Lien copié !", true));
                  }
             }
         }
         
         function showMyQrCode() {
             const canvas = document.getElementById('qr-code-canvas');
-            if (!currentUserId) {
-                showMessage("ID utilisateur non trouvé.", false);
-                return;
-            }
+            if (!currentUserId) return showMessage("Erreur ID.", false);
             
+            // Générer le QR avec l'URL complète
+            const link = `${BASE_URL}?uid=${currentUserId}`;
             document.getElementById('qr-user-id').textContent = currentUserId; 
             
-            QRCode.toCanvas(canvas, currentUserId, { width: 200, margin: 2 }, function (error) {
-                if (error) {
-                    console.error(error);
-                    showMessage("Erreur de génération QR.", false);
-                    return;
-                }
+            QRCode.toCanvas(canvas, link, { width: 200, margin: 2 }, function (error) {
+                if (error) return showMessage("Erreur QR.", false);
                 closeFriendOptionsMenu();
                 showModal(qrCodeModal);
             });
         }
 
         function closeQrModal() { hideModal(qrCodeModal); }
+
+        // --- SCANNER QR ---
+        function openScannerModal() {
+            hideModal(friendOptionsModal);
+            showModal(scannerModal);
+            
+            // Init scanner
+            if(!html5QrcodeScanner) {
+                html5QrcodeScanner = new Html5QrcodeScanner(
+                    "reader", { fps: 10, qrbox: 250 }
+                );
+            }
+            html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+        }
+        
+        function closeScannerModal() {
+            if(html5QrcodeScanner) {
+                html5QrcodeScanner.clear().then(() => {
+                    hideModal(scannerModal);
+                }).catch(error => {
+                    console.error("Failed to clear scanner", error);
+                    hideModal(scannerModal);
+                });
+            } else {
+                hideModal(scannerModal);
+            }
+        }
+        
+        function onScanSuccess(decodedText, decodedResult) {
+            // Gérer le résultat du scan
+            console.log(`Code scanné = ${decodedText}`);
+            
+            let uidToAdd = decodedText;
+            // Vérifier si c'est une URL Drop
+            if (decodedText.includes("uid=")) {
+                try {
+                    const url = new URL(decodedText);
+                    uidToAdd = url.searchParams.get("uid");
+                } catch (e) {
+                    console.error("Erreur parsing URL QR", e);
+                }
+            }
+            
+            if(uidToAdd) {
+                if(confirm(`Ajouter l'ami ID: ${uidToAdd} ?`)) {
+                    sendFriendRequest(uidToAdd);
+                    closeScannerModal();
+                }
+            } else {
+                showMessage("QR Code invalide pour Drop.", false);
+            }
+        }
+        
+        function onScanFailure(error) {
+            // Ignorer les erreurs de frame vide
+        }
 
     </script>
 </body>
