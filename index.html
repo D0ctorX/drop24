@@ -8,8 +8,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <!-- QR Code Generator -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.1/qrcode.min.js"></script>
-    <!-- QR Code Scanner -->
-    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <!-- HTML2Canvas pour la génération d'image -->
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 
@@ -471,7 +469,7 @@
             font-weight: 600; font-size: 16px; cursor: pointer;
         }
         #save-profile-btn { background-color: var(--highlight-color); color: white; }
-        #cancel-edit-btn, #cancel-friend-options-btn, #cancel-friend-requests-btn, #cancel-paste-id-btn, #cancel-scan-btn { 
+        #cancel-edit-btn, #cancel-friend-options-btn, #cancel-friend-requests-btn, #cancel-paste-id-btn { 
             background-color: #f0f0f0; color: var(--text-color); 
         }
 
@@ -515,19 +513,6 @@
             border: 5px solid var(--secondary-bg);
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        
-        /* NOUVEAU: Scanner QR */
-        #scanner-modal .modal-content {
-            padding: 0;
-            overflow: hidden;
-            background-color: black;
-            justify-content: center;
-        }
-        #reader {
-            width: 100%;
-            height: 300px;
-            background-color: black;
         }
         
         /* NOUVEAU: Modale des demandes d'amis */
@@ -917,7 +902,6 @@
         <div class="modal-content">
             <h3>Options d'amis</h3>
             <button id="show-friend-requests" class="friend-option-button"><div class="friend-option-button-text"><i class="fas fa-bell"></i><span>Demandes d'amis</span></div><span id="pending-requests-count-badge" class="request-count-badge" style="display: none;">0</span></button>
-            <button id="scan-qr-code" class="friend-option-button"><div class="friend-option-button-text"><i class="fas fa-camera"></i><span>Scanner QR Code</span></div></button>
             <button id="enter-id-manually" class="friend-option-button"><div class="friend-option-button-text"><i class="fas fa-id-card"></i><span>Ajouter par ID</span></div></button>
             <button id="share-profile-link" class="friend-option-button"><div class="friend-option-button-text"><i class="fas fa-share-alt"></i><span>Inviter un ami (Lien)</span></div></button>
             <button id="show-my-qr" class="friend-option-button"><div class="friend-option-button-text"><i class="fas fa-qrcode"></i><span>Mon QR Code</span></div></button>
@@ -930,14 +914,6 @@
             <h3>Mon QR Code Drop</h3><canvas id="qr-code-canvas"></canvas>
             <p style="font-size: 14px; text-align: center; color: var(--last-seen-color);">Partagez ce code ou votre ID : <strong id="qr-user-id" style="color: var(--text-color);"></strong></p>
             <div class="modal-actions"><button id="close-qr-modal-btn" style="background-color: var(--highlight-color); color: white;">Fermer</button></div>
-        </div>
-    </div>
-
-    <div id="scanner-modal" class="modal-backdrop">
-        <div class="modal-content" style="background: #000; color: white;">
-            <h3>Scanner un QR Code Drop</h3>
-            <div id="reader"></div>
-            <div class="modal-actions"><button id="cancel-scan-btn" style="background: #333; color: white;">Fermer</button></div>
         </div>
     </div>
     
@@ -971,7 +947,7 @@
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, getDoc, setDoc, updateDoc, onSnapshot, query, orderBy, arrayUnion, arrayRemove, writeBatch, serverTimestamp, addDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
-        // --- CONFIGURATION FIREBASE ---
+        // --- CONFIGURATION FIREBASE (Remise en place pour votre site) ---
         const firebaseConfig = {
             apiKey: "AIzaSyB_z5U4yKJERho93p9696NujcG5R5fvlD8",
             authDomain: "studio-3374032724-f28d6.firebaseapp.com",
@@ -984,8 +960,9 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = firebaseConfig.appId;
-        const dbPath = `artifacts/${appId}/public/data`;
+        
+        // Utilisation de l'ID de l'app directement depuis la config
+        const dbPath = `artifacts/${firebaseConfig.appId}/public/data`;
         const usersCollectionRef = collection(db, dbPath, 'users');
         const postsCollectionRef = collection(db, dbPath, 'posts');
         
@@ -1002,7 +979,6 @@
         let postsData = [];
         let filteredPostsData = []; 
         let pendingRequests = []; 
-        let html5QrcodeScanner = null;
         
         let unsubscribeUsersListener = null;
         let unsubscribeFeedListener = null;
@@ -1038,7 +1014,6 @@
         const addFriendFab = document.getElementById('add-friend-fab');
         const friendOptionsModal = document.getElementById('friend-options-modal');
         const qrCodeModal = document.getElementById('qr-code-modal');
-        const scannerModal = document.getElementById('scanner-modal');
         const pasteIdModal = document.getElementById('paste-id-modal'); 
         const friendRequestsModal = document.getElementById('friend-requests-modal'); 
         const friendRequestsList = document.getElementById('friend-requests-list'); 
@@ -1091,11 +1066,8 @@
                 const urlParams = new URLSearchParams(window.location.search);
                 const targetUid = urlParams.get('uid');
                 if(targetUid && targetUid !== currentUserId) {
-                    // Petit délai pour s'assurer que les données sont chargées
                     setTimeout(() => {
-                         // Nettoyer l'URL pour éviter de spammer la demande au refresh
                         window.history.replaceState({}, document.title, window.location.pathname);
-                        // Demander confirmation ou envoyer directement
                         if(confirm("Voulez-vous envoyer une demande d'ami à cet utilisateur ?")) {
                             sendFriendRequest(targetUid);
                         }
@@ -1284,15 +1256,43 @@
         
         async function acceptFriendRequest(senderId) {
             if (!currentUserId || !senderId) return;
+            
             const batch = writeBatch(db);
+            
+            // 1. Mettre à jour MON profil
             const currentUserRef = doc(usersCollectionRef, currentUserId);
             batch.update(currentUserRef, { friends: arrayUnion(senderId) });
-            const senderUserRef = doc(usersCollectionRef, senderId);
-            batch.update(senderUserRef, { friends: arrayUnion(currentUserId) });
+            
+            // 2. Supprimer la demande
             const requestRef = doc(db, dbPath, 'users', currentUserId, 'friendRequests', senderId);
             batch.delete(requestRef);
-            try { await batch.commit(); showMessage("Ami ajouté !", true); } 
-            catch (error) { console.error(error); showMessage("Erreur acceptation.", false); }
+
+            // 3. Mettre à jour le profil de l'AUTRE
+            const senderUserRef = doc(usersCollectionRef, senderId);
+            batch.update(senderUserRef, { friends: arrayUnion(currentUserId) });
+
+            try { 
+                await batch.commit(); 
+                showMessage("Ami ajouté !", true); 
+            } catch (error) { 
+                console.error("Erreur acceptation (Probablement permissions Firestore):", error);
+                
+                if (error.code === 'permission-denied') {
+                    console.warn("Tentative de fallback : mise à jour locale uniquement.");
+                    try {
+                        const batch2 = writeBatch(db);
+                        batch2.update(currentUserRef, { friends: arrayUnion(senderId) });
+                        batch2.delete(requestRef);
+                        await batch2.commit();
+                        showMessage("Ami ajouté (Vérifiez les règles pour la réciprocité) !", true);
+                        alert("Note: L'ami a été ajouté de votre côté, mais vos règles de sécurité empêchent de vous ajouter automatiquement à sa liste. Veuillez mettre à jour vos règles Firestore pour autoriser 'write' si 'request.auth != null'.");
+                    } catch (err2) {
+                        showMessage("Erreur critique d'ajout.", false);
+                    }
+                } else {
+                    showMessage("Erreur acceptation.", false); 
+                }
+            }
         }
         
         async function rejectFriendRequest(senderId) {
@@ -1463,14 +1463,12 @@
             document.getElementById('show-my-qr').addEventListener('click', showMyQrCode);
             document.getElementById('close-qr-modal-btn').addEventListener('click', closeQrModal);
             document.getElementById('show-friend-requests').addEventListener('click', openFriendRequestsModal);
-            document.getElementById('scan-qr-code').addEventListener('click', openScannerModal);
             document.getElementById('enter-id-manually').addEventListener('click', openPasteIdModal);
             document.getElementById('cancel-paste-id-btn').addEventListener('click', () => hideModal(pasteIdModal));
             document.getElementById('send-friend-request-btn').addEventListener('click', async () => {
                 await sendFriendRequest(document.getElementById('paste-id-input').value.trim()); hideModal(pasteIdModal);
             });
             document.getElementById('cancel-friend-requests-btn').addEventListener('click', () => hideModal(friendRequestsModal));
-            document.getElementById('cancel-scan-btn').addEventListener('click', closeScannerModal);
             
             friendRequestsList.addEventListener('click', e => {
                 const acc = e.target.closest('.request-accept-btn');
@@ -1695,62 +1693,6 @@
         }
 
         function closeQrModal() { hideModal(qrCodeModal); }
-
-        // --- SCANNER QR ---
-        function openScannerModal() {
-            hideModal(friendOptionsModal);
-            showModal(scannerModal);
-            
-            // Init scanner
-            if(!html5QrcodeScanner) {
-                html5QrcodeScanner = new Html5QrcodeScanner(
-                    "reader", { fps: 10, qrbox: 250 }
-                );
-            }
-            html5QrcodeScanner.render(onScanSuccess, onScanFailure);
-        }
-        
-        function closeScannerModal() {
-            if(html5QrcodeScanner) {
-                html5QrcodeScanner.clear().then(() => {
-                    hideModal(scannerModal);
-                }).catch(error => {
-                    console.error("Failed to clear scanner", error);
-                    hideModal(scannerModal);
-                });
-            } else {
-                hideModal(scannerModal);
-            }
-        }
-        
-        function onScanSuccess(decodedText, decodedResult) {
-            // Gérer le résultat du scan
-            console.log(`Code scanné = ${decodedText}`);
-            
-            let uidToAdd = decodedText;
-            // Vérifier si c'est une URL Drop
-            if (decodedText.includes("uid=")) {
-                try {
-                    const url = new URL(decodedText);
-                    uidToAdd = url.searchParams.get("uid");
-                } catch (e) {
-                    console.error("Erreur parsing URL QR", e);
-                }
-            }
-            
-            if(uidToAdd) {
-                if(confirm(`Ajouter l'ami ID: ${uidToAdd} ?`)) {
-                    sendFriendRequest(uidToAdd);
-                    closeScannerModal();
-                }
-            } else {
-                showMessage("QR Code invalide pour Drop.", false);
-            }
-        }
-        
-        function onScanFailure(error) {
-            // Ignorer les erreurs de frame vide
-        }
 
     </script>
 </body>
