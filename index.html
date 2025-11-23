@@ -11,12 +11,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.1/qrcode.min.js"></script>
     <!-- HTML2Canvas pour la génération d'image -->
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
-    <!-- Lecteur QR Code -->
-    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
     <style>
-        /* Import des polices variées pour le bouton */
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Pacifico&family=Oswald:wght@500&family=Courier+Prime&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Montserrat:wght@700&family=Pacifico&display=swap');
 
         :root {
             --primary-bg: #FAFAFA;
@@ -36,11 +34,10 @@
             --apple-btn: #000000;
         }
 
-        /* Classes de polices pour JS */
         .font-inter { font-family: 'Inter', sans-serif; }
+        .font-roboto { font-family: 'Roboto', sans-serif; }
+        .font-montserrat { font-family: 'Montserrat', sans-serif; }
         .font-pacifico { font-family: 'Pacifico', cursive; }
-        .font-oswald { font-family: 'Oswald', sans-serif; text-transform: uppercase; letter-spacing: 1px; }
-        .font-courier { font-family: 'Courier Prime', monospace; font-weight: bold; }
 
         *, *::before, *::after {
             box-sizing: border-box;
@@ -714,64 +711,80 @@
             font-family: 'Pacifico', cursive;
         }
 
-        /* Scanner UI */
-        #scanner-modal .modal-content {
-            width: 90%;
-            max-width: 400px;
-            padding: 10px;
-        }
-        #reader {
-            width: 100%;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-
     </style>
 </head>
 <body>
 
-    <!-- AUTH VIEW -->
+    <!-- VUE D'AUTHENTIFICATION (Premier écran) -->
     <div id="auth-view">
         <div class="auth-card">
             <h1 class="app-logo">Drop</h1>
+            
+            <!-- Formulaire Login/Signup -->
             <div id="email-auth-form">
                 <input type="email" id="auth-email" class="auth-input" placeholder="Email" required>
                 <input type="password" id="auth-password" class="auth-input" placeholder="Mot de passe" required>
-                <button id="login-btn" class="auth-btn btn-primary"><i class="fas fa-sign-in-alt"></i> Se connecter</button>
+                
+                <button id="login-btn" class="auth-btn btn-primary">
+                    <i class="fas fa-sign-in-alt"></i> Se connecter
+                </button>
+                
                 <div class="auth-switch-text">
-                    <span id="auth-toggle-text">Pas de compte ?</span> <span id="auth-toggle-link" class="auth-switch-link">S'inscrire</span>
+                    <span id="auth-toggle-text">Pas de compte ?</span>
+                    <span id="auth-toggle-link" class="auth-switch-link">S'inscrire</span>
                 </div>
             </div>
+
             <div class="or-divider">OU</div>
-            <button id="google-btn" class="auth-btn btn-google"><i class="fab fa-google"></i> Continuer avec Google</button>
+
+            <!-- Boutons Sociaux -->
+            <button id="google-btn" class="auth-btn btn-google">
+                <i class="fab fa-google"></i> Continuer avec Google
+            </button>
         </div>
     </div>
 
-    <!-- APP PRINCIPALE -->
+    <!-- APPLICATION PRINCIPALE (Cachée par défaut) -->
     <div id="app-container" class="container">
         <div id="view-wrapper">
-            <!-- FEED -->
+            <!-- VUE FEED -->
             <div id="feed-view" class="view feed-view">
                 <div class="view-header">
                     <div class="header-placeholder"></div> 
                     <h1 class="header-title">Flux</h1>
                     <i id="create-post-header-btn" class="fas fa-feather-alt header-icon"></i>
-                    <div id="feed-search-bar"><i id="feed-search-icon" class="fas fa-search"></i><input type="text" id="feed-search-input" placeholder="Rechercher des posts..."></div>
+                    <div id="feed-search-bar">
+                        <i id="feed-search-icon" class="fas fa-search"></i>
+                        <input type="text" id="feed-search-input" placeholder="Rechercher des posts...">
+                    </div>
                 </div>
                 <div id="feed-content" class="feed-content"></div>
             </div>
             
-            <!-- AMIS -->
+            <!-- VUE AMIS -->
             <div id="contacts-view" class="view contacts-view">
-                <div class="view-header"><div class="header-placeholder"></div><h1 class="header-title">Amis</h1><div class="header-placeholder"></div></div>
-                <div class="search-bar"><input type="text" id="search-input" placeholder="Rechercher un ami..."></div>
+                <div class="view-header">
+                    <div class="header-placeholder"></div>
+                    <h1 class="header-title">Amis</h1>
+                    <div class="header-placeholder"></div>
+                </div>
+                <div class="search-bar">
+                    <input type="text" id="search-input" placeholder="Rechercher un ami...">
+                </div>
                 <div id="friends-list" class="contacts-content"></div>
-                <button id="add-friend-fab"><i class="fas fa-user-plus"></i></button>
+                <!-- Bouton FAB -->
+                <button id="add-friend-fab">
+                    <i class="fas fa-user-plus"></i>
+                </button>
             </div>
 
-            <!-- PROFIL -->
+            <!-- VUE PROFIL -->
             <div id="profile-view" class="view profile-view">
-                <div class="view-header"><i id="my-profile-nav-item" class="fas fa-users header-icon"></i><h1 id="profile-username-header" class="header-title">Profil</h1><div class="header-placeholder"></div></div>
+                <div class="view-header">
+                     <i id="my-profile-nav-item" class="fas fa-users header-icon"></i>
+                    <h1 id="profile-username-header" class="header-title">Profil</h1>
+                    <div class="header-placeholder"></div>
+                </div>
                 <div class="profile-content">
                     <div class="profile-header">
                         <img id="profile-pic" src="" alt="Avatar">
@@ -791,28 +804,43 @@
                         </div>
                     </div>
                     <div class="profile-stats">
-                        <div class="stat-item"><h3 id="posts-count">0</h3><p>Posts</p></div>
-                        <div class="stat-item"><h3 id="followers-count">0</h3><p>Amis</p></div>
+                        <div class="stat-item">
+                            <h3 id="posts-count">0</h3>
+                            <p>Posts</p>
+                        </div>
+                        <div class="stat-item">
+                            <h3 id="followers-count">0</h3>
+                            <p>Amis</p>
+                        </div>
                     </div>
                     <div class="profile-details">
-                        <h4>Bio</h4><p id="profile-bio">...</p>
-                        <h4>Membre depuis</h4><p id="creation-date">...</p>
+                        <h4>Bio</h4>
+                        <p id="profile-bio">Ceci est ma bio.</p>
+                        <h4>Membre depuis</h4>
+                        <p id="creation-date">1 janvier 2025</p>
+                        
+                        <!-- Bouton Déconnexion -->
                         <button id="logout-btn"><i class="fas fa-sign-out-alt"></i> Se déconnecter</button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- SECONDAIRES -->
+        <!-- VUES SECONDAIRES (Chat, Création Post...) -->
         <div id="chat-view" class="view chat-view secondary">
             <div class="view-header chat-header">
                 <i id="chat-back-btn" class="fas fa-arrow-left back-button"></i>
-                <img id="chat-user-pp" src="" alt="Avatar">
+                <img id="chat-user-pp" src="" alt="Avatar du contact">
                 <h1 id="chat-username" class="header-title">Chat</h1>
                 <div class="header-placeholder"></div>
             </div>
-            <div class="chat-content"><div id="chat-body"></div></div>
-            <div class="chat-input"><input type="text" id="message-input" placeholder="..."><button id="send-button"><i class="fas fa-paper-plane"></i></button></div>
+            <div class="chat-content">
+                <div id="chat-body"></div>
+            </div>
+            <div class="chat-input">
+                <input type="text" id="message-input" placeholder="Votre message...">
+                <button id="send-button"><i class="fas fa-paper-plane"></i></button>
+            </div>
         </div>
         
         <div id="post-creation-view" class="view post-creation-view secondary">
@@ -823,35 +851,50 @@
             </div>
             <div class="post-input-area">
                 <div id="square-content">
-                    <!-- MODIFICATION : LIMITE A 70 -->
-                    <textarea id="post-textarea" placeholder="Exprimez-vous..." maxlength="70"></textarea>
+                    <textarea id="post-textarea" placeholder="Exprimez-vous..." maxlength="200"></textarea>
                 </div>
-                <!-- MODIFICATION : COMPTEUR A 70 -->
-                <div class="char-limit-indicator"><span id="char-count">0</span> / 70</div>
+                <div class="char-limit-indicator">
+                    <span id="char-count">0</span> / 200
+                </div>
             </div>
             <div class="post-controls">
-                <div class="control-row"><label>Couleur</label><div class="color-swatches-container" id="post-color-swatches"></div></div>
-                <div class="control-row"><label>Police</label><button class="control-button" id="font-style-button"><i class="fas fa-font"></i></button></div>
-                <div class="control-row"><label>Anonyme</label><label class="switch"><input type="checkbox" id="anonymous-switch-input"><span class="slider"></span></label></div>
+                <div class="control-row">
+                    <label>Couleur de fond</label>
+                    <div class="color-swatches-container" id="post-color-swatches"></div>
+                </div>
+                <div class="control-row">
+                    <label>Style de police</label>
+                    <button class="control-button" id="font-style-button">
+                        <i class="fas fa-font"></i>
+                    </button>
+                </div>
+                <div class="control-row">
+                    <label>Publier en anonyme</label>
+                    <label class="switch">
+                        <input type="checkbox" id="anonymous-switch-input">
+                        <span class="slider"></span>
+                    </label>
+                </div>
             </div>
         </div>
 
+        <div id="toast-message">Message</div>
+        <div id="share-capture-container"></div>
+        
         <nav class="nav-bar">
             <div class="nav-item active" data-view="feed-view"><i class="fas fa-home"></i><span>Flux</span></div>
             <div class="nav-item" data-view="contacts-view"><i class="fas fa-users"></i><span>Amis</span></div>
             <div class="nav-item" data-view="profile-view"><i class="fas fa-user"></i><span>Profil</span></div>
         </nav>
-        <div id="toast-message">Message</div>
-        <div id="share-capture-container"></div>
     </div>
 
-    <!-- MODALES -->
+    <!-- Modales (Profil, Amis, QR...) -->
     <div id="edit-profile-modal" class="modal-backdrop">
         <div class="modal-content">
             <h3>Modifier le profil</h3>
-            <input type="text" id="edit-username-input" placeholder="Nom">
-            <textarea id="edit-bio-textarea" placeholder="Bio"></textarea>
-            <div id="edit-color-swatches"></div>
+            <div><label>Nom d'utilisateur</label><input type="text" id="edit-username-input" maxlength="20"></div>
+            <div><label>Bio</label><textarea id="edit-bio-textarea" maxlength="150"></textarea></div>
+            <div><label>Couleur du profil</label><div id="edit-color-swatches"></div></div>
             <div class="modal-actions"><button id="cancel-edit-btn">Annuler</button><button id="save-profile-btn">Enregistrer</button></div>
         </div>
     </div>
@@ -859,10 +902,9 @@
     <div id="friend-options-modal" class="modal-backdrop">
         <div class="modal-content">
             <h3>Options d'amis</h3>
-            <button id="show-friend-requests" class="friend-option-button"><div class="friend-option-button-text"><i class="fas fa-bell"></i><span>Demandes</span></div><span id="pending-requests-count-badge" class="request-count-badge" style="display: none;">0</span></button>
-            <button id="open-scanner-btn" class="friend-option-button"><div class="friend-option-button-text"><i class="fas fa-camera"></i><span>Scanner QR</span></div></button>
-            <button id="scan-qr-code" class="friend-option-button"><div class="friend-option-button-text"><i class="fas fa-id-card"></i><span>Ajouter par ID</span></div></button>
-            <button id="share-profile-link" class="friend-option-button"><div class="friend-option-button-text"><i class="fas fa-share-alt"></i><span>Inviter (Lien)</span></div></button>
+            <button id="show-friend-requests" class="friend-option-button"><div class="friend-option-button-text"><i class="fas fa-bell"></i><span>Demandes d'amis</span></div><span id="pending-requests-count-badge" class="request-count-badge" style="display: none;">0</span></button>
+            <button id="enter-id-manually" class="friend-option-button"><div class="friend-option-button-text"><i class="fas fa-id-card"></i><span>Ajouter par ID</span></div></button>
+            <button id="share-profile-link" class="friend-option-button"><div class="friend-option-button-text"><i class="fas fa-share-alt"></i><span>Inviter un ami (Lien)</span></div></button>
             <button id="show-my-qr" class="friend-option-button"><div class="friend-option-button-text"><i class="fas fa-qrcode"></i><span>Mon QR Code</span></div></button>
             <div class="modal-actions"><button id="cancel-friend-options-btn">Annuler</button></div>
         </div>
@@ -870,37 +912,30 @@
     
     <div id="qr-code-modal" class="modal-backdrop">
         <div class="modal-content">
-            <h3>Mon QR Code</h3><canvas id="qr-code-canvas"></canvas>
-            <p style="text-align: center; font-size: 14px;">Scan pour m'ajouter !</p>
-            <div class="modal-actions"><button id="close-qr-modal-btn">Fermer</button></div>
-        </div>
-    </div>
-
-    <div id="scanner-modal" class="modal-backdrop">
-        <div class="modal-content">
-            <h3>Scanner un QR</h3>
-            <div id="reader"></div>
-            <div class="modal-actions"><button id="close-scanner-btn">Fermer</button></div>
+            <h3>Mon QR Code Drop</h3><canvas id="qr-code-canvas"></canvas>
+            <p style="font-size: 14px; text-align: center; color: var(--last-seen-color);">Partagez ce code ou votre ID : <strong id="qr-user-id" style="color: var(--text-color);"></strong></p>
+            <div class="modal-actions"><button id="close-qr-modal-btn" style="background-color: var(--highlight-color); color: white;">Fermer</button></div>
         </div>
     </div>
     
     <div id="paste-id-modal" class="modal-backdrop">
         <div class="modal-content">
-            <h3>Ajouter par ID</h3>
-            <input type="text" id="paste-id-input" placeholder="ID de l'ami">
-            <div class="modal-actions"><button id="cancel-paste-id-btn">Annuler</button><button id="send-friend-request-btn">Envoyer</button></div>
+            <h3>Ajouter un ami par ID</h3>
+            <p style="font-size: 14px; color: var(--last-seen-color); text-align: center;">Collez l'ID de l'utilisateur.</p>
+            <div><label>ID de l'utilisateur</label><input type="text" id="paste-id-input" placeholder="Coller l'ID ici..."></div>
+            <div class="modal-actions"><button id="cancel-paste-id-btn">Annuler</button><button id="send-friend-request-btn" style="background-color: var(--highlight-color); color: white;">Envoyer</button></div>
         </div>
     </div>
     
     <div id="friend-requests-modal" class="modal-backdrop">
         <div class="modal-content">
-            <h3>Demandes</h3>
+            <h3>Demandes d'amis</h3>
             <div id="friend-requests-list"></div>
             <div class="modal-actions"><button id="cancel-friend-requests-btn">Fermer</button></div>
         </div>
     </div>
 
-    <script type="module">
+<script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { 
             getAuth, 
@@ -933,12 +968,10 @@
         const postsCollectionRef = collection(db, dbPath, 'posts');
         
         // --- CONSTANTES & ETAT ---
-        const PROFILE_COLORS = ['#e57373', '#81c784', '#64b5f6', '#f06292', '#ba68c8', '#ffd54f', '#7986cb', '#4db6ac', '#9575cd', '#4fc3f7'];
-        // MODIFICATION: POLICES VARIEES
-        const POST_FONT_FAMILIES = ['font-inter', 'font-pacifico', 'font-oswald', 'font-courier'];
+        const PROFILE_COLORS = ['#e57373', '#81c784', '#64b5f6', '#f06292', '#ba68c8', '#ffd54f', '#7986cb', '#4db6ac', '#9575cd', '#4fc3f7', '#a1887f', '#90a4ae'];
+        const POST_FONT_FAMILIES = ['font-inter', 'font-roboto', 'font-montserrat', 'font-pacifico'];
         const POST_COLOR_PALETTE = ['#f1f1f1', '#D6E9F7', '#D1F7D1', '#FFF7D1', '#F7D1D1', '#A0D4FE', '#84E084', '#FEEA84', '#FE8484'];
-        // MODIFICATION: LIMITE A 70
-        const MAX_CHARS = 70;
+        const MAX_CHARS = 200;
         const BASE_URL = 'https://drop-24.netlify.app/';
 
         let currentUserId = null;
@@ -956,6 +989,50 @@
         // Etat UI Auth
         let isLoginMode = true;
 
+        // --- DOM REFERENCES ---
+        const authView = document.getElementById('auth-view');
+        const appContainer = document.getElementById('app-container');
+        
+        // Auth Elements
+        const authEmailInput = document.getElementById('auth-email');
+        const authPasswordInput = document.getElementById('auth-password');
+        const loginBtn = document.getElementById('login-btn');
+        const googleBtn = document.getElementById('google-btn');
+        const authToggleText = document.getElementById('auth-toggle-text');
+        const authToggleLink = document.getElementById('auth-toggle-link');
+        const logoutBtn = document.getElementById('logout-btn');
+
+        // App Elements
+        const viewWrapper = document.getElementById('view-wrapper');
+        const friendsList = document.getElementById('friends-list');
+        const navItems = document.querySelectorAll('.nav-item');
+        const editProfileModal = document.getElementById('edit-profile-modal');
+        const feedContent = document.getElementById('feed-content');
+        const friendSearchInput = document.getElementById('search-input'); 
+        const feedSearchInput = document.getElementById('feed-search-input'); 
+
+        // Refs Modales
+        const addFriendFab = document.getElementById('add-friend-fab');
+        const friendOptionsModal = document.getElementById('friend-options-modal');
+        const qrCodeModal = document.getElementById('qr-code-modal');
+        const pasteIdModal = document.getElementById('paste-id-modal'); 
+        const friendRequestsModal = document.getElementById('friend-requests-modal'); 
+        const friendRequestsList = document.getElementById('friend-requests-list'); 
+        const captureContainer = document.getElementById('share-capture-container');
+        
+        // Refs Post
+        const postCreationView = document.getElementById('post-creation-view');
+        const postTextarea = document.getElementById('post-textarea');
+        const charCountSpan = document.getElementById('char-count');
+        const publishButton = document.getElementById('publish-button');
+        const postColorSwatches = document.getElementById('post-color-swatches');
+        const fontStyleButton = document.getElementById('font-style-button');
+        const squareContent = document.getElementById('square-content');
+        const anonymousSwitch = document.getElementById('anonymous-switch-input');
+        let currentPostFontIndex = 0;
+        let currentPostColor = POST_COLOR_PALETTE[0];
+        let isAnonymousPost = false;
+
         // --- UTILS ---
         let toastTimeout;
         function showMessage(message, isSuccess) {
@@ -966,17 +1043,8 @@
             clearTimeout(toastTimeout);
             toastTimeout = setTimeout(() => { toast.className = toast.className.replace('show', ''); }, 3000);
         }
-        
-        // Fonctions modales unifiées (Robustes pour élément ou string)
-        function showModal(elOrId) {
-            const el = typeof elOrId === 'string' ? document.getElementById(elOrId) : elOrId;
-            if (el) el.style.display = 'flex';
-        }
-        function hideModal(elOrId) {
-            const el = typeof elOrId === 'string' ? document.getElementById(elOrId) : elOrId;
-            if (el) el.style.display = 'none';
-        }
-        
+        function showModal(el) { el.style.display = 'flex'; }
+        function hideModal(el) { el.style.display = 'none'; }
         function showSecondaryView(el) { el.classList.add('visible'); }
         function hideSecondaryView(el) { el.classList.remove('visible'); }
 
@@ -995,7 +1063,7 @@
                 listenToFriendRequests();
                 navigateTo('feed-view');
                 
-                // --- AUTO ADD FRIEND VIA URL ---
+                // --- NOUVEAU: AUTO ADD FRIEND VIA URL ---
                 const urlParams = new URLSearchParams(window.location.search);
                 const targetUid = urlParams.get('uid');
                 if(targetUid && targetUid !== currentUserId) {
@@ -1018,42 +1086,6 @@
                 if(unsubscribeFriendRequestsListener) unsubscribeFriendRequestsListener();
             }
         });
-
-        // --- DATA & LOGIC ---
-        
-        // DOM References
-        const authView = document.getElementById('auth-view');
-        const appContainer = document.getElementById('app-container');
-        const authEmailInput = document.getElementById('auth-email');
-        const authPasswordInput = document.getElementById('auth-password');
-        const loginBtn = document.getElementById('login-btn');
-        const googleBtn = document.getElementById('google-btn');
-        const authToggleText = document.getElementById('auth-toggle-text');
-        const authToggleLink = document.getElementById('auth-toggle-link');
-        const logoutBtn = document.getElementById('logout-btn');
-        const viewWrapper = document.getElementById('view-wrapper');
-        const friendsList = document.getElementById('friends-list');
-        const navItems = document.querySelectorAll('.nav-item');
-        const editProfileModal = document.getElementById('edit-profile-modal');
-        const feedContent = document.getElementById('feed-content');
-        const friendSearchInput = document.getElementById('search-input'); 
-        const feedSearchInput = document.getElementById('feed-search-input'); 
-        const addFriendFab = document.getElementById('add-friend-fab');
-        const friendOptionsModal = document.getElementById('friend-options-modal');
-        const qrCodeModal = document.getElementById('qr-code-modal');
-        const pasteIdModal = document.getElementById('paste-id-modal'); 
-        const friendRequestsModal = document.getElementById('friend-requests-modal'); 
-        const friendRequestsList = document.getElementById('friend-requests-list'); 
-        const captureContainer = document.getElementById('share-capture-container');
-        const postCreationView = document.getElementById('post-creation-view');
-        const postTextarea = document.getElementById('post-textarea');
-        const charCountSpan = document.getElementById('char-count');
-        const publishButton = document.getElementById('publish-button');
-        const postColorSwatches = document.getElementById('post-color-swatches');
-        const fontStyleButton = document.getElementById('font-style-button');
-        const squareContent = document.getElementById('square-content');
-        const anonymousSwitch = document.getElementById('anonymous-switch-input');
-        let html5QrcodeScanner = null;
 
         // Toggle Login/Signup
         authToggleLink.addEventListener('click', () => {
@@ -1115,6 +1147,8 @@
             }
         });
 
+        // --- DATA & LOGIC ---
+        
         async function upsertUserDocument(user) {
             const userRef = doc(usersCollectionRef, user.uid);
             const userDoc = await getDoc(userRef);
@@ -1210,7 +1244,7 @@
         }
         
         async function sendFriendRequest(recipientId) {
-            if (!recipientId || recipientId === currentUserId) return showMessage("ID invalide.", false);
+            if (!recipientId || recipientId === currentUserId) return showMessage("Impossible de s'ajouter soi-même.", false);
             if (usersData[currentUserId]?.friends?.includes(recipientId)) return showMessage("Déjà amis.", false);
             try {
                 const requestRef = doc(db, dbPath, 'users', recipientId, 'friendRequests', currentUserId);
@@ -1225,10 +1259,16 @@
             if (!currentUserId || !senderId) return;
             
             const batch = writeBatch(db);
+            
+            // 1. Mettre à jour MON profil
             const currentUserRef = doc(usersCollectionRef, currentUserId);
             batch.update(currentUserRef, { friends: arrayUnion(senderId) });
+            
+            // 2. Supprimer la demande
             const requestRef = doc(db, dbPath, 'users', currentUserId, 'friendRequests', senderId);
             batch.delete(requestRef);
+
+            // 3. Mettre à jour le profil de l'AUTRE
             const senderUserRef = doc(usersCollectionRef, senderId);
             batch.update(senderUserRef, { friends: arrayUnion(currentUserId) });
 
@@ -1236,9 +1276,20 @@
                 await batch.commit(); 
                 showMessage("Ami ajouté !", true); 
             } catch (error) { 
-                console.error("Erreur acceptation:", error);
+                console.error("Erreur acceptation (Probablement permissions Firestore):", error);
+                
                 if (error.code === 'permission-denied') {
-                    showMessage("Erreur permission.", false);
+                    console.warn("Tentative de fallback : mise à jour locale uniquement.");
+                    try {
+                        const batch2 = writeBatch(db);
+                        batch2.update(currentUserRef, { friends: arrayUnion(senderId) });
+                        batch2.delete(requestRef);
+                        await batch2.commit();
+                        showMessage("Ami ajouté (Vérifiez les règles pour la réciprocité) !", true);
+                        alert("Note: L'ami a été ajouté de votre côté, mais vos règles de sécurité empêchent de vous ajouter automatiquement à sa liste. Veuillez mettre à jour vos règles Firestore pour autoriser 'write' si 'request.auth != null'.");
+                    } catch (err2) {
+                        showMessage("Erreur critique d'ajout.", false);
+                    }
                 } else {
                     showMessage("Erreur acceptation.", false); 
                 }
@@ -1413,7 +1464,7 @@
             document.getElementById('show-my-qr').addEventListener('click', showMyQrCode);
             document.getElementById('close-qr-modal-btn').addEventListener('click', closeQrModal);
             document.getElementById('show-friend-requests').addEventListener('click', openFriendRequestsModal);
-            document.getElementById('scan-qr-code').addEventListener('click', openPasteIdModal);
+            document.getElementById('enter-id-manually').addEventListener('click', openPasteIdModal);
             document.getElementById('cancel-paste-id-btn').addEventListener('click', () => hideModal(pasteIdModal));
             document.getElementById('send-friend-request-btn').addEventListener('click', async () => {
                 await sendFriendRequest(document.getElementById('paste-id-input').value.trim()); hideModal(pasteIdModal);
@@ -1426,35 +1477,6 @@
                 if(acc) { acc.disabled=true; acceptFriendRequest(acc.dataset.senderId); }
                 else if(rej) { rej.disabled=true; rejectFriendRequest(rej.dataset.senderId); }
             });
-            
-            // AJOUT : Gestion du bouton scanner
-            document.getElementById('open-scanner-btn').onclick = () => {
-                hideModal('friend-options-modal');
-                showModal('scanner-modal');
-                html5QrcodeScanner = new Html5Qrcode("reader");
-                html5QrcodeScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 },
-                    (decodedText) => {
-                        html5QrcodeScanner.stop().then(() => hideModal('scanner-modal'));
-                        try {
-                            const url = new URL(decodedText);
-                            const id = url.searchParams.get('uid'); // Attention, c'est 'uid' dans le lien généré
-                            if (id) sendFriendRequest(id);
-                            else showMessage("QR Code invalide", false);
-                        } catch {
-                            sendFriendRequest(decodedText); 
-                        }
-                    },
-                    (errorMessage) => { }
-                ).catch(err => {
-                    hideModal('scanner-modal');
-                    showMessage("Impossible d'accéder à la caméra", false);
-                });
-            };
-            
-            document.getElementById('close-scanner-btn').onclick = () => {
-                if(html5QrcodeScanner) html5QrcodeScanner.stop().then(() => hideModal('scanner-modal'));
-                else hideModal('scanner-modal');
-            };
         });
         
         // --- FUNCTIONS ---
@@ -1478,13 +1500,10 @@
         function openPasteIdModal() { hideModal(friendOptionsModal); document.getElementById('paste-id-input').value=''; showModal(pasteIdModal); }
         function openFriendRequestsModal() { hideModal(friendOptionsModal); showModal(friendRequestsModal); renderFriendRequestsList(); }
         function showChat(uid) { showMessage("Chat bientôt dispo !", false); }
-        
-        // MODIFICATION : LIMITE DE CARACTERES
         function updateCharCount() {
             const l = postTextarea.value.length; charCountSpan.textContent=l;
             publishButton.disabled = l===0 || l>MAX_CHARS;
         }
-        
         function generatePostColorSwatches() {
             const div = document.getElementById('post-color-swatches'); div.innerHTML='';
             POST_COLOR_PALETTE.forEach(c => {
@@ -1679,3 +1698,4 @@
     </script>
 </body>
 </html>
+
