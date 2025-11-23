@@ -36,8 +36,9 @@
 
         .font-inter { font-family: 'Inter', sans-serif; }
         .font-roboto { font-family: 'Roboto', sans-serif; }
-        .font-montserrat { font-family: 'Montserrat', sans-serif; }
+        .font-montserrat { font-family: 'Montserrat', sans-serif; font-weight: 700; } /* Grasse */
         .font-pacifico { font-family: 'Pacifico', cursive; }
+        .font-mono { font-family: 'Courier New', Courier, monospace; } /* Monospace ajoutée */
 
         *, *::before, *::after {
             box-sizing: border-box;
@@ -851,10 +852,10 @@
             </div>
             <div class="post-input-area">
                 <div id="square-content">
-                    <textarea id="post-textarea" placeholder="Exprimez-vous..." maxlength="200"></textarea>
+                    <textarea id="post-textarea" placeholder="Exprimez-vous..." maxlength="70"></textarea>
                 </div>
                 <div class="char-limit-indicator">
-                    <span id="char-count">0</span> / 200
+                    <span id="char-count">0</span> / 70
                 </div>
             </div>
             <div class="post-controls">
@@ -969,9 +970,12 @@
         
         // --- CONSTANTES & ETAT ---
         const PROFILE_COLORS = ['#e57373', '#81c784', '#64b5f6', '#f06292', '#ba68c8', '#ffd54f', '#7986cb', '#4db6ac', '#9575cd', '#4fc3f7', '#a1887f', '#90a4ae'];
-        const POST_FONT_FAMILIES = ['font-inter', 'font-roboto', 'font-montserrat', 'font-pacifico'];
+        
+        // Polices mises à jour : Classique, Pacifico, Monospace, Grasse
+        const POST_FONT_FAMILIES = ['font-inter', 'font-pacifico', 'font-mono', 'font-montserrat'];
+        
         const POST_COLOR_PALETTE = ['#f1f1f1', '#D6E9F7', '#D1F7D1', '#FFF7D1', '#F7D1D1', '#A0D4FE', '#84E084', '#FEEA84', '#FE8484'];
-        const MAX_CHARS = 200;
+        const MAX_CHARS = 70; // Limite passée à 70
         const BASE_URL = 'https://drop-24.netlify.app/';
 
         let currentUserId = null;
@@ -1698,4 +1702,3 @@
     </script>
 </body>
 </html>
-
