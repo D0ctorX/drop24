@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta name="google-site-verification" content="lULIZecjpMCUjs1v3f7cUVpNzZf0cceze-bv5Zkq9Qs" />
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Drop</title>
@@ -9,7 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <!-- QR Code Generator -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.1/qrcode.min.js"></script>
-    <!-- HTML2Canvas pour la génération d'image -->
+    <!-- HTML2Canvas -->
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 
     <style>
@@ -52,7 +51,7 @@
             font-family: 'Inter', sans-serif;
             background-color: var(--page-bg); 
             color: var(--text-color);
-            overflow: hidden; /* Empêche le scroll global du body */
+            overflow: hidden;
         }
 
         /* --- VUE AUTHENTIFICATION --- */
@@ -144,7 +143,6 @@
         }
 
         /* --- APPLICATION PRINCIPALE --- */
-        /* Caché par défaut, affiché par JS après auth */
         #app-container {
             display: none; 
             width: 100%;
@@ -235,7 +233,7 @@
         .back-button { font-size: 20px; cursor: pointer; width: 40px; text-align: left; }
 
         /* Scroll Fix */
-        .feed-content, .contacts-content, .chat-content, .profile-content, #friend-requests-list {
+        .feed-content, .contacts-content, .profile-content, #friend-requests-list {
             flex: 1 1 0;
             overflow-y: auto;
             padding-bottom: 80px;
@@ -244,7 +242,7 @@
             scrollbar-width: none;  
         }
         .feed-content::-webkit-scrollbar, .contacts-content::-webkit-scrollbar, 
-        .chat-content::-webkit-scrollbar, .profile-content::-webkit-scrollbar,
+        .profile-content::-webkit-scrollbar,
         #friend-requests-list::-webkit-scrollbar {
             display: none;
         }
@@ -351,25 +349,6 @@
             border-radius: 12px;
             margin-left: 8px;
         }
-        
-        /* --- Chat --- */
-        .chat-view .view-header { gap: 10px; }
-        #chat-user-pp { width: 40px; height: 40px; border-radius: 50%; }
-        .chat-view .header-title { flex-grow: 1; text-align: left; }
-        .chat-content { background-color: #f0f2f5; padding: 10px; }
-        #chat-body { display: flex; flex-direction: column; gap: 10px; }
-        .message-container { display: flex; width: 100%; }
-        .message-row { max-width: 75%; display: flex; align-items: flex-end; gap: 8px; }
-        .message { padding: 10px 15px; border-radius: 18px; font-size: 15px; line-height: 1.4; word-wrap: break-word; }
-        .message-time { font-size: 11px; color: var(--last-seen-color); white-space: nowrap; }
-        .message-container.sent { justify-content: flex-end; }
-        .message.sent { background-color: var(--highlight-color); color: white; border-bottom-right-radius: 4px; }
-        .message-container.received { justify-content: flex-start; }
-        .message.received { background-color: var(--secondary-bg); border-bottom-left-radius: 4px; }
-        .chat-input { display: flex; padding: 10px; background-color: var(--secondary-bg); border-top: 1px solid var(--border-color); flex-shrink: 0; }
-        #message-input { flex-grow: 1; border: 1px solid var(--border-color); border-radius: 20px; padding: 10px 15px; font-size: 15px; }
-        #send-button { background: none; border: none; font-size: 22px; color: var(--highlight-color); cursor: pointer; padding: 0 10px; }
-        
         
         /* --- Profil --- */
         .profile-header { display: flex; align-items: center; padding: 15px; gap: 15px; background-color: var(--secondary-bg); border-bottom: 1px solid var(--border-color); }
@@ -711,6 +690,24 @@
             font-family: 'Pacifico', cursive;
         }
 
+        /* VUES SECONDAIRES (Chat) */
+        .chat-view .view-header { gap: 10px; }
+        #chat-user-pp { width: 40px; height: 40px; border-radius: 50%; }
+        .chat-view .header-title { flex-grow: 1; text-align: left; }
+        .chat-content { background-color: #f0f2f5; padding: 10px; }
+        #chat-body { display: flex; flex-direction: column; gap: 10px; }
+        .message-container { display: flex; width: 100%; }
+        .message-row { max-width: 75%; display: flex; align-items: flex-end; gap: 8px; }
+        .message { padding: 10px 15px; border-radius: 18px; font-size: 15px; line-height: 1.4; word-wrap: break-word; }
+        .message-time { font-size: 11px; color: var(--last-seen-color); white-space: nowrap; }
+        .message-container.sent { justify-content: flex-end; }
+        .message.sent { background-color: var(--highlight-color); color: white; border-bottom-right-radius: 4px; }
+        .message-container.received { justify-content: flex-start; }
+        .message.received { background-color: var(--secondary-bg); border-bottom-left-radius: 4px; }
+        .chat-input { display: flex; padding: 10px; background-color: var(--secondary-bg); border-top: 1px solid var(--border-color); flex-shrink: 0; }
+        #message-input { flex-grow: 1; border: 1px solid var(--border-color); border-radius: 20px; padding: 10px 15px; font-size: 15px; }
+        #send-button { background: none; border: none; font-size: 22px; color: var(--highlight-color); cursor: pointer; padding: 0 10px; }
+
     </style>
 </head>
 <body>
@@ -903,6 +900,7 @@
         <div class="modal-content">
             <h3>Options d'amis</h3>
             <button id="show-friend-requests" class="friend-option-button"><div class="friend-option-button-text"><i class="fas fa-bell"></i><span>Demandes d'amis</span></div><span id="pending-requests-count-badge" class="request-count-badge" style="display: none;">0</span></button>
+            <button id="scan-qr-code" class="friend-option-button"><div class="friend-option-button-text"><i class="fas fa-camera"></i><span>Scanner QR Code</span></div></button>
             <button id="enter-id-manually" class="friend-option-button"><div class="friend-option-button-text"><i class="fas fa-id-card"></i><span>Ajouter par ID</span></div></button>
             <button id="share-profile-link" class="friend-option-button"><div class="friend-option-button-text"><i class="fas fa-share-alt"></i><span>Inviter un ami (Lien)</span></div></button>
             <button id="show-my-qr" class="friend-option-button"><div class="friend-option-button-text"><i class="fas fa-qrcode"></i><span>Mon QR Code</span></div></button>
@@ -915,6 +913,14 @@
             <h3>Mon QR Code Drop</h3><canvas id="qr-code-canvas"></canvas>
             <p style="font-size: 14px; text-align: center; color: var(--last-seen-color);">Partagez ce code ou votre ID : <strong id="qr-user-id" style="color: var(--text-color);"></strong></p>
             <div class="modal-actions"><button id="close-qr-modal-btn" style="background-color: var(--highlight-color); color: white;">Fermer</button></div>
+        </div>
+    </div>
+
+    <div id="scanner-modal" class="modal-backdrop">
+        <div class="modal-content" style="background: #000; color: white;">
+            <h3>Scanner un QR Code Drop</h3>
+            <div id="reader"></div>
+            <div class="modal-actions"><button id="cancel-scan-btn" style="background: #333; color: white;">Fermer</button></div>
         </div>
     </div>
     
@@ -980,6 +986,7 @@
         let postsData = [];
         let filteredPostsData = []; 
         let pendingRequests = []; 
+        let html5QrcodeScanner = null;
         
         let unsubscribeUsersListener = null;
         let unsubscribeFeedListener = null;
@@ -1015,6 +1022,7 @@
         const addFriendFab = document.getElementById('add-friend-fab');
         const friendOptionsModal = document.getElementById('friend-options-modal');
         const qrCodeModal = document.getElementById('qr-code-modal');
+        const scannerModal = document.getElementById('scanner-modal');
         const pasteIdModal = document.getElementById('paste-id-modal'); 
         const friendRequestsModal = document.getElementById('friend-requests-modal'); 
         const friendRequestsList = document.getElementById('friend-requests-list'); 
@@ -1067,8 +1075,11 @@
                 const urlParams = new URLSearchParams(window.location.search);
                 const targetUid = urlParams.get('uid');
                 if(targetUid && targetUid !== currentUserId) {
+                    // Petit délai pour s'assurer que les données sont chargées
                     setTimeout(() => {
+                         // Nettoyer l'URL pour éviter de spammer la demande au refresh
                         window.history.replaceState({}, document.title, window.location.pathname);
+                        // Demander confirmation ou envoyer directement
                         if(confirm("Voulez-vous envoyer une demande d'ami à cet utilisateur ?")) {
                             sendFriendRequest(targetUid);
                         }
@@ -1259,16 +1270,10 @@
             if (!currentUserId || !senderId) return;
             
             const batch = writeBatch(db);
-            
-            // 1. Mettre à jour MON profil
             const currentUserRef = doc(usersCollectionRef, currentUserId);
             batch.update(currentUserRef, { friends: arrayUnion(senderId) });
-            
-            // 2. Supprimer la demande
             const requestRef = doc(db, dbPath, 'users', currentUserId, 'friendRequests', senderId);
             batch.delete(requestRef);
-
-            // 3. Mettre à jour le profil de l'AUTRE
             const senderUserRef = doc(usersCollectionRef, senderId);
             batch.update(senderUserRef, { friends: arrayUnion(currentUserId) });
 
@@ -1277,7 +1282,6 @@
                 showMessage("Ami ajouté !", true); 
             } catch (error) { 
                 console.error("Erreur acceptation (Probablement permissions Firestore):", error);
-                
                 if (error.code === 'permission-denied') {
                     console.warn("Tentative de fallback : mise à jour locale uniquement.");
                     try {
@@ -1286,7 +1290,7 @@
                         batch2.delete(requestRef);
                         await batch2.commit();
                         showMessage("Ami ajouté (Vérifiez les règles pour la réciprocité) !", true);
-                        alert("Note: L'ami a été ajouté de votre côté, mais vos règles de sécurité empêchent de vous ajouter automatiquement à sa liste. Veuillez mettre à jour vos règles Firestore pour autoriser 'write' si 'request.auth != null'.");
+                        alert("Note: L'ami a été ajouté de votre côté, mais vos règles de sécurité empêchent de vous ajouter automatiquement à sa liste.");
                     } catch (err2) {
                         showMessage("Erreur critique d'ajout.", false);
                     }
@@ -1374,7 +1378,7 @@
             navigateTo('profile-view');
         }
 
-        // --- FLUX & POSTS ---
+        // --- FLUX & POSTS (Identique) ---
         function listenToFeed() {
             if (unsubscribeFeedListener) unsubscribeFeedListener();
             const q = query(postsCollectionRef, orderBy('createdAt', 'desc'));
@@ -1405,14 +1409,11 @@
         }
         function createPostElement(post) {
             const pub = post.isAnon ? "Anonyme" : (usersData[post.publisherId]?.username || "...");
-            const publisherAttr = !post.isAnon && post.publisherId ? `data-publisher-id="${post.publisherId}"` : '';
-            
             const rem = post.expiresAt - new Date();
             const txt = rem > 0 ? formatCountdown(rem) : "Fini";
             const l = (post.likedBy||[]).length, d = (post.dislikedBy||[]).length;
             const il = (post.likedBy||[]).includes(currentUserId), id = (post.dislikedBy||[]).includes(currentUserId);
-            
-            return `<div class="post-card" data-post-id="${post.id}"><div class="post-header"><span class="post-publisher" ${publisherAttr}>${pub}</span><span class="post-countdown" data-expires="${post.expiresAt.getTime()}">${txt}</span></div><div class="post-image-wrapper"><div class="post-content-inner" style="background-color:${post.backgroundColor}"><p class="post-message ${post.fontClass}">${post.message}</p></div></div><div class="post-actions"><div class="action-button ${il?'liked':''}" data-action="like"><i class="fas fa-thumbs-up"></i><span>${l}</span></div><div class="action-button ${id?'disliked':''}" data-action="dislike"><i class="fas fa-thumbs-down"></i><span>${d}</span></div><div class="action-button share-btn" data-action="share"><i class="fas fa-share-square"></i></div></div></div>`;
+            return `<div class="post-card" data-post-id="${post.id}"><div class="post-header"><span class="post-publisher">${pub}</span><span class="post-countdown" data-expires="${post.expiresAt.getTime()}">${txt}</span></div><div class="post-image-wrapper"><div class="post-content-inner" style="background-color:${post.backgroundColor}"><p class="post-message ${post.fontClass}">${post.message}</p></div></div><div class="post-actions"><div class="action-button ${il?'liked':''}" data-action="like"><i class="fas fa-thumbs-up"></i><span>${l}</span></div><div class="action-button ${id?'disliked':''}" data-action="dislike"><i class="fas fa-thumbs-down"></i><span>${d}</span></div><div class="action-button share-btn" data-action="share"><i class="fas fa-share-square"></i></div></div></div>`;
         }
         function formatCountdown(ms) {
             const s = Math.floor(ms/1000);
@@ -1427,19 +1428,27 @@
         
         // --- HANDLERS ---
         document.addEventListener('DOMContentLoaded', () => {
+            // Nav
             navItems.forEach(i => i.addEventListener('click', () => {
                 if(i.dataset.view === 'profile-view') { activeProfileUserId = null; showProfile(currentUserId); }
                 else navigateTo(i.dataset.view);
             }));
             document.getElementById('my-profile-nav-item').addEventListener('click', () => navigateTo('contacts-view'));
             
+            // Search
             friendSearchInput.addEventListener('input', renderFriendsList);
             feedSearchInput.addEventListener('input', filterAndRenderFeed);
 
+            // Edit Profile
             document.getElementById('edit-bio-btn').addEventListener('click', openEditProfileModal);
             document.getElementById('cancel-edit-btn').addEventListener('click', closeEditProfileModal);
             document.getElementById('save-profile-btn').addEventListener('click', saveProfileChanges);
             
+            // Friend Actions
+            document.getElementById('toggle-friend-btn')?.addEventListener('click', e => toggleFriendship(e.target.dataset.userId));
+            document.getElementById('profile-dm-btn')?.addEventListener('click', e => showChat(e.target.dataset.userId));
+
+            // Post Creation
             document.getElementById('create-post-header-btn').addEventListener('click', () => { generatePostColorSwatches(); showSecondaryView(postCreationView); });
             document.getElementById('post-creation-back-btn').addEventListener('click', () => hideSecondaryView(postCreationView));
             postTextarea.addEventListener('input', updateCharCount);
@@ -1447,30 +1456,29 @@
             anonymousSwitch.addEventListener('change', () => isAnonymousPost = anonymousSwitch.checked);
             publishButton.addEventListener('click', handlePublish);
             
+            // Feed Delegation
             feedContent.addEventListener('click', e => {
                 const btn = e.target.closest('.action-button');
                 if(btn) handlePostAction(e);
-
-                const publisher = e.target.closest('.post-publisher');
-                if(publisher && publisher.dataset.publisherId) {
-                    e.stopPropagation(); 
-                    showProfile(publisher.dataset.publisherId);
-                }
             });
             
+            // Friend Modals
             addFriendFab.addEventListener('click', openFriendOptionsMenu);
             document.getElementById('cancel-friend-options-btn').addEventListener('click', closeFriendOptionsMenu);
             document.getElementById('share-profile-link').addEventListener('click', shareProfileLink);
             document.getElementById('show-my-qr').addEventListener('click', showMyQrCode);
             document.getElementById('close-qr-modal-btn').addEventListener('click', closeQrModal);
             document.getElementById('show-friend-requests').addEventListener('click', openFriendRequestsModal);
+            document.getElementById('scan-qr-code').addEventListener('click', openScannerModal);
             document.getElementById('enter-id-manually').addEventListener('click', openPasteIdModal);
             document.getElementById('cancel-paste-id-btn').addEventListener('click', () => hideModal(pasteIdModal));
             document.getElementById('send-friend-request-btn').addEventListener('click', async () => {
                 await sendFriendRequest(document.getElementById('paste-id-input').value.trim()); hideModal(pasteIdModal);
             });
             document.getElementById('cancel-friend-requests-btn').addEventListener('click', () => hideModal(friendRequestsModal));
+            document.getElementById('cancel-scan-btn').addEventListener('click', closeScannerModal);
             
+            // Request Actions
             friendRequestsList.addEventListener('click', e => {
                 const acc = e.target.closest('.request-accept-btn');
                 const rej = e.target.closest('.request-reject-btn');
@@ -1479,7 +1487,7 @@
             });
         });
         
-        // --- FUNCTIONS ---
+        // Functions called by event listeners needing declaration
         function openEditProfileModal() {
             const u = usersData[currentUserId];
             if(!u) return;
@@ -1520,22 +1528,37 @@
             squareContent.classList.add(POST_FONT_FAMILIES[currentPostFontIndex]);
         }
         
+        // AJOUT DE LA FONCTION MANQUANTE
         async function saveProfileChanges() {
             const newUsername = document.getElementById('edit-username-input').value.trim();
             const newBio = document.getElementById('edit-bio-textarea').value.trim();
             const selectedColor = document.querySelector('#edit-color-swatches .selected')?.dataset.color;
-            if (!newUsername || newUsername.length < 3) return showMessage("Pseudo trop court.", false);
+
+            if (!newUsername || newUsername.length < 3) {
+                showMessage("Le nom d'utilisateur doit contenir au moins 3 caractères.", false);
+                return;
+            }
+
             const userRef = doc(usersCollectionRef, currentUserId);
             try {
-                await updateDoc(userRef, { username: newUsername, bio: newBio, profileColor: selectedColor || usersData[currentUserId].profileColor });
+                await updateDoc(userRef, {
+                    username: newUsername,
+                    bio: newBio,
+                    profileColor: selectedColor || usersData[currentUserId].profileColor
+                });
                 showMessage("Profil mis à jour !", true);
                 closeEditProfileModal();
-            } catch (error) { console.error(error); showMessage("Erreur maj profil.", false); }
+            } catch (error) {
+                console.error("Erreur de mise à jour du profil: ", error);
+                showMessage("Une erreur est survenue.", false);
+            }
         }
         
+        // REINTEGRATION DE HANDLEPUBLISH
         async function handlePublish() {
             const message = postTextarea.value.trim();
             if (message.length === 0 || message.length > MAX_CHARS) return;
+
             publishButton.disabled = true;
             try {
                 await addDoc(postsCollectionRef, {
@@ -1548,17 +1571,27 @@
                     likedBy: [],
                     dislikedBy: []
                 });
+                
                 const userRef = doc(usersCollectionRef, currentUserId);
                 const userDoc = await getDoc(userRef);
-                await updateDoc(userRef, { postsCount: (userDoc.data().postsCount || 0) + 1 });
+                const currentPostCount = userDoc.data().postsCount || 0;
+                await updateDoc(userRef, { postsCount: currentPostCount + 1 });
+                
                 postTextarea.value = '';
                 isAnonymousPost = false;
                 anonymousSwitch.checked = false;
                 hideSecondaryView(postCreationView);
                 showMessage("Post publié !", true);
-            } catch (error) { console.error(error); showMessage("Echec publication.", false); } finally { publishButton.disabled = false; }
+
+            } catch (error) {
+                console.error("Erreur de publication: ", error);
+                showMessage("La publication a échoué.", false);
+            } finally {
+                publishButton.disabled = false;
+            }
         }
 
+        // REINTEGRATION DE HANDLEPOSTACTION
         async function handlePostAction(e) {
             const button = e.target.closest('.action-button');
             if (!button || !currentUserId) return;
@@ -1582,10 +1615,13 @@
             const hasOtherAction = post[firestoreOtherAction]?.includes(currentUserId);
 
             const batch = writeBatch(db);
-            if (hasAction) batch.update(postRef, { [firestoreAction]: arrayRemove(currentUserId) });
-            else {
+            if (hasAction) {
+                batch.update(postRef, { [firestoreAction]: arrayRemove(currentUserId) });
+            } else {
                 batch.update(postRef, { [firestoreAction]: arrayUnion(currentUserId) });
-                if (hasOtherAction) batch.update(postRef, { [firestoreOtherAction]: arrayRemove(currentUserId) });
+                if (hasOtherAction) {
+                    batch.update(postRef, { [firestoreOtherAction]: arrayRemove(currentUserId) });
+                }
             }
             await batch.commit();
         }
@@ -1695,7 +1731,62 @@
 
         function closeQrModal() { hideModal(qrCodeModal); }
 
+        // --- SCANNER QR ---
+        function openScannerModal() {
+            hideModal(friendOptionsModal);
+            showModal(scannerModal);
+            
+            // Init scanner
+            if(!html5QrcodeScanner) {
+                html5QrcodeScanner = new Html5QrcodeScanner(
+                    "reader", { fps: 10, qrbox: 250 }
+                );
+            }
+            html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+        }
+        
+        function closeScannerModal() {
+            if(html5QrcodeScanner) {
+                html5QrcodeScanner.clear().then(() => {
+                    hideModal(scannerModal);
+                }).catch(error => {
+                    console.error("Failed to clear scanner", error);
+                    hideModal(scannerModal);
+                });
+            } else {
+                hideModal(scannerModal);
+            }
+        }
+        
+        function onScanSuccess(decodedText, decodedResult) {
+            // Gérer le résultat du scan
+            console.log(`Code scanné = ${decodedText}`);
+            
+            let uidToAdd = decodedText;
+            // Vérifier si c'est une URL Drop
+            if (decodedText.includes("uid=")) {
+                try {
+                    const url = new URL(decodedText);
+                    uidToAdd = url.searchParams.get("uid");
+                } catch (e) {
+                    console.error("Erreur parsing URL QR", e);
+                }
+            }
+            
+            if(uidToAdd) {
+                if(confirm(`Ajouter l'ami ID: ${uidToAdd} ?`)) {
+                    sendFriendRequest(uidToAdd);
+                    closeScannerModal();
+                }
+            } else {
+                showMessage("QR Code invalide pour Drop.", false);
+            }
+        }
+        
+        function onScanFailure(error) {
+            // Ignorer les erreurs de frame vide
+        }
+
     </script>
 </body>
 </html>
-
