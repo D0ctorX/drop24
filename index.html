@@ -604,6 +604,8 @@
             font-size: 20px; line-height: 1.4;
             color: var(--text-color);
             display: flex; align-items: center; justify-content: center;
+            font-family: inherit; /* CORRECTION: Force l'héritage de la police */
+            font-weight: inherit; /* CORRECTION: Force l'héritage du style gras */
         }
         .char-limit-indicator {
             margin-top: 10px;
@@ -851,7 +853,8 @@
                 <button id="publish-button" disabled>Publier</button>
             </div>
             <div class="post-input-area">
-                <div id="square-content">
+                <!-- AJOUT: Classe par défaut 'font-inter' pour que la police initiale soit correcte -->
+                <div id="square-content" class="font-inter">
                     <textarea id="post-textarea" placeholder="Exprimez-vous..." maxlength="70"></textarea>
                 </div>
                 <div class="char-limit-indicator">
