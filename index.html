@@ -32,6 +32,8 @@
             --page-bg: #f0f2f5; 
             --google-btn: #4285F4;
             --apple-btn: #000000;
+            --chat-bubble-sent: #3897f0;
+            --chat-bubble-received: #EFEFEF;
         }
 
         .font-inter { font-family: 'Inter', sans-serif; }
@@ -355,22 +357,123 @@
         
         /* --- Chat --- */
         .chat-view .view-header { gap: 10px; }
-        #chat-user-pp { width: 40px; height: 40px; border-radius: 50%; }
+        #chat-user-pp { width: 40px; height: 40px; border-radius: 50%; object-fit: cover;}
         .chat-view .header-title { flex-grow: 1; text-align: left; }
-        .chat-content { background-color: #f0f2f5; padding: 10px; }
-        #chat-body { display: flex; flex-direction: column; gap: 10px; }
-        .message-container { display: flex; width: 100%; }
-        .message-row { max-width: 75%; display: flex; align-items: flex-end; gap: 8px; }
-        .message { padding: 10px 15px; border-radius: 18px; font-size: 15px; line-height: 1.4; word-wrap: break-word; }
-        .message-time { font-size: 11px; color: var(--last-seen-color); white-space: nowrap; }
-        .message-container.sent { justify-content: flex-end; }
-        .message.sent { background-color: var(--highlight-color); color: white; border-bottom-right-radius: 4px; }
-        .message-container.received { justify-content: flex-start; }
-        .message.received { background-color: var(--secondary-bg); border-bottom-left-radius: 4px; }
-        .chat-input { display: flex; padding: 10px; background-color: var(--secondary-bg); border-top: 1px solid var(--border-color); flex-shrink: 0; }
-        #message-input { flex-grow: 1; border: 1px solid var(--border-color); border-radius: 20px; padding: 10px 15px; font-size: 15px; }
-        #send-button { background: none; border: none; font-size: 22px; color: var(--highlight-color); cursor: pointer; padding: 0 10px; }
+        .chat-content { background-color: #FFFFFF; padding: 15px; display: flex; flex-direction: column; gap: 8px; }
         
+        .message-container { display: flex; width: 100%; margin-bottom: 5px; }
+        .message-bubble { 
+            max-width: 75%; 
+            padding: 10px 14px; 
+            border-radius: 20px; 
+            font-size: 15px; 
+            line-height: 1.4; 
+            word-wrap: break-word; 
+            position: relative;
+        }
+        .message-time { 
+            font-size: 10px; 
+            margin-top: 4px;
+            display: block;
+            opacity: 0.7;
+            text-align: right;
+        }
+
+        .message-container.sent { justify-content: flex-end; }
+        .message-bubble.sent { 
+            background-color: var(--chat-bubble-sent); 
+            color: white; 
+            border-bottom-right-radius: 4px; 
+        }
+        
+        .message-container.received { justify-content: flex-start; }
+        .message-bubble.received { 
+            background-color: var(--chat-bubble-received); 
+            color: black; 
+            border-bottom-left-radius: 4px; 
+        }
+
+        .chat-footer { 
+            display: flex; 
+            align-items: center;
+            padding: 10px; 
+            background-color: var(--secondary-bg); 
+            border-top: 1px solid var(--border-color); 
+            gap: 10px;
+            position: relative;
+        }
+        
+        #emoji-btn {
+            font-size: 24px;
+            color: var(--text-color);
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 5px;
+        }
+        
+        #chat-input-wrapper {
+            flex-grow: 1;
+            background-color: var(--primary-bg);
+            border-radius: 24px;
+            padding: 0 15px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+        }
+
+        #message-input { 
+            flex-grow: 1; 
+            border: none; 
+            background: transparent;
+            padding: 12px 0; 
+            font-size: 15px; 
+            outline: none;
+        }
+        
+        #send-button { 
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--highlight-color); 
+            border: none; 
+            font-size: 16px; 
+            color: white; 
+            cursor: pointer; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        #send-button:disabled { opacity: 0.5; cursor: default; }
+
+        /* Emoji Picker */
+        #emoji-picker {
+            position: absolute;
+            bottom: 70px;
+            left: 10px;
+            background-color: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
+            padding: 10px;
+            display: none;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 8px;
+            width: 300px;
+            max-width: 90vw;
+            z-index: 50;
+        }
+        #emoji-picker.show { display: grid; }
+        .emoji-item {
+            font-size: 24px;
+            cursor: pointer;
+            text-align: center;
+            padding: 5px;
+            border-radius: 4px;
+        }
+        .emoji-item:hover { background-color: var(--primary-bg); }
+
         
         /* --- Profil --- */
         .profile-header { display: flex; align-items: center; padding: 15px; gap: 15px; background-color: var(--secondary-bg); border-bottom: 1px solid var(--border-color); }
@@ -837,11 +940,19 @@
                 <h1 id="chat-username" class="header-title">Chat</h1>
                 <div class="header-placeholder"></div>
             </div>
-            <div class="chat-content">
+            <div id="chat-content-container" class="chat-content">
                 <div id="chat-body"></div>
             </div>
-            <div class="chat-input">
-                <input type="text" id="message-input" placeholder="Votre message...">
+            <div class="chat-footer">
+                <!-- Emoji Picker -->
+                <button id="emoji-btn"><i class="far fa-smile"></i></button>
+                <div id="emoji-picker">
+                    <!-- Les émojis seront générés ici -->
+                </div>
+                
+                <div id="chat-input-wrapper">
+                    <input type="text" id="message-input" placeholder="Votre message...">
+                </div>
                 <button id="send-button"><i class="fas fa-paper-plane"></i></button>
             </div>
         </div>
@@ -970,12 +1081,14 @@
         const dbPath = `artifacts/${firebaseConfig.appId}/public/data`;
         const usersCollectionRef = collection(db, dbPath, 'users');
         const postsCollectionRef = collection(db, dbPath, 'posts');
+        const chatsCollectionRef = collection(db, dbPath, 'chats');
         
         // --- CONSTANTES & ETAT ---
         const PROFILE_COLORS = ['#e57373', '#81c784', '#64b5f6', '#f06292', '#ba68c8', '#ffd54f', '#7986cb', '#4db6ac', '#9575cd', '#4fc3f7', '#a1887f', '#90a4ae'];
         
         // Polices mises à jour : Classique, Pacifico, Monospace, Grasse
         const POST_FONT_FAMILIES = ['font-inter', 'font-pacifico', 'font-mono', 'font-montserrat'];
+        const EMOJI_LIST = ['😀', '😂', '😍', '😎', '😭', '👍', '👎', '🔥', '❤️', '🎉', '🤔', '👋', '🙏', '👻', '💩', '✨', '💀', '👀'];
         
         const POST_COLOR_PALETTE = ['#f1f1f1', '#D6E9F7', '#D1F7D1', '#FFF7D1', '#F7D1D1', '#A0D4FE', '#84E084', '#FEEA84', '#FE8484'];
         const MAX_CHARS = 70; // Limite passée à 70
@@ -988,6 +1101,10 @@
         let filteredPostsData = []; 
         let pendingRequests = []; 
         
+        // Chat vars
+        let currentChatFriendId = null;
+        let unsubscribeChatListener = null;
+
         let unsubscribeUsersListener = null;
         let unsubscribeFeedListener = null;
         let unsubscribeFriendRequestsListener = null;
@@ -995,6 +1112,7 @@
         
         // Etat UI Auth
         let isLoginMode = true;
+        let friendRequestsLoaded = false; // Pour ne pas notifier au chargement initial
 
         // --- DOM REFERENCES ---
         const authView = document.getElementById('auth-view');
@@ -1017,6 +1135,15 @@
         const feedContent = document.getElementById('feed-content');
         const friendSearchInput = document.getElementById('search-input'); 
         const feedSearchInput = document.getElementById('feed-search-input'); 
+
+        // Chat Elements
+        const chatView = document.getElementById('chat-view');
+        const chatBody = document.getElementById('chat-body');
+        const messageInput = document.getElementById('message-input');
+        const sendButton = document.getElementById('send-button');
+        const chatContentContainer = document.getElementById('chat-content-container');
+        const emojiBtn = document.getElementById('emoji-btn');
+        const emojiPicker = document.getElementById('emoji-picker');
 
         // Refs Modales
         const addFriendFab = document.getElementById('add-friend-fab');
@@ -1054,6 +1181,22 @@
         function hideModal(el) { el.style.display = 'none'; }
         function showSecondaryView(el) { el.classList.add('visible'); }
         function hideSecondaryView(el) { el.classList.remove('visible'); }
+        
+        // --- NOTIFICATIONS SYSTEME ---
+        function sendLocalNotification(text) {
+            if (!("Notification" in window)) return;
+            
+            if (Notification.permission === "granted") {
+                new Notification("Drop", { body: text, icon: 'https://cdn-icons-png.flaticon.com/512/3710/3710520.png' });
+            }
+        }
+        
+        function requestNotificationPermission() {
+            if (!("Notification" in window)) return;
+            if (Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+        }
 
         // --- AUTHENTIFICATION ---
 
@@ -1085,6 +1228,7 @@
             } else {
                 console.log("No user connected");
                 currentUserId = null;
+                friendRequestsLoaded = false; // Reset notification flag
                 authView.style.display = 'flex';
                 appContainer.style.display = 'none'; // Cacher l'app
                 
@@ -1110,6 +1254,7 @@
 
         // Email Auth
         loginBtn.addEventListener('click', async () => {
+            requestNotificationPermission(); // Demande permission notif
             const email = authEmailInput.value;
             const password = authPasswordInput.value;
             if(!email || !password) {
@@ -1131,6 +1276,7 @@
 
         // Google Auth
         googleBtn.addEventListener('click', async () => {
+            requestNotificationPermission(); // Demande permission notif
             const provider = new GoogleAuthProvider();
             try {
                 await signInWithPopup(auth, provider);
@@ -1208,10 +1354,33 @@
             if (!currentUserId) return;
             const requestsRef = collection(db, dbPath, 'users', currentUserId, 'friendRequests');
             unsubscribeFriendRequestsListener = onSnapshot(requestsRef, (snapshot) => {
+                
+                // NOTIFICATIONS LOGIQUE
+                snapshot.docChanges().forEach(async (change) => {
+                    if (change.type === "added" && friendRequestsLoaded) {
+                        const reqData = change.doc.data();
+                        const senderId = reqData.senderId;
+                        let senderName = "Un utilisateur";
+                        
+                        if (usersData[senderId]) {
+                            senderName = usersData[senderId].username;
+                        } else {
+                            try {
+                                const uSnap = await getDoc(doc(db, dbPath, 'users', senderId));
+                                if(uSnap.exists()) senderName = uSnap.data().username;
+                            } catch(e){}
+                        }
+                        
+                        sendLocalNotification(`${senderName} vous a envoyé une demande d'ami`);
+                    }
+                });
+
                 pendingRequests = [];
                 snapshot.forEach(doc => { pendingRequests.push({ id: doc.id, ...doc.data() }); });
                 updateFriendRequestBadge(pendingRequests.length);
                 if(document.getElementById('friend-requests-modal').style.display === 'flex') renderFriendRequestsList();
+                
+                friendRequestsLoaded = true; // Fin du chargement initial
             });
         }
 
@@ -1266,16 +1435,10 @@
             if (!currentUserId || !senderId) return;
             
             const batch = writeBatch(db);
-            
-            // 1. Mettre à jour MON profil
             const currentUserRef = doc(usersCollectionRef, currentUserId);
             batch.update(currentUserRef, { friends: arrayUnion(senderId) });
-            
-            // 2. Supprimer la demande
             const requestRef = doc(db, dbPath, 'users', currentUserId, 'friendRequests', senderId);
             batch.delete(requestRef);
-
-            // 3. Mettre à jour le profil de l'AUTRE
             const senderUserRef = doc(usersCollectionRef, senderId);
             batch.update(senderUserRef, { friends: arrayUnion(currentUserId) });
 
@@ -1432,6 +1595,103 @@
             });
         }
         
+        // --- CHAT SYSTEM ---
+        
+        function getChatId(userA, userB) {
+            return [userA, userB].sort().join('_');
+        }
+
+        async function showChat(friendId) {
+            if (!friendId) return;
+            currentChatFriendId = friendId;
+            const friend = usersData[friendId];
+            
+            // UI Update
+            document.getElementById('chat-username').textContent = friend ? friend.username : 'Utilisateur';
+            document.getElementById('chat-user-pp').src = generateAvatarUrl(friend);
+            chatBody.innerHTML = ''; // Clear previous
+            
+            showSecondaryView(chatView);
+            
+            // Logic
+            const chatId = getChatId(currentUserId, friendId);
+            const messagesRef = collection(db, dbPath, 'chats', chatId, 'messages');
+            const q = query(messagesRef, orderBy('createdAt', 'asc')); // Chronologique
+
+            if (unsubscribeChatListener) unsubscribeChatListener();
+            
+            unsubscribeChatListener = onSnapshot(q, (snapshot) => {
+                chatBody.innerHTML = '';
+                snapshot.forEach(doc => {
+                    const msg = doc.data();
+                    renderMessage(msg);
+                });
+                // Auto scroll bottom
+                chatContentContainer.scrollTop = chatContentContainer.scrollHeight;
+            });
+        }
+        
+        function renderMessage(msg) {
+            const isMe = msg.senderId === currentUserId;
+            const time = msg.createdAt ? msg.createdAt.toDate().toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'}) : '...';
+            
+            const div = document.createElement('div');
+            div.className = `message-container ${isMe ? 'sent' : 'received'}`;
+            div.innerHTML = `
+                <div class="message-bubble ${isMe ? 'sent' : 'received'}">
+                    ${msg.text}
+                    <span class="message-time">${time}</span>
+                </div>
+            `;
+            chatBody.appendChild(div);
+        }
+        
+        async function sendChatMessage() {
+            const text = messageInput.value.trim();
+            if (!text || !currentChatFriendId) return;
+            
+            messageInput.value = ''; // Optimistic UI
+            
+            const chatId = getChatId(currentUserId, currentChatFriendId);
+            const messagesRef = collection(db, dbPath, 'chats', chatId, 'messages');
+            
+            try {
+                await addDoc(messagesRef, {
+                    text: text,
+                    senderId: currentUserId,
+                    receiverId: currentChatFriendId,
+                    createdAt: serverTimestamp()
+                });
+            } catch (error) {
+                console.error("Erreur envoi:", error);
+                showMessage("Echec envoi message.", false);
+            }
+        }
+        
+        // Emoji Logic
+        function toggleEmojiPicker() {
+            if (emojiPicker.style.display === 'grid') {
+                emojiPicker.style.display = 'none';
+            } else {
+                renderEmojis();
+                emojiPicker.style.display = 'grid';
+            }
+        }
+        
+        function renderEmojis() {
+            emojiPicker.innerHTML = '';
+            EMOJI_LIST.forEach(emoji => {
+                const span = document.createElement('div');
+                span.className = 'emoji-item';
+                span.textContent = emoji;
+                span.onclick = () => {
+                    messageInput.value += emoji;
+                    messageInput.focus();
+                };
+                emojiPicker.appendChild(span);
+            });
+        }
+
         // --- HANDLERS ---
         document.addEventListener('DOMContentLoaded', () => {
             navItems.forEach(i => i.addEventListener('click', () => {
@@ -1454,6 +1714,22 @@
             anonymousSwitch.addEventListener('change', () => isAnonymousPost = anonymousSwitch.checked);
             publishButton.addEventListener('click', handlePublish);
             
+            // Chat Handlers
+            document.getElementById('chat-back-btn').addEventListener('click', () => {
+                hideSecondaryView(chatView);
+                if (unsubscribeChatListener) unsubscribeChatListener();
+                currentChatFriendId = null;
+            });
+            sendButton.addEventListener('click', sendChatMessage);
+            messageInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') sendChatMessage(); });
+            emojiBtn.addEventListener('click', toggleEmojiPicker);
+            // Fermer les émojis si on clique ailleurs
+            document.addEventListener('click', (e) => {
+                if (!emojiPicker.contains(e.target) && e.target !== emojiBtn && !emojiBtn.contains(e.target)) {
+                    emojiPicker.style.display = 'none';
+                }
+            });
+
             feedContent.addEventListener('click', e => {
                 const btn = e.target.closest('.action-button');
                 if(btn) handlePostAction(e);
@@ -1506,7 +1782,7 @@
         function closeFriendOptionsMenu() { hideModal(friendOptionsModal); }
         function openPasteIdModal() { hideModal(friendOptionsModal); document.getElementById('paste-id-input').value=''; showModal(pasteIdModal); }
         function openFriendRequestsModal() { hideModal(friendOptionsModal); showModal(friendRequestsModal); renderFriendRequestsList(); }
-        function showChat(uid) { showMessage("Chat bientôt dispo !", false); }
+        // showChat remplacé par la version complète plus haut
         function updateCharCount() {
             const l = postTextarea.value.length; charCountSpan.textContent=l;
             publishButton.disabled = l===0 || l>MAX_CHARS;
