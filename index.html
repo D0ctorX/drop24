@@ -1059,16 +1059,12 @@
             createUserWithEmailAndPassword,
             signInWithEmailAndPassword,
             signOut,
-            onAuthStateChanged,
-            signInWithCustomToken,
-            signInAnonymously
+            onAuthStateChanged 
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, getDoc, setDoc, updateDoc, onSnapshot, query, orderBy, arrayUnion, arrayRemove, writeBatch, serverTimestamp, addDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
-        // --- CONFIGURATION FIREBASE ---
-        // Récupération de la config depuis l'environnement ou fallback (IMPORTANT: Garder __app_id)
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-drop-app-id';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+        // --- CONFIGURATION FIREBASE (Remise en place pour votre site) ---
+        const firebaseConfig = {
             apiKey: "AIzaSyB_z5U4yKJERho93p9696NujcG5R5fvlD8",
             authDomain: "studio-3374032724-f28d6.firebaseapp.com",
             projectId: "studio-3374032724-f28d6",
@@ -1076,30 +1072,26 @@
             messagingSenderId: "541715107757",
             appId: "1:541715107757:web:0141b71ee3cd1ce5ec5b24"
         };
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
         
-        // Utilisation de l'ID de l'app directement depuis la config pour le path
-        // On utilise l'appId global s'il existe, sinon celui de la config statique, sinon défaut.
-        const effectiveAppId = appId; 
-        const dbPath = `artifacts/${effectiveAppId}/public/data`;
+        // Utilisation de l'ID de l'app directement depuis la config
+        const dbPath = `artifacts/${firebaseConfig.appId}/public/data`;
         const usersCollectionRef = collection(db, dbPath, 'users');
         const postsCollectionRef = collection(db, dbPath, 'posts');
-        // Collection chat sans path complexe
         const chatsCollectionRef = collection(db, dbPath, 'chats');
         
         // --- CONSTANTES & ETAT ---
         const PROFILE_COLORS = ['#e57373', '#81c784', '#64b5f6', '#f06292', '#ba68c8', '#ffd54f', '#7986cb', '#4db6ac', '#9575cd', '#4fc3f7', '#a1887f', '#90a4ae'];
         
-        // Polices mises à jour
+        // Polices mises à jour : Classique, Pacifico, Monospace, Grasse
         const POST_FONT_FAMILIES = ['font-inter', 'font-pacifico', 'font-mono', 'font-montserrat'];
         const EMOJI_LIST = ['😀', '😂', '😍', '😎', '😭', '👍', '👎', '🔥', '❤️', '🎉', '🤔', '👋', '🙏', '👻', '💩', '✨', '💀', '👀'];
         
         const POST_COLOR_PALETTE = ['#f1f1f1', '#D6E9F7', '#D1F7D1', '#FFF7D1', '#F7D1D1', '#A0D4FE', '#84E084', '#FEEA84', '#FE8484'];
-        const MAX_CHARS = 70; 
+        const MAX_CHARS = 70; // Limite passée à 70
         const BASE_URL = 'https://drop-24.netlify.app/';
 
         let currentUserId = null;
@@ -1120,7 +1112,7 @@
         
         // Etat UI Auth
         let isLoginMode = true;
-        let friendRequestsLoaded = false; 
+        let friendRequestsLoaded = false; // Pour ne pas notifier au chargement initial
 
         // --- DOM REFERENCES ---
         const authView = document.getElementById('auth-view');
@@ -1193,6 +1185,7 @@
         // --- NOTIFICATIONS SYSTEME ---
         function sendLocalNotification(text) {
             if (!("Notification" in window)) return;
+            
             if (Notification.permission === "granted") {
                 new Notification("Drop", { body: text, icon: 'https://cdn-icons-png.flaticon.com/512/3710/3710520.png' });
             }
@@ -1206,24 +1199,13 @@
         }
 
         // --- AUTHENTIFICATION ---
-        
-        // Initial Auth Check (pour le sandbox)
-        const initAuth = async () => {
-            if (initialAuthToken) {
-                await signInWithCustomToken(auth, initialAuthToken);
-            } else {
-                // Fallback si pas de token custom
-                // await signInAnonymously(auth); // Déjà géré dans le listener si user null ? Non, il faut le trigger.
-            }
-        };
-        initAuth();
 
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 console.log("User connected:", user.uid);
                 currentUserId = user.uid;
                 authView.style.display = 'none';
-                appContainer.style.display = 'flex'; 
+                appContainer.style.display = 'flex'; // Afficher l'app
                 
                 await upsertUserDocument(user);
                 listenToAllUsers();
@@ -1231,6 +1213,7 @@
                 listenToFriendRequests();
                 navigateTo('feed-view');
                 
+                // --- NOUVEAU: AUTO ADD FRIEND VIA URL ---
                 const urlParams = new URLSearchParams(window.location.search);
                 const targetUid = urlParams.get('uid');
                 if(targetUid && targetUid !== currentUserId) {
@@ -1244,14 +1227,10 @@
 
             } else {
                 console.log("No user connected");
-                // Si on n'a pas de user, on essaie de se connecter anonymement si pas de token
-                if (!initialAuthToken) {
-                    // await signInAnonymously(auth); // Optionnel : forcer anonyme ou laisser écran de login
-                }
                 currentUserId = null;
-                friendRequestsLoaded = false;
+                friendRequestsLoaded = false; // Reset notification flag
                 authView.style.display = 'flex';
-                appContainer.style.display = 'none';
+                appContainer.style.display = 'none'; // Cacher l'app
                 
                 if(unsubscribeUsersListener) unsubscribeUsersListener();
                 if(unsubscribeFeedListener) unsubscribeFeedListener();
@@ -1275,7 +1254,7 @@
 
         // Email Auth
         loginBtn.addEventListener('click', async () => {
-            requestNotificationPermission();
+            requestNotificationPermission(); // Demande permission notif
             const email = authEmailInput.value;
             const password = authPasswordInput.value;
             if(!email || !password) {
@@ -1297,7 +1276,7 @@
 
         // Google Auth
         googleBtn.addEventListener('click', async () => {
-            requestNotificationPermission();
+            requestNotificationPermission(); // Demande permission notif
             const provider = new GoogleAuthProvider();
             try {
                 await signInWithPopup(auth, provider);
@@ -1376,6 +1355,7 @@
             const requestsRef = collection(db, dbPath, 'users', currentUserId, 'friendRequests');
             unsubscribeFriendRequestsListener = onSnapshot(requestsRef, (snapshot) => {
                 
+                // NOTIFICATIONS LOGIQUE
                 snapshot.docChanges().forEach(async (change) => {
                     if (change.type === "added" && friendRequestsLoaded) {
                         const reqData = change.doc.data();
@@ -1400,7 +1380,7 @@
                 updateFriendRequestBadge(pendingRequests.length);
                 if(document.getElementById('friend-requests-modal').style.display === 'flex') renderFriendRequestsList();
                 
-                friendRequestsLoaded = true; 
+                friendRequestsLoaded = true; // Fin du chargement initial
             });
         }
 
@@ -1467,6 +1447,7 @@
                 showMessage("Ami ajouté !", true); 
             } catch (error) { 
                 console.error("Erreur acceptation (Probablement permissions Firestore):", error);
+                
                 if (error.code === 'permission-denied') {
                     console.warn("Tentative de fallback : mise à jour locale uniquement.");
                     try {
@@ -1566,8 +1547,7 @@
         // --- FLUX & POSTS ---
         function listenToFeed() {
             if (unsubscribeFeedListener) unsubscribeFeedListener();
-            // CORRECTION: Suppression de orderBy pour éviter les erreurs d'index/permission
-            const q = query(postsCollectionRef);
+            const q = query(postsCollectionRef, orderBy('createdAt', 'desc'));
             unsubscribeFeedListener = onSnapshot(q, (snap) => {
                 const now = new Date();
                 postsData = [];
@@ -1579,8 +1559,6 @@
                         postsData.push(p);
                     }
                 });
-                // Tri manuel en JS
-                postsData.sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
                 filterAndRenderFeed();
             });
         }
@@ -1638,22 +1616,16 @@
             // Logic
             const chatId = getChatId(currentUserId, friendId);
             const messagesRef = collection(db, dbPath, 'chats', chatId, 'messages');
-            // CORRECTION: Suppression de orderBy pour éviter les erreurs d'index/permission
-            const q = query(messagesRef);
+            const q = query(messagesRef, orderBy('createdAt', 'asc')); // Chronologique
 
             if (unsubscribeChatListener) unsubscribeChatListener();
             
             unsubscribeChatListener = onSnapshot(q, (snapshot) => {
                 chatBody.innerHTML = '';
-                const messages = [];
                 snapshot.forEach(doc => {
-                    messages.push(doc.data());
+                    const msg = doc.data();
+                    renderMessage(msg);
                 });
-                // Tri manuel en JS
-                messages.sort((a, b) => (a.createdAt?.toMillis() || 0) - (b.createdAt?.toMillis() || 0));
-                
-                messages.forEach(msg => renderMessage(msg));
-                
                 // Auto scroll bottom
                 chatContentContainer.scrollTop = chatContentContainer.scrollHeight;
             });
