@@ -806,12 +806,14 @@
         import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, getDoc, setDoc, updateDoc, onSnapshot, query, arrayUnion, arrayRemove, writeBatch, serverTimestamp, addDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-drop-app-id';
+        // --- APP ID SPECIFIQUE FORCÉ ---
+        const appId = '1:541715107757:web:0141b71ee3cd1ce5ec5b24'; 
+        
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
             apiKey: "AIzaSyB_z5U4yKJERho93p9696NujcG5R5fvlD8",
             authDomain: "studio-3374032724-f28d6.firebaseapp.com",
             projectId: "studio-3374032724-f28d6",
-            appId: "1:541715107757:web:0141b71ee3cd1ce5ec5b24"
+            appId: appId // Utilisation explicite
         };
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
@@ -853,7 +855,9 @@
         let currentImageBase64 = null;
         let cropperImage = new Image();
         let cropperState = { scale: 1, x: 0, y: 0, isDragging: false, startX: 0, startY: 0 };
-        const CROP_SIZE = 500; // 500px pour rester léger
+        
+        // AMELIORATION: Taille augmentée et qualité meilleure
+        const CROP_SIZE = 600; 
 
         // DOM Elements
         const authView = document.getElementById('auth-view');
@@ -1065,13 +1069,10 @@
                     const p = { id: d.id, ...d.data() };
                     const date = p.createdAt?.toDate ? p.createdAt.toDate() : new Date();
                     
-                    // SUPPRESSION REELLE (CLEANUP)
-                    // Si le post a plus de 24h et que JE suis l'auteur, je le supprime de la DB.
                     if (now.getTime() - date.getTime() > 86400000) {
                         if (p.publisherId === currentUserId) {
                             deleteDoc(doc(postsCollectionRef, p.id)).catch(err => console.log("Cleanup err", err));
                         }
-                        // On ne l'ajoute pas à postsData (filtrage visuel en attendant suppression)
                     } else {
                         p.expiresAt = new Date(date.getTime() + 86400000);
                         postsData.push(p);
@@ -1092,7 +1093,6 @@
                 const author = usersData[p.publisherId] || {username: 'Inconnu'};
                 const rem = p.expiresAt - new Date();
                 
-                // Gestion Image
                 let bgStyle = `background-color:${p.backgroundColor}`;
                 let txtClass = p.fontClass;
                 if(p.imageBase64) {
@@ -1132,7 +1132,6 @@
         document.addEventListener('DOMContentLoaded', () => {
             cropperCtx = cropperCanvas.getContext('2d');
             
-            // Events Post Creation
             document.getElementById('create-post-header-btn').onclick = () => {
                 resetPostCreator();
                 generatePostColorSwatches();
@@ -1140,7 +1139,6 @@
             };
             document.getElementById('post-creation-back-btn').onclick = () => hideSecondaryView(postCreationView);
             
-            // Image Upload
             addImageButton.onclick = () => imageUploadInput.click();
             imageUploadInput.onchange = (e) => {
                 if(e.target.files && e.target.files[0]) {
@@ -1154,10 +1152,8 @@
                 e.target.value = '';
             };
             
-            // Cropper Interaction
             zoomSlider.oninput = () => drawCropper();
             
-            // Mouse/Touch events for Cropping
             const startDrag = (x, y) => { cropperState.isDragging=true; cropperState.startX=x; cropperState.startY=y; };
             const moveDrag = (x, y) => {
                 if(!cropperState.isDragging) return;
@@ -1176,18 +1172,25 @@
             window.addEventListener('touchmove', e => { if(cropperState.isDragging) e.preventDefault(); moveDrag(e.touches[0].clientX, e.touches[0].clientY); }, {passive: false});
             window.addEventListener('touchend', endDrag);
             
-            // Confirm Crop
             confirmCropBtn.onclick = () => {
                 const tempCvs = document.createElement('canvas');
                 tempCvs.width = CROP_SIZE; tempCvs.height = CROP_SIZE;
                 const ctx = tempCvs.getContext('2d');
-                ctx.fillStyle = "#FFFFFF"; ctx.fillRect(0,0,CROP_SIZE,CROP_SIZE);
+                
+                // AMELIORATION: Fond noir pour l'effet "Bandes noires" (Letterbox)
+                ctx.fillStyle = "#000000"; 
+                ctx.fillRect(0,0,CROP_SIZE,CROP_SIZE);
+                
                 const ratio = CROP_SIZE / 300;
                 const scale = parseFloat(zoomSlider.value) * ratio;
                 const dx = (CROP_SIZE/2) - (cropperImage.width*scale/2) + (cropperState.x*ratio);
                 const dy = (CROP_SIZE/2) - (cropperImage.height*scale/2) + (cropperState.y*ratio);
+                
                 ctx.drawImage(cropperImage, dx, dy, cropperImage.width*scale, cropperImage.height*scale);
-                currentImageBase64 = tempCvs.toDataURL('image/jpeg', 0.6);
+                
+                // AMELIORATION: Qualité JPEG augmentée (0.85)
+                currentImageBase64 = tempCvs.toDataURL('image/jpeg', 0.85);
+                
                 squareContent.style.backgroundImage = `url('${currentImageBase64}')`;
                 squareContent.style.backgroundColor = 'transparent';
                 postTextarea.classList.add('has-image');
@@ -1205,9 +1208,6 @@
             
             publishButton.onclick = handlePublish;
             
-            // --- Other Handlers (NAVIGATION & MENUS RESTAURÉS) ---
-            
-            // Navigation
             navItems.forEach(item => {
                 item.addEventListener('click', () => {
                      if(item.dataset.view === 'profile-view') { activeProfileUserId = null; showProfile(currentUserId); }
@@ -1216,11 +1216,9 @@
             });
             document.getElementById('my-profile-nav-item').addEventListener('click', () => navigateTo('contacts-view'));
 
-            // Recherche
             document.getElementById('feed-search-input').addEventListener('input', renderFeed);
             document.getElementById('search-input').addEventListener('input', renderFriendsList);
 
-            // Menu Amis & Sous-options
             document.getElementById('add-friend-fab').onclick = () => showModal(document.getElementById('friend-options-modal'));
             document.getElementById('cancel-friend-options-btn').onclick = () => hideModal(document.getElementById('friend-options-modal'));
             
@@ -1246,7 +1244,6 @@
                 hideModal(document.getElementById('paste-id-modal'));
             };
 
-            // Post Text Area
             postTextarea.addEventListener('input', () => {
                 charCountSpan.textContent = postTextarea.value.length;
                 publishButton.disabled = postTextarea.value.length === 0 || postTextarea.value.length > MAX_CHARS;
@@ -1265,11 +1262,11 @@
         }
         function drawCropper() {
             if(!cropperCtx) return;
-            // Clear black
-            cropperCtx.fillStyle = "#000"; cropperCtx.fillRect(0,0,300,300);
+            // AMELIORATION: Fond noir pendant le recadrage aussi
+            cropperCtx.fillStyle = "#000"; 
+            cropperCtx.fillRect(0,0,300,300);
             
             const scale = parseFloat(zoomSlider.value);
-            // Center in 300x300 canvas
             const dx = 150 - (cropperImage.width * scale / 2) + cropperState.x;
             const dy = 150 - (cropperImage.height * scale / 2) + cropperState.y;
             
@@ -1320,10 +1317,9 @@
                     backgroundColor: currentImageBase64 ? 'transparent' : currentPostColor,
                     fontClass: POST_FONT_FAMILIES[currentPostFontIndex],
                     likedBy: [],
-                    imageBase64: currentImageBase64 // Sauvegarde directe
+                    imageBase64: currentImageBase64
                 });
                 
-                // Update User Stats
                 const uRef = doc(usersCollectionRef, currentUserId);
                 const uDoc = await getDoc(uRef);
                 updateDoc(uRef, { postsCount: (uDoc.data().postsCount||0)+1 });
@@ -1338,7 +1334,6 @@
             publishButton.disabled = false;
         }
 
-        // Chat logic
         function getChatId(u1, u2) { return [u1, u2].sort().join('_'); }
         async function showChat(fid) {
             currentChatFriendId = fid;
@@ -1372,7 +1367,6 @@
                 text: txt, senderId: currentUserId, receiverId: currentChatFriendId, createdAt: serverTimestamp()
             });
         };
-        // Simple handlers for secondary views
         document.getElementById('chat-back-btn').onclick = () => hideSecondaryView(document.getElementById('chat-view'));
         document.getElementById('emoji-btn').onclick = () => {
             const p = document.getElementById('emoji-picker');
@@ -1384,7 +1378,6 @@
             }
         };
 
-        // Handlers Profil Edit / Qr / etc sont conservés globalement via l'architecture existante.
         document.getElementById('edit-bio-btn').onclick = () => {
              const u = usersData[currentUserId];
              document.getElementById('edit-username-input').value = u.username;
@@ -1408,7 +1401,6 @@
             hideModal(document.getElementById('edit-profile-modal'));
         };
 
-        // QR & Share Logic
         async function shareProfileLink() {
             const link = `${BASE_URL}?uid=${currentUserId}`;
             try { await navigator.share({ title: 'Rejoins-moi sur Drop !', text: `Ajoute-moi sur Drop !`, url: link }); } catch (err) { if (err.name !== 'AbortError') navigator.clipboard.writeText(link).then(() => showMessage("Lien copié !", true)); }
