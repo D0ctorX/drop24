@@ -367,6 +367,15 @@
             word-wrap: break-word; 
             position: relative;
         }
+        /* STYLES POUR LES STICKERS */
+        .chat-sticker {
+            width: 150px;
+            height: 150px;
+            object-fit: contain;
+            display: block;
+            margin: 5px 0;
+        }
+        
         .message-time { 
             font-size: 10px; 
             margin-top: 4px;
@@ -395,7 +404,7 @@
         #send-button { width: 40px; height: 40px; border-radius: 50%; background-color: var(--highlight-color); border: none; font-size: 16px; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         #send-button:disabled { opacity: 0.5; cursor: default; }
 
-        /* Emoji Picker */
+        /* Sticker Picker (Remplaçant Emoji Picker) */
         #emoji-picker {
             position: absolute;
             bottom: 70px;
@@ -404,17 +413,25 @@
             border: 1px solid var(--border-color);
             border-radius: 12px;
             box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
-            padding: 10px;
+            padding: 15px;
             display: none;
-            grid-template-columns: repeat(6, 1fr);
-            gap: 8px;
-            width: 300px;
+            grid-template-columns: repeat(4, 1fr); /* 4 colonnes pour les stickers */
+            gap: 10px;
+            width: 320px;
             max-width: 90vw;
             z-index: 50;
+            max-height: 250px;
+            overflow-y: auto;
         }
         #emoji-picker.show { display: grid; }
-        .emoji-item { font-size: 24px; cursor: pointer; text-align: center; padding: 5px; border-radius: 4px; }
-        .emoji-item:hover { background-color: var(--primary-bg); }
+        .picker-sticker {
+            width: 60px;
+            height: 60px;
+            cursor: pointer;
+            object-fit: contain;
+            transition: transform 0.2s;
+        }
+        .picker-sticker:hover { transform: scale(1.1); }
 
         /* --- Profil --- */
         .profile-header { display: flex; align-items: center; padding: 15px; gap: 15px; background-color: var(--secondary-bg); border-bottom: 1px solid var(--border-color); }
@@ -829,7 +846,18 @@
         
         const PROFILE_COLORS = ['#e57373', '#81c784', '#64b5f6', '#f06292', '#ba68c8', '#ffd54f', '#7986cb', '#4db6ac', '#9575cd', '#4fc3f7', '#a1887f', '#90a4ae'];
         const POST_FONT_FAMILIES = ['font-inter', 'font-pacifico', 'font-mono', 'font-montserrat'];
-        const EMOJI_LIST = ['😀', '😂', '😍', '😎', '😭', '👍', '👎', '🔥', '❤️', '🎉', '🤔', '👋', '🙏', '👻', '💩', '✨', '💀', '👀'];
+        
+        // --- NOUVEAUX STICKERS GIF ---
+        const STICKERS = [
+            "mal_à_l'aise.gif",
+            "amour.gif",
+            "triste.gif",
+            "colère.gif",
+            "soulé.gif",
+            "choqué.gif",
+            "cligne.gif"
+        ];
+
         const POST_COLOR_PALETTE = ['#f1f1f1', '#D6E9F7', '#D1F7D1', '#FFF7D1', '#F7D1D1', '#A0D4FE', '#84E084', '#FEEA84', '#FE8484'];
         const MAX_CHARS = 70; 
         const BASE_URL = 'https://drop-24.netlify.app/';
@@ -1188,6 +1216,19 @@
         };
         window.showProfile = showProfile; 
 
+        // Fonction pour envoyer un Sticker (GIF)
+        async function sendSticker(filename) {
+            if(!currentChatFriendId) return;
+            
+            // On envoie le message avec un format spécial pour le sticker
+            await addDoc(collection(db, dbPath, 'chats', getChatId(currentUserId, currentChatFriendId), 'messages'), {
+                text: `[sticker:${filename}]`, 
+                senderId: currentUserId, 
+                receiverId: currentChatFriendId, 
+                createdAt: serverTimestamp()
+            });
+        }
+
         // --- IMAGE & CROP LOGIC ---
         document.addEventListener('DOMContentLoaded', () => {
             cropperCtx = cropperCanvas.getContext('2d');
@@ -1414,6 +1455,7 @@
                 document.getElementById('chat-body').innerHTML = '';
                 const msgs = []; snap.forEach(d => msgs.push(d.data()));
                 msgs.sort((a,b)=>(a.createdAt?.seconds||0)-(b.createdAt?.seconds||0));
+                
                 msgs.forEach(m => {
                     const div = document.createElement('div');
                     const isMe = m.senderId === currentUserId;
@@ -1421,7 +1463,20 @@
                     const time = m.createdAt ? new Date(m.createdAt.seconds * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
                     
                     div.className = `message-container ${isMe?'sent':'received'}`;
-                    div.innerHTML = `<div class="message-bubble ${isMe?'sent':'received'}">${m.text}<span class="message-time">${time}</span></div>`;
+                    
+                    // --- GESTION DES STICKERS ---
+                    // On vérifie si le message est un sticker (format: [sticker:nom_fichier])
+                    if (m.text.startsWith('[sticker:') && m.text.endsWith(']')) {
+                        const fileName = m.text.substring(9, m.text.length - 1);
+                        div.innerHTML = `<div class="message-bubble ${isMe?'sent':'received'}" style="background:transparent;box-shadow:none;padding:0;">
+                            <img src="${fileName}" class="chat-sticker" alt="sticker">
+                            <span class="message-time" style="color:black;">${time}</span>
+                        </div>`;
+                    } else {
+                        // Message normal
+                        div.innerHTML = `<div class="message-bubble ${isMe?'sent':'received'}">${m.text}<span class="message-time">${time}</span></div>`;
+                    }
+                    
                     document.getElementById('chat-body').appendChild(div);
                 });
                 // Scroll en bas
@@ -1438,13 +1493,25 @@
             });
         };
         document.getElementById('chat-back-btn').onclick = () => hideSecondaryView(document.getElementById('chat-view'));
+        
+        // --- NOUVEAU PICKER DE STICKERS ---
         document.getElementById('emoji-btn').onclick = () => {
             const p = document.getElementById('emoji-picker');
-            if(p.style.display==='grid') { p.style.display='none'; } else {
-                p.innerHTML=''; EMOJI_LIST.forEach(e=>{
-                    const s=document.createElement('div'); s.className='emoji-item'; s.textContent=e;
-                    s.onclick=()=>{document.getElementById('message-input').value+=e;}; p.appendChild(s);
-                }); p.style.display='grid';
+            if(p.style.display==='grid') { 
+                p.style.display='none'; 
+            } else {
+                p.innerHTML=''; 
+                STICKERS.forEach(s => {
+                    const img = document.createElement('img');
+                    img.src = s;
+                    img.className = 'picker-sticker';
+                    img.onclick = () => {
+                        sendSticker(s); // Envoi immédiat
+                        p.style.display = 'none';
+                    };
+                    p.appendChild(img);
+                }); 
+                p.style.display='grid';
             }
         };
 
