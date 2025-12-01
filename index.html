@@ -11,29 +11,20 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.1/qrcode.min.js"></script>
     <!-- HTML2Canvas pour la génération d'image -->
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <!-- Tailwind pour utilitaires rapides si besoin -->
+    <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Montserrat:wght@700&family=Pacifico&display=swap');
 
         :root {
-            --primary-bg: #FAFAFA;
-            --secondary-bg: #FFFFFF;
-            --border-color: #DBDBDB;
-            --text-color: #262626;
-            --highlight-color: #3897f0;
-            --last-seen-color: #8E8E8E;
-            --button-border: #d4d4d4;
-            --like-color: #3897f0;
-            --dislike-color: #E74C3C;
-            --action-color: #8e8e8e;
-            --switch-off: #ccc;
-            --switch-on: #5cb85c;
-            --page-bg: #f0f2f5; 
-            --google-btn: #4285F4;
-            --apple-btn: #000000;
-            --chat-bubble-sent: #3897f0;
-            --chat-bubble-received: #EFEFEF;
+            --primary-bg: #FAFAFA; --secondary-bg: #FFFFFF; --border-color: #DBDBDB;
+            --text-color: #262626; --highlight-color: #3897f0; --last-seen-color: #8E8E8E;
+            --button-border: #d4d4d4; --like-color: #3897f0; --dislike-color: #E74C3C;
+            --action-color: #8e8e8e; --switch-off: #ccc; --switch-on: #5cb85c;
+            --page-bg: #f0f2f5; --google-btn: #4285F4; --chat-bubble-sent: #3897f0;
+            --chat-bubble-received: #EFEFEF; --badge-color: #ff3b30;
         }
 
         .font-inter { font-family: 'Inter', sans-serif; }
@@ -42,659 +33,168 @@
         .font-pacifico { font-family: 'Pacifico', cursive; }
         .font-mono { font-family: 'Courier New', Courier, monospace; }
 
-        *, *::before, *::after {
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        html, body {
-            height: 100%;
-            width: 100%;
-            margin: 0;
-            padding: 0;
-            font-family: 'Inter', sans-serif;
-            background-color: var(--page-bg); 
-            color: var(--text-color);
-            overflow: hidden;
-        }
+        *, *::before, *::after { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        html, body { height: 100%; width: 100%; margin: 0; padding: 0; font-family: 'Inter', sans-serif; background-color: var(--page-bg); color: var(--text-color); overflow: hidden; }
 
         /* --- VUE AUTHENTIFICATION --- */
-        #auth-view {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-color: var(--primary-bg);
-            z-index: 1000;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            overflow-y: auto;
-        }
-
-        .auth-card {
-            background: var(--secondary-bg);
-            padding: 30px 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            width: 100%;
-            max-width: 350px;
-            text-align: center;
-        }
-
-        .app-logo {
-            font-family: 'Pacifico', cursive;
-            font-size: 48px;
-            color: var(--text-color);
-            margin-bottom: 30px;
-        }
-
-        .auth-input {
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 10px;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            background-color: var(--primary-bg);
-            font-size: 14px;
-        }
-
-        .auth-btn {
-            width: 100%;
-            padding: 12px;
-            border: none;
-            border-radius: 6px;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            transition: opacity 0.2s;
-        }
-        .auth-btn:hover { opacity: 0.9; }
-        .auth-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
+        #auth-view { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--primary-bg); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
+        .auth-card { background: var(--secondary-bg); padding: 30px 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 100%; max-width: 350px; text-align: center; }
+        .app-logo { font-family: 'Pacifico', cursive; font-size: 48px; color: var(--text-color); margin-bottom: 30px; }
+        .auth-input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid var(--border-color); border-radius: 6px; background-color: var(--primary-bg); font-size: 14px; }
+        .auth-btn { width: 100%; padding: 12px; border: none; border-radius: 6px; font-weight: 600; font-size: 14px; cursor: pointer; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 10px; transition: opacity 0.2s; }
         .btn-primary { background-color: var(--highlight-color); color: white; }
         .btn-google { background-color: var(--google-btn); color: white; }
-        
-        .or-divider {
-            display: flex;
-            align-items: center;
-            color: var(--last-seen-color);
-            font-size: 12px;
-            font-weight: 600;
-            margin: 15px 0;
-        }
-        .or-divider::before, .or-divider::after {
-            content: "";
-            flex: 1;
-            border-bottom: 1px solid var(--border-color);
-        }
-        .or-divider::before { margin-right: 10px; }
-        .or-divider::after { margin-left: 10px; }
-
+        .or-divider { display: flex; align-items: center; color: var(--last-seen-color); font-size: 12px; font-weight: 600; margin: 15px 0; }
+        .or-divider::before, .or-divider::after { content: ""; flex: 1; border-bottom: 1px solid var(--border-color); }
+        .or-divider::before { margin-right: 10px; } .or-divider::after { margin-left: 10px; }
         .auth-switch-text { margin-top: 20px; font-size: 14px; }
         .auth-switch-link { color: var(--highlight-color); font-weight: 600; cursor: pointer; }
 
-        /* --- APPLICATION PRINCIPALE --- */
-        #app-container {
-            display: none; 
-            width: 100%;
-            height: 100%;
-            max-width: 480px;
-            margin: 0 auto;
-            background-color: var(--primary-bg);
-            flex-direction: column;
-            position: relative;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            overflow: hidden;
-        }
+        /* --- APP LAYOUT --- */
+        #app-container { display: none; width: 100%; height: 100%; max-width: 480px; margin: 0 auto; background-color: var(--primary-bg); flex-direction: column; position: relative; box-shadow: 0 4px 12px rgba(0,0,0,0.1); overflow: hidden; }
+        #view-wrapper { display: flex; flex: 1; width: 100%; height: 100%; transition: transform 0.3s ease-in-out; }
+        .view { display: flex; flex-direction: column; background-color: var(--primary-bg); width: 100%; height: 100%; flex-shrink: 0; overflow: hidden; }
+        .view.secondary { position: absolute; top: 0; left: 0; right: 0; bottom: 0; transform: translateX(100%); transition: transform 0.3s ease-in-out; z-index: 20; visibility: hidden; }
+        .view.secondary.visible { transform: translateX(0); visibility: visible; }
 
-        #view-wrapper {
-            display: flex;
-            flex: 1;
-            width: 100%;
-            height: 100%;
-            transition: transform 0.3s ease-in-out;
-        }
-        
-        .view {
-            display: flex;
-            flex-direction: column;
-            background-color: var(--primary-bg);
-            width: 100%;
-            height: 100%;
-            flex-shrink: 0;
-            overflow: hidden;
-        }
-
-        .view.secondary {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            transform: translateX(100%);
-            transition: transform 0.3s ease-in-out;
-            z-index: 20;
-            visibility: hidden;
-        }
-        
-        .view.secondary.visible {
-            transform: translateX(0);
-            visibility: visible;
-        }
-
-        .view-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 15px;
-            background-color: var(--secondary-bg);
-            border-bottom: 1px solid var(--border-color);
-            min-height: 60px;
-            flex-shrink: 0;
-            z-index: 10;
-            gap: 10px; 
-        }
-        
+        /* HEADERS */
+        .view-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background-color: var(--secondary-bg); border-bottom: 1px solid var(--border-color); min-height: 60px; flex-shrink: 0; z-index: 10; gap: 10px; }
         .feed-view .view-header { flex-wrap: wrap; }
-        #feed-search-bar {
-            width: 100%;
-            display: flex;
-            align-items: center;
-            background-color: var(--page-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 0 10px;
-            order: 3; 
-        }
+        #feed-search-bar { width: 100%; display: flex; align-items: center; background-color: var(--page-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 0 10px; order: 3; }
         #feed-search-icon { color: var(--last-seen-color); font-size: 14px; }
-        #feed-search-input {
-            width: 100%;
-            padding: 8px 5px;
-            border: none;
-            background: transparent;
-            outline: none;
-            font-size: 14px;
-        }
-
+        #feed-search-input { width: 100%; padding: 8px 5px; border: none; background: transparent; outline: none; font-size: 14px; }
         .header-title { font-size: 20px; font-weight: 600; margin: 0; text-align: center; flex-grow: 1; }
         .header-icon { font-size: 22px; cursor: pointer; color: var(--text-color); width: 40px; text-align: right; }
         .header-placeholder { width: 40px; } 
         .back-button { font-size: 20px; cursor: pointer; width: 40px; text-align: left; }
 
-        /* Scroll Fix - Augmentation MASSIVE du padding bottom pour éviter le masquage par la navbar */
+        /* SCROLL CONTENT (Padding augmenté pour le dernier élément) */
         .feed-content, .contacts-content, .chat-content, .profile-content, #friend-requests-list {
-            flex: 1 1 0;
-            overflow-y: auto;
-            padding-bottom: 140px; /* 140px pour être sûr */
-            -webkit-overflow-scrolling: touch;
-            -ms-overflow-style: none;  
-            scrollbar-width: none;  
+            flex: 1 1 0; overflow-y: auto; padding-bottom: 140px;
+            -webkit-overflow-scrolling: touch; scrollbar-width: none;
         }
-        .feed-content::-webkit-scrollbar, .contacts-content::-webkit-scrollbar, 
-        .chat-content::-webkit-scrollbar, .profile-content::-webkit-scrollbar,
-        #friend-requests-list::-webkit-scrollbar { display: none; }
-        
+        .feed-content::-webkit-scrollbar, .contacts-content::-webkit-scrollbar, .chat-content::-webkit-scrollbar { display: none; }
         #friend-requests-list { max-height: 300px; flex: initial; }
 
-        /* --- Barre de Navigation --- */
-        .nav-bar {
-            position: absolute;
-            bottom: 0; left: 0; right: 0;
-            display: flex;
-            justify-content: space-around;
-            background-color: var(--secondary-bg);
-            border-top: 1px solid var(--border-color);
-            z-index: 15;
-            padding-bottom: env(safe-area-inset-bottom);
-            height: 60px;
-        }
-        .nav-item { padding: 10px 15px; font-size: 24px; color: var(--action-color); cursor: pointer; text-align: center; transition: color 0.2s, transform 0.2s; }
+        /* NAVBAR */
+        .nav-bar { position: absolute; bottom: 0; left: 0; right: 0; display: flex; justify-content: space-around; background-color: var(--secondary-bg); border-top: 1px solid var(--border-color); z-index: 15; padding-bottom: env(safe-area-inset-bottom); height: 60px; }
+        .nav-item { padding: 10px 15px; font-size: 24px; color: var(--action-color); cursor: pointer; text-align: center; position: relative; transition: transform 0.2s; }
         .nav-item.active { color: var(--highlight-color); transform: scale(1.1); }
         .nav-item span { display: block; font-size: 10px; margin-top: 2px; }
+        .nav-badge { position: absolute; top: 5px; right: 10px; background-color: var(--badge-color); color: white; font-size: 10px; font-weight: bold; min-width: 18px; height: 18px; border-radius: 9px; display: none; align-items: center; justify-content: center; padding: 0 4px; border: 2px solid var(--secondary-bg); }
 
-        /* --- Feed --- */
-        .feed-content { padding: 0; }
+        /* POSTS */
         .post-card { background-color: var(--secondary-bg); border-bottom: 1px solid var(--border-color); margin-bottom: 8px; }
         .post-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; font-size: 14px; }
         .post-publisher { font-weight: 600; cursor: pointer; }
-        .post-countdown { 
-            font-size: 12px; 
-            color: var(--dislike-color);
-            font-family: 'Roboto Mono', monospace;
-            font-weight: 700;
-            background-color: #fcebeb;
-            padding: 2px 6px;
-            border-radius: 4px;
-        }
-        .post-image-wrapper { width: 100%; padding-top: 100%; position: relative; background-size: cover; background-position: center; background-repeat: no-repeat; }
+        .post-countdown { font-size: 12px; color: var(--dislike-color); font-family: 'Roboto Mono', monospace; font-weight: 700; background-color: #fcebeb; padding: 2px 6px; border-radius: 4px; }
+        .post-image-wrapper { width: 100%; padding-top: 100%; position: relative; background-size: cover; background-position: center; }
         .post-content-inner { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; padding: 20px; }
         .post-message { font-size: 22px; text-align: center; white-space: pre-wrap; word-wrap: break-word; }
-        
-        /* STYLE SNAPCHAT TEXT (Noir transparent si image) */
-        .post-message.snap-text {
-            display: inline;
-            background-color: rgba(0, 0, 0, 0.5);
-            color: white;
-            padding: 2px 6px;
-            line-height: 1.6;
-            -webkit-box-decoration-break: clone;
-            box-decoration-break: clone;
-            border-radius: 4px;
-            text-shadow: none;
-        }
-
+        .post-message.snap-text { display: inline; background-color: rgba(0, 0, 0, 0.5); color: white; padding: 2px 6px; border-radius: 4px; -webkit-box-decoration-break: clone; box-decoration-break: clone; text-shadow: none; }
         .post-actions { display: flex; padding: 8px 15px; gap: 20px; }
         .action-button { display: flex; align-items: center; gap: 8px; font-size: 18px; color: var(--action-color); cursor: pointer; }
-        .action-button span { font-size: 14px; font-weight: 600; }
         .action-button.liked i, .action-button.liked span { color: var(--like-color); }
         .action-button.disliked i, .action-button.disliked span { color: var(--dislike-color); }
-        .action-button.share-btn { margin-left: auto; } 
+        .action-button.share-btn { margin-left: auto; }
 
-        /* --- Amis --- */
-        .contacts-view { position: relative; } 
-        .search-bar { padding: 10px; background-color: var(--primary-bg); flex-shrink: 0; }
+        /* CONTACTS & GROUPES */
+        .contacts-view { position: relative; }
+        .search-container { display: flex; padding: 10px; background-color: var(--primary-bg); gap: 10px; align-items: center; }
+        .search-bar { flex-grow: 1; }
         #search-input { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--secondary-bg); font-size: 14px; }
+        #create-group-btn { font-size: 20px; color: var(--highlight-color); background: none; border: none; cursor: pointer; width: 40px; }
+        
         .friend-item { display: flex; align-items: center; padding: 10px 15px; border-bottom: 1px solid var(--border-color); cursor: pointer; transition: background-color 0.2s; }
         .friend-item:hover { background-color: #f9f9f9; }
-        .friend-pp { width: 50px; height: 50px; border-radius: 50%; margin-right: 15px; }
-        .friend-info { flex-grow: 1; }
-        .friend-info h4 { margin: 0 0 4px 0; font-size: 16px; }
-        .friend-info p { margin: 0; font-size: 12px; color: var(--last-seen-color); }
-        .dm-button { background-color: var(--highlight-color); color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: 600; }
-        
-        /* FAB */
-        #add-friend-fab {
-            position: absolute;
-            bottom: calc(80px + env(safe-area-inset-bottom));
-            right: 20px;
-            width: 56px;
-            height: 56px;
-            background-color: var(--highlight-color);
-            color: white;
-            border-radius: 50%;
-            border: none;
-            font-size: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            cursor: pointer;
-            z-index: 100;
-        }
-        .request-badge {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background-color: var(--dislike-color);
-            color: white;
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            font-weight: 700;
-            border: 2px solid var(--secondary-bg);
-            z-index: 101;
-        }
-        .request-count-badge {
-            background-color: var(--dislike-color);
-            color: white;
-            font-size: 12px;
-            font-weight: 700;
-            padding: 2px 8px;
-            border-radius: 12px;
-            margin-left: 8px;
-        }
-        
-        /* --- Chat --- */
+        .friend-pp { width: 50px; height: 50px; border-radius: 50%; margin-right: 15px; object-fit: cover; }
+        .group-pp { width: 50px; height: 50px; border-radius: 12px; margin-right: 15px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: white; font-weight: bold; }
+        .friend-info { flex-grow: 1; min-width: 0; }
+        .friend-info h4 { margin: 0 0 4px 0; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .friend-info p { margin: 0; font-size: 12px; color: var(--last-seen-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .chat-row-meta { display: flex; flex-direction: column; align-items: flex-end; min-width: 50px; }
+        .last-msg-time { font-size: 10px; color: var(--last-seen-color); margin-bottom: 5px; }
+        .unread-badge { background-color: var(--badge-color); color: white; font-size: 10px; font-weight: bold; min-width: 20px; height: 20px; border-radius: 10px; display: flex; align-items: center; justify-content: center; padding: 0 5px; }
+
+        /* CHAT */
         .chat-view .view-header { gap: 10px; }
-        #chat-user-pp { width: 40px; height: 40px; border-radius: 50%; object-fit: cover;}
-        .chat-view .header-title { flex-grow: 1; text-align: left; }
+        #chat-header-info { flex-grow: 1; display: flex; align-items: center; gap: 10px; overflow: hidden; cursor: pointer; }
+        #chat-user-pp { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+        #chat-group-pp { width: 40px; height: 40px; border-radius: 10px; display: none; align-items: center; justify-content: center; color: white; font-weight: bold; flex-shrink: 0; }
+        #chat-username { font-size: 18px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .chat-content { background-color: #FFFFFF; padding: 15px; display: flex; flex-direction: column; gap: 8px; }
-        
         .message-container { display: flex; width: 100%; margin-bottom: 5px; }
-        .message-bubble { 
-            max-width: 75%; 
-            padding: 10px 14px; 
-            border-radius: 20px; 
-            font-size: 15px; 
-            line-height: 1.4; 
-            word-wrap: break-word; 
-            position: relative;
-        }
-        /* STYLES POUR LES STICKERS */
-        .chat-sticker {
-            width: 150px;
-            height: 150px;
-            object-fit: contain;
-            display: block;
-            margin: 5px 0;
-        }
-        
-        .message-time { 
-            font-size: 10px; 
-            margin-top: 4px;
-            display: block;
-            opacity: 0.6;
-            text-align: right;
-            font-weight: 600;
-        }
+        .message-bubble { max-width: 75%; padding: 10px 14px; border-radius: 20px; font-size: 15px; line-height: 1.4; word-wrap: break-word; position: relative; }
+        .message-time { font-size: 10px; margin-top: 4px; display: block; opacity: 0.6; text-align: right; font-weight: 600; }
+        .message-sender-name { font-size: 10px; font-weight: 700; color: var(--highlight-color); margin-bottom: 2px; display: block; }
         .message-container.sent { justify-content: flex-end; }
         .message-bubble.sent { background-color: var(--chat-bubble-sent); color: white; border-bottom-right-radius: 4px; }
         .message-container.received { justify-content: flex-start; }
         .message-bubble.received { background-color: var(--chat-bubble-received); color: black; border-bottom-left-radius: 4px; }
-
-        .chat-footer { 
-            display: flex; 
-            align-items: center;
-            padding: 10px; 
-            background-color: var(--secondary-bg); 
-            border-top: 1px solid var(--border-color); 
-            gap: 10px;
-            position: relative;
-        }
-        #emoji-btn { font-size: 24px; color: var(--text-color); cursor: pointer; background: none; border: none; padding: 5px; }
+        .chat-sticker { width: 150px; height: 150px; object-fit: contain; display: block; margin: 5px 0; }
+        .mention { color: var(--highlight-color); font-weight: bold; background: rgba(56, 151, 240, 0.1); padding: 0 4px; border-radius: 4px; }
+        .chat-footer { display: flex; align-items: center; padding: 10px; background-color: var(--secondary-bg); border-top: 1px solid var(--border-color); gap: 10px; position: relative; }
         #chat-input-wrapper { flex-grow: 1; background-color: var(--primary-bg); border-radius: 24px; padding: 0 15px; border: 1px solid var(--border-color); display: flex; align-items: center; }
         #message-input { flex-grow: 1; border: none; background: transparent; padding: 12px 0; font-size: 15px; outline: none; }
         #send-button { width: 40px; height: 40px; border-radius: 50%; background-color: var(--highlight-color); border: none; font-size: 16px; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        #send-button:disabled { opacity: 0.5; cursor: default; }
-
-        /* Sticker Picker (Remplaçant Emoji Picker) */
-        #emoji-picker {
-            position: absolute;
-            bottom: 70px;
-            left: 10px;
-            background-color: var(--secondary-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
-            padding: 15px;
-            display: none;
-            grid-template-columns: repeat(4, 1fr); /* 4 colonnes pour les stickers */
-            gap: 10px;
-            width: 320px;
-            max-width: 90vw;
-            z-index: 50;
-            max-height: 250px;
-            overflow-y: auto;
-        }
+        
+        #emoji-picker { position: absolute; bottom: 70px; left: 10px; background-color: var(--secondary-bg); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 -4px 12px rgba(0,0,0,0.1); padding: 15px; display: none; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 320px; max-width: 90vw; z-index: 50; max-height: 250px; overflow-y: auto; }
         #emoji-picker.show { display: grid; }
-        .picker-sticker {
-            width: 60px;
-            height: 60px;
-            cursor: pointer;
-            object-fit: contain;
-            transition: transform 0.2s;
-        }
+        .picker-sticker { width: 60px; height: 60px; cursor: pointer; object-fit: contain; transition: transform 0.2s; }
         .picker-sticker:hover { transform: scale(1.1); }
 
-        /* --- Profil --- */
+        /* PROFIL */
         .profile-header { display: flex; align-items: center; padding: 15px; gap: 15px; background-color: var(--secondary-bg); border-bottom: 1px solid var(--border-color); }
         #profile-pic { width: 80px; height: 80px; border-radius: 50%; }
         .profile-info-main { flex-grow: 1; }
         #profile-username { font-size: 22px; font-weight: 600; margin: 0; }
         #edit-bio-btn { background: none; border: 1px solid var(--button-border); border-radius: 6px; padding: 6px 12px; margin-top: 10px; cursor: pointer; font-weight: 600; width: 100%; }
         #profile-actions { display: flex; gap: 10px; margin-top: 10px; }
-        
         .profile-action-btn { flex-grow: 1; padding: 8px 12px; border: 1px solid var(--button-border); border-radius: 6px; font-weight: 600; cursor: pointer; background: none; }
         .profile-action-btn.primary { background-color: var(--highlight-color); color: white; border-color: var(--highlight-color); }
         .profile-action-btn.danger { background-color: var(--dislike-color); color: white; border-color: var(--dislike-color); }
-
         .profile-stats { display: flex; justify-content: space-around; text-align: center; padding: 15px 0; border-bottom: 1px solid var(--border-color); }
-        .stat-item h3 { margin: 0; font-size: 18px; }
-        .stat-item p { margin: 2px 0 0; font-size: 12px; color: var(--last-seen-color); }
         .profile-details { padding: 15px; }
-        .profile-details h4 { margin: 0 0 5px 0; font-size: 16px; }
-        .profile-details p { margin: 0 0 15px 0; line-height: 1.5; }
+        #logout-btn { width: 100%; margin-top: 20px; padding: 12px; background-color: var(--primary-bg); color: var(--dislike-color); border: 1px solid var(--button-border); border-radius: 6px; font-weight: 600; cursor: pointer; display: none; }
 
-        #logout-btn { width: 100%; margin-top: 20px; padding: 12px; background-color: var(--primary-bg); color: var(--dislike-color); border: 1px solid var(--button-border); border-radius: 6px; font-weight: 600; cursor: pointer; display: none; } /* CACHÉ PAR DÉFAUT */
-
-        /* --- Toast --- */
+        /* MODALES */
+        .modal-backdrop { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.5); z-index: 150; display: none; align-items: center; justify-content: center; padding: 15px; }
+        .modal-content { background: var(--secondary-bg); padding: 20px; border-radius: 12px; width: 100%; max-width: 350px; display: flex; flex-direction: column; gap: 15px; max-height: 80vh; overflow-y: auto; }
+        .modal-content h3 { margin: 0 0 10px 0; text-align: center; }
+        .modal-actions { display: flex; gap: 10px; margin-top: 10px; }
+        .modal-actions button { flex-grow: 1; padding: 10px; border-radius: 6px; border: none; font-weight: 600; font-size: 16px; cursor: pointer; }
+        .friend-option-button { display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; }
+        .friend-option-button:hover { background-color: #f9f9f9; }
+        
+        .friend-selector-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
+        .friend-selector-info { display: flex; align-items: center; gap: 10px; }
+        .friend-selector-info img { width: 32px; height: 32px; border-radius: 50%; }
+        
+        /* POST CREATOR */
+        #post-creation-view .view-header { justify-content: space-between; }
+        .post-input-area { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; background-color: var(--secondary-bg); }
+        #square-content { width: 100%; padding-top: 100%; position: relative; background-color: #f1f1f1; border-radius: 12px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); cursor: text; background-size: cover; background-position: center; overflow: hidden; }
+        #post-textarea { position: absolute; top: 0; left: 0; width: 100%; height: 100%; box-sizing: border-box; padding: 20px; background: transparent; border: none; resize: none; outline: none; text-align: center; font-size: 20px; line-height: 1.4; color: var(--text-color); display: flex; align-items: center; justify-content: center; font-family: inherit; font-weight: inherit; }
+        #post-textarea.has-image { color: white; text-shadow: 0 1px 4px rgba(0,0,0,0.8); }
+        .post-controls { padding: 15px 20px; background-color: var(--secondary-bg); border-top: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 15px; }
+        .control-row { display: flex; align-items: center; justify-content: space-between; }
+        .color-swatch { width: 30px; height: 30px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; }
+        .color-swatch.selected { border-color: var(--highlight-color); box-shadow: 0 0 0 2px white; }
+        
         #toast-message { position: absolute; bottom: 80px; left: 50%; transform: translate(-50%, 100%); background-color: rgba(0, 0, 0, 0.75); color: white; padding: 10px 20px; border-radius: 20px; font-size: 14px; z-index: 200; opacity: 0; transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out; pointer-events: none; }
         #toast-message.show { transform: translate(-50%, 0); opacity: 1; }
         #toast-message.success { background-color: #28a745; }
         #toast-message.error { background-color: #dc3545; }
-        
-        /* --- Modales --- */
-        .modal-backdrop {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-color: rgba(0,0,0,0.5);
-            z-index: 150;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            padding: 15px;
-        }
-        .modal-content {
-            background: var(--secondary-bg);
-            padding: 20px;
-            border-radius: 12px;
-            width: 100%;
-            max-width: 350px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        .modal-content h3 { margin: 0 0 10px 0; text-align: center; }
-        .modal-content label { font-size: 14px; font-weight: 600; }
-        .modal-content input, .modal-content textarea {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            font-size: 14px;
-        }
-        .modal-content textarea { resize: vertical; min-height: 60px; }
-        #edit-color-swatches { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
-        .edit-color-swatch {
-            width: 30px; height: 30px; border-radius: 50%; cursor: pointer;
-            border: 2px solid transparent;
-            transition: border-color 0.2s;
-        }
-        .edit-color-swatch.selected { border-color: var(--highlight-color); }
-        .modal-actions { display: flex; gap: 10px; margin-top: 10px; }
-        .modal-actions button {
-            flex-grow: 1; padding: 10px; border-radius: 6px; border: none;
-            font-weight: 600; font-size: 16px; cursor: pointer;
-        }
-        #save-profile-btn { background-color: var(--highlight-color); color: white; }
-        #cancel-edit-btn, #cancel-friend-options-btn, #cancel-friend-requests-btn, #cancel-paste-id-btn { 
-            background-color: #f0f0f0; color: var(--text-color); 
-        }
 
-        #friend-options-modal .modal-content { gap: 10px; }
-        .friend-option-button {
-            display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background-color 0.2s;
-        }
-        .friend-option-button:hover { background-color: #f9f9f9; }
-        .friend-option-button i { width: 20px; text-align: center; color: var(--action-color); }
-        .friend-option-button-text { display: flex; align-items: center; gap: 15px; }
-        
-        #qr-code-modal .modal-content { align-items: center; gap: 20px; }
-        #qr-code-canvas { border: 5px solid var(--secondary-bg); border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        
-        #friend-requests-list { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
-        .friend-request-item { display: flex; align-items: center; justify-content: space-between; padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; }
-        .friend-request-info { display: flex; align-items: center; gap: 10px; }
-        .friend-request-info img { width: 40px; height: 40px; border-radius: 50%; }
-        .friend-request-info span { font-weight: 600; }
-        .friend-request-actions { display: flex; gap: 8px; }
-        .friend-request-actions button { border: none; border-radius: 50%; width: 32px; height: 32px; font-size: 16px; cursor: pointer; }
-        .request-accept-btn { background-color: var(--switch-on); color: white; }
-        .request-reject-btn { background-color: var(--dislike-color); color: white; }
-
-        /* --- Styles Création de post --- */
-        #post-creation-view .view-header { justify-content: space-between; }
-        #publish-button {
-            font-size: 16px; font-weight: 600; color: var(--highlight-color);
-            background: none; border: none; cursor: pointer;
-        }
-        #publish-button:disabled { color: var(--last-seen-color); cursor: not-allowed; }
-        .post-input-area {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            overflow-y: hidden;
-            background-color: var(--secondary-bg);
-        }
-        #square-content {
-            width: 100%;
-            padding-top: 100%; /* Ratio 1:1 */
-            position: relative;
-            background-color: #f1f1f1;
-            border-radius: 12px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-            transition: background-color 0.3s ease-in-out;
-            cursor: text;
-            background-size: cover;
-            background-position: center;
-            overflow: hidden;
-        }
-        #post-textarea {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            box-sizing: border-box; padding: 20px;
-            background: transparent; border: none;
-            resize: none; outline: none;
-            text-align: center;
-            font-size: 20px; line-height: 1.4;
-            color: var(--text-color);
-            display: flex; align-items: center; justify-content: center;
-            font-family: inherit;
-            font-weight: inherit;
-        }
-        /* Style texte "Snapchat" dans l'éditeur */
-        #post-textarea.has-image {
-            color: white;
-            text-shadow: 0 1px 4px rgba(0,0,0,0.8);
-        }
-        .char-limit-indicator {
-            margin-top: 10px;
-            font-size: 12px;
-            color: var(--last-seen-color);
-            text-align: right;
-            width: 100%;
-        }
-        .char-limit-indicator.error { color: var(--dislike-color); font-weight: 600; }
-        .post-controls {
-            padding: 15px 20px;
-            background-color: var(--secondary-bg);
-            border-top: 1px solid var(--border-color);
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        .control-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .control-row label { font-size: 14px; font-weight: 600; }
-        .color-swatches-container { display: flex; gap: 8px; }
-        .color-swatch {
-            width: 30px; height: 30px;
-            border-radius: 50%;
-            border: 2px solid transparent;
-            cursor: pointer;
-            transition: border-color 0.2s;
-        }
-        .color-swatch.selected { border-color: var(--highlight-color); box-shadow: 0 0 0 2px white; }
-        .control-button {
-            width: 40px; height: 40px;
-            border-radius: 50%;
-            border: 1px solid var(--button-border);
-            background-color: var(--primary-bg);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 44px; height: 24px;
-        }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider {
-            position: absolute; cursor: pointer;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-color: var(--switch-off);
-            transition: .4s;
-            border-radius: 24px;
-        }
-        .slider:before {
-            position: absolute; content: "";
-            height: 18px; width: 18px;
-            left: 3px; bottom: 3px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
-        input:checked + .slider { background-color: var(--switch-on); }
-        input:checked + .slider:before { transform: translateX(20px); }
-
-        /* Styles pour la capture d'image (caché) */
-        #share-capture-container {
-            position: fixed;
-            top: -9999px;
-            left: -9999px;
-            width: 400px;
-            height: 400px;
-            z-index: -1;
-        }
-        .capture-card {
-            width: 100%;
-            height: 100%;
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            text-align: center;
-            background-size: cover;
-            background-position: center;
-        }
-        .capture-publisher {
-            position: absolute;
-            top: 20px; left: 0; width: 100%;
-            text-align: center; font-weight: 700; font-size: 24px;
-            color: rgba(0,0,0,0.5); z-index: 10;
-        }
-        .capture-watermark {
-            position: absolute; bottom: 10px; right: 15px;
-            font-size: 12px; font-weight: 600; color: rgba(0,0,0,0.3);
-            font-family: 'Pacifico', cursive;
-        }
-
-        /* --- Modale Cropper --- */
-        #cropper-modal .modal-content {
-            max-width: 90vw;
-            width: 400px;
-            align-items: center;
-        }
-        #cropper-canvas {
-            max-width: 100%;
-            border: 1px solid var(--border-color);
-            background: #eee;
-            touch-action: none; 
-        }
-
+        #share-capture-container { position: fixed; top: -9999px; left: -9999px; width: 400px; height: 400px; z-index: -1; }
+        .capture-card { width: 100%; height: 100%; position: relative; display: flex; align-items: center; justify-content: center; padding: 20px; text-align: center; background-size: cover; background-position: center; }
+        #cropper-modal .modal-content { max-width: 90vw; width: 400px; align-items: center; }
+        #cropper-canvas { max-width: 100%; border: 1px solid var(--border-color); background: #eee; touch-action: none; }
     </style>
 </head>
 <body>
 
-    <!-- VUE D'AUTHENTIFICATION (Premier écran) -->
+    <!-- AUTH -->
     <div id="auth-view">
         <div class="auth-card">
             <h1 class="app-logo">Drop</h1>
@@ -709,10 +209,10 @@
         </div>
     </div>
 
-    <!-- APPLICATION PRINCIPALE -->
+    <!-- MAIN APP -->
     <div id="app-container" class="container">
         <div id="view-wrapper">
-            <!-- VUE FEED -->
+            <!-- Feed -->
             <div id="feed-view" class="view feed-view">
                 <div class="view-header">
                     <div class="header-placeholder"></div> 
@@ -723,26 +223,29 @@
                 <div id="feed-content" class="feed-content"></div>
             </div>
             
-            <!-- VUE AMIS -->
+            <!-- Discussions (Contacts/Groups) -->
             <div id="contacts-view" class="view contacts-view">
-                <div class="view-header"><div class="header-placeholder"></div><h1 class="header-title">Amis</h1><div class="header-placeholder"></div></div>
-                <div class="search-bar"><input type="text" id="search-input" placeholder="Rechercher un ami..."></div>
+                <div class="view-header"><div class="header-placeholder"></div><h1 class="header-title">Discussions</h1><div class="header-placeholder"></div></div>
+                <div class="search-container">
+                    <div class="search-bar"><input type="text" id="search-input" placeholder="Rechercher..."></div>
+                    <button id="create-group-btn"><i class="fas fa-users-cog"></i></button>
+                </div>
                 <div id="friends-list" class="contacts-content"></div>
                 <button id="add-friend-fab"><i class="fas fa-user-plus"></i></button>
             </div>
 
-            <!-- VUE PROFIL -->
+            <!-- Profile -->
             <div id="profile-view" class="view profile-view">
                 <div class="view-header"><i id="my-profile-nav-item" class="fas fa-users header-icon"></i><h1 id="profile-username-header" class="header-title">Profil</h1><div class="header-placeholder"></div></div>
                 <div class="profile-content">
                     <div class="profile-header">
                         <img id="profile-pic" src="" alt="Avatar">
                         <div class="profile-info-main">
-                            <h2 id="profile-username">Nom d'utilisateur</h2>
+                            <h2 id="profile-username">User</h2>
                             <div id="profile-actions-container">
-                                <button id="edit-bio-btn">Modifier le profil</button>
+                                <button id="edit-bio-btn">Modifier</button>
                                 <div id="profile-actions" style="display: none;">
-                                    <button id="action-add-friend" class="profile-action-btn">Ajouter</button>
+                                    <button id="action-add-friend" class="profile-action-btn primary">Ajouter</button>
                                     <button id="action-block-user" class="profile-action-btn danger">Bloquer</button>
                                     <button id="action-message-user" class="profile-action-btn primary">Message</button>
                                 </div>
@@ -750,14 +253,22 @@
                         </div>
                     </div>
                     <div class="profile-stats"><div class="stat-item"><h3 id="posts-count">0</h3><p>Posts</p></div><div class="stat-item"><h3 id="followers-count">0</h3><p>Amis</p></div></div>
-                    <div class="profile-details"><h4>Bio</h4><p id="profile-bio">Ceci est ma bio.</p><h4>Membre depuis</h4><p id="creation-date">...</p><button id="logout-btn"><i class="fas fa-sign-out-alt"></i> Se déconnecter</button></div>
+                    <div class="profile-details"><h4>Bio</h4><p id="profile-bio">...</p><h4>Membre depuis</h4><p id="creation-date">...</p><button id="logout-btn"><i class="fas fa-sign-out-alt"></i> Se déconnecter</button></div>
                 </div>
             </div>
         </div>
 
-        <!-- VUES SECONDAIRES -->
+        <!-- Chat View -->
         <div id="chat-view" class="view chat-view secondary">
-            <div class="view-header chat-header"><i id="chat-back-btn" class="fas fa-arrow-left back-button"></i><img id="chat-user-pp" src=""><h1 id="chat-username" class="header-title">Chat</h1><div class="header-placeholder"></div></div>
+            <div class="view-header chat-header">
+                <i id="chat-back-btn" class="fas fa-arrow-left back-button"></i>
+                <div id="chat-header-info">
+                    <img id="chat-user-pp" src="">
+                    <div id="chat-group-pp"></div>
+                    <h1 id="chat-username" class="header-title">Chat</h1>
+                </div>
+                <div class="header-placeholder"></div>
+            </div>
             <div id="chat-content-container" class="chat-content"><div id="chat-body"></div></div>
             <div class="chat-footer">
                 <button id="emoji-btn"><i class="far fa-smile"></i></button><div id="emoji-picker"></div>
@@ -765,14 +276,14 @@
             </div>
         </div>
         
+        <!-- Post Creator -->
         <div id="post-creation-view" class="view post-creation-view secondary">
-            <div class="view-header"><i id="post-creation-back-btn" class="fas fa-arrow-left back-button"></i><h1 class="header-title">Nouveau Post</h1><button id="publish-button" disabled>Publier</button></div>
+            <div class="view-header"><i id="post-creation-back-btn" class="fas fa-arrow-left back-button"></i><h1 class="header-title">Nouveau</h1><button id="publish-button" disabled>Publier</button></div>
             <div class="post-input-area">
                 <div id="square-content" class="font-inter"><textarea id="post-textarea" placeholder="Exprimez-vous..." maxlength="70"></textarea></div>
                 <div class="char-limit-indicator"><span id="char-count">0</span> / 70</div>
             </div>
             <div class="post-controls">
-                <!-- CONTROLES IMAGE -->
                 <div class="control-row">
                     <label>Image</label>
                     <input type="file" id="image-upload-input" accept="image/*" style="display: none;">
@@ -781,58 +292,46 @@
                         <button class="control-button" id="remove-image-button" style="display:none; color: var(--dislike-color);"><i class="fas fa-trash"></i></button>
                     </div>
                 </div>
-                <div class="control-row" id="bg-color-control-row"><label>Couleur de fond</label><div class="color-swatches-container" id="post-color-swatches"></div></div>
-                <div class="control-row"><label>Style de police</label><button class="control-button" id="font-style-button"><i class="fas fa-font"></i></button></div>
-                <div class="control-row"><label>Publier en anonyme</label><label class="switch"><input type="checkbox" id="anonymous-switch-input"><span class="slider"></span></label></div>
+                <div class="control-row" id="bg-color-control-row"><label>Couleur</label><div class="color-swatches-container" id="post-color-swatches"></div></div>
+                <div class="control-row"><label>Police</label><button class="control-button" id="font-style-button"><i class="fas fa-font"></i></button></div>
+                <div class="control-row"><label>Anonyme</label><label class="switch"><input type="checkbox" id="anonymous-switch-input"><span class="slider"></span></label></div>
             </div>
         </div>
+
+        <!-- Modals -->
+        <div id="edit-profile-modal" class="modal-backdrop"><div class="modal-content"><h3>Modifier</h3><div><label>Nom</label><input type="text" id="edit-username-input" maxlength="20"></div><div><label>Bio</label><textarea id="edit-bio-textarea" maxlength="150"></textarea></div><div><label>Couleur</label><div id="edit-color-swatches"></div></div><div class="modal-actions"><button id="cancel-edit-btn">Annuler</button><button id="save-profile-btn">Enregistrer</button></div></div></div>
+        
+        <div id="friend-options-modal" class="modal-backdrop"><div class="modal-content"><h3>Options</h3><button id="show-friend-requests" class="friend-option-button"><span>Demandes</span><span id="pending-requests-count-badge" class="request-count-badge" style="display: none;">0</span></button><button id="enter-id-manually" class="friend-option-button"><span>Ajouter par ID</span></button><button id="share-profile-link" class="friend-option-button"><span>Inviter (Lien)</span></button><button id="show-my-qr" class="friend-option-button"><span>Mon QR Code</span></button><div class="modal-actions"><button id="cancel-friend-options-btn">Fermer</button></div></div></div>
+        
+        <div id="group-creation-modal" class="modal-backdrop"><div class="modal-content"><h3>Créer un groupe</h3><input type="text" id="group-name-input" class="auth-input" placeholder="Nom"><input type="text" id="group-bio-input" class="auth-input" placeholder="Bio"><div id="group-color-swatches" style="display:flex;gap:5px;flex-wrap:wrap;justify-content:center;"></div><h4>Ajouter des membres</h4><div id="group-friend-selector" style="max-height: 200px; overflow-y: auto;"></div><div class="modal-actions"><button id="cancel-group-creation">Annuler</button><button id="confirm-group-creation" style="background:var(--highlight-color);color:white;">Créer</button></div></div></div>
+        
+        <div id="group-settings-modal" class="modal-backdrop"><div class="modal-content"><h3>Paramètres du groupe</h3><input type="text" id="edit-group-name" class="auth-input"><textarea id="edit-group-bio" class="auth-input"></textarea><div id="group-admins-list"></div><div id="group-members-list" style="max-height:150px; overflow-y:auto;"></div><button id="add-member-link-btn" class="friend-option-button">Copier lien</button><div class="modal-actions"><button id="close-group-settings">Fermer</button><button id="save-group-settings" style="background:var(--highlight-color);color:white;">Sauver</button></div></div></div>
+
+        <div id="qr-code-modal" class="modal-backdrop"><div class="modal-content"><h3>QR Code</h3><canvas id="qr-code-canvas"></canvas><p>ID: <strong id="qr-user-id"></strong></p><div class="modal-actions"><button id="close-qr-modal-btn">Fermer</button></div></div></div>
+        <div id="paste-id-modal" class="modal-backdrop"><div class="modal-content"><h3>Ajouter par ID</h3><input type="text" id="paste-id-input" class="auth-input"><div class="modal-actions"><button id="cancel-paste-id-btn">Annuler</button><button id="send-friend-request-btn">Envoyer</button></div></div></div>
+        <div id="friend-requests-modal" class="modal-backdrop"><div class="modal-content"><h3>Demandes</h3><div id="friend-requests-list"></div><div class="modal-actions"><button id="cancel-friend-requests-btn">Fermer</button></div></div></div>
+        <div id="cropper-modal" class="modal-backdrop"><div class="modal-content"><h3>Cadrer</h3><div style="display:flex;justify-content:center;background:#000;"><canvas id="cropper-canvas" width="300" height="300"></canvas></div><input type="range" id="zoom-slider" min="1" max="3" step="0.1" value="1" style="width:100%;margin-top:10px;"><div class="modal-actions"><button id="cancel-crop-btn">Annuler</button><button id="confirm-crop-btn" style="background-color: var(--highlight-color); color: white;">Valider</button></div></div></div>
 
         <div id="toast-message">Message</div>
         <div id="share-capture-container"></div>
         
         <nav class="nav-bar">
             <div class="nav-item active" data-view="feed-view"><i class="fas fa-home"></i><span>Flux</span></div>
-            <div class="nav-item" data-view="contacts-view"><i class="fas fa-users"></i><span>Amis</span></div>
+            <div class="nav-item" data-view="contacts-view">
+                <i class="fas fa-users"></i><span>Amis</span>
+                <div id="main-nav-badge" class="nav-badge">0</div>
+            </div>
             <div class="nav-item" data-view="profile-view"><i class="fas fa-user"></i><span>Profil</span></div>
         </nav>
-    </div>
-
-    <!-- Modales -->
-    <div id="edit-profile-modal" class="modal-backdrop"><div class="modal-content"><h3>Modifier le profil</h3><div><label>Nom d'utilisateur</label><input type="text" id="edit-username-input" maxlength="20"></div><div><label>Bio</label><textarea id="edit-bio-textarea" maxlength="150"></textarea></div><div><label>Couleur du profil</label><div id="edit-color-swatches"></div></div><div class="modal-actions"><button id="cancel-edit-btn">Annuler</button><button id="save-profile-btn">Enregistrer</button></div></div></div>
-    <div id="friend-options-modal" class="modal-backdrop"><div class="modal-content"><h3>Options d'amis</h3><button id="show-friend-requests" class="friend-option-button"><div class="friend-option-button-text"><i class="fas fa-bell"></i><span>Demandes d'amis</span></div><span id="pending-requests-count-badge" class="request-count-badge" style="display: none;">0</span></button><button id="enter-id-manually" class="friend-option-button"><div class="friend-option-button-text"><i class="fas fa-id-card"></i><span>Ajouter par ID</span></div></button><button id="share-profile-link" class="friend-option-button"><div class="friend-option-button-text"><i class="fas fa-share-alt"></i><span>Inviter un ami (Lien)</span></div></button><button id="show-my-qr" class="friend-option-button"><div class="friend-option-button-text"><i class="fas fa-qrcode"></i><span>Mon QR Code</span></div></button><div class="modal-actions"><button id="cancel-friend-options-btn">Annuler</button></div></div></div>
-    <div id="qr-code-modal" class="modal-backdrop"><div class="modal-content"><h3>Mon QR Code Drop</h3><canvas id="qr-code-canvas"></canvas><p style="font-size: 14px; text-align: center; color: var(--last-seen-color);">Partagez ce code ou votre ID : <strong id="qr-user-id" style="color: var(--text-color);"></strong></p><div class="modal-actions"><button id="close-qr-modal-btn" style="background-color: var(--highlight-color); color: white;">Fermer</button></div></div></div>
-    <div id="paste-id-modal" class="modal-backdrop"><div class="modal-content"><h3>Ajouter un ami par ID</h3><p style="font-size: 14px; color: var(--last-seen-color); text-align: center;">Collez l'ID de l'utilisateur.</p><div><label>ID de l'utilisateur</label><input type="text" id="paste-id-input" placeholder="Coller l'ID ici..."></div><div class="modal-actions"><button id="cancel-paste-id-btn">Annuler</button><button id="send-friend-request-btn" style="background-color: var(--highlight-color); color: white;">Envoyer</button></div></div></div>
-    <div id="friend-requests-modal" class="modal-backdrop"><div class="modal-content"><h3>Demandes d'amis</h3><div id="friend-requests-list"></div><div class="modal-actions"><button id="cancel-friend-requests-btn">Fermer</button></div></div></div>
-
-    <!-- Modale de Recadrage d'Image -->
-    <div id="cropper-modal" class="modal-backdrop">
-        <div class="modal-content">
-            <h3>Recadrer l'image</h3>
-            <div style="width: 100%; display: flex; justify-content: center; background: #000;">
-                 <canvas id="cropper-canvas" width="300" height="300"></canvas>
-            </div>
-            <input type="range" id="zoom-slider" min="1" max="3" step="0.1" value="1" style="width: 100%; margin-top: 10px;">
-            <div class="modal-actions">
-                <button id="cancel-crop-btn">Annuler</button>
-                <button id="confirm-crop-btn" style="background-color: var(--highlight-color); color: white;">Valider</button>
-            </div>
-        </div>
     </div>
 
 <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, doc, getDoc, setDoc, updateDoc, onSnapshot, query, arrayUnion, arrayRemove, writeBatch, serverTimestamp, addDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, getDoc, setDoc, updateDoc, onSnapshot, query, arrayUnion, arrayRemove, writeBatch, serverTimestamp, addDoc, deleteDoc, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
-        // --- APP ID SPECIFIQUE ---
-        const appId = '1:541715107757:web:0141b71ee3cd1ce5ec5b24'; 
-        
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-            apiKey: "AIzaSyB_z5U4yKJERho93p9696NujcG5R5fvlD8",
-            authDomain: "studio-3374032724-f28d6.firebaseapp.com",
-            projectId: "studio-3374032724-f28d6",
-            appId: appId 
-        };
+        const appId = '1:541715107757:web:0141b71ee3cd1ce5ec5b24';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "AIzaSyB_z5U4yKJERho93p9696NujcG5R5fvlD8", authDomain: "studio-3374032724-f28d6.firebaseapp.com", projectId: "studio-3374032724-f28d6", appId: appId };
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
         const app = initializeApp(firebaseConfig);
@@ -843,24 +342,13 @@
         const dbPath = `artifacts/${effectiveAppId}/public/data`;
         const usersCollectionRef = collection(db, dbPath, 'users');
         const postsCollectionRef = collection(db, dbPath, 'posts');
+        const groupsCollectionRef = collection(db, dbPath, 'groups');
         
         const PROFILE_COLORS = ['#e57373', '#81c784', '#64b5f6', '#f06292', '#ba68c8', '#ffd54f', '#7986cb', '#4db6ac', '#9575cd', '#4fc3f7', '#a1887f', '#90a4ae'];
         const POST_FONT_FAMILIES = ['font-inter', 'font-pacifico', 'font-mono', 'font-montserrat'];
-        
-        // --- NOUVEAUX STICKERS GIF ---
-        const STICKERS = [
-            "mal_à_l'aise.gif",
-            "amour.gif",
-            "triste.gif",
-            "colère.gif",
-            "soulé.gif",
-            "choqué.gif",
-            "cligne.gif"
-        ];
-
+        const STICKERS = ["mal_à_l'aise.gif", "amour.gif", "triste.gif", "colère.gif", "soulé.gif", "choqué.gif", "cligne.gif"];
         const POST_COLOR_PALETTE = ['#f1f1f1', '#D6E9F7', '#D1F7D1', '#FFF7D1', '#F7D1D1', '#A0D4FE', '#84E084', '#FEEA84', '#FE8484'];
-        const MAX_CHARS = 70; 
-        const BASE_URL = 'https://drop-24.netlify.app/';
+        const MAX_CHARS = 70; const BASE_URL = 'https://drop-24.netlify.app/';
 
         let currentUserId = null;
         let activeProfileUserId = null;
@@ -868,231 +356,366 @@
         let postsData = [];
         let filteredPostsData = []; 
         let pendingRequests = []; 
+        let myFriends = []; // IDs
+        let myGroups = []; // Objects
+        let myPrivateChatsMeta = {}; // { chatId: { lastMessageTime, ... } }
+        let myLastReads = {}; // { chatId: timestamp }
         
-        let currentChatFriendId = null;
+        let currentChatId = null;
+        let currentChatType = 'private'; // 'private' or 'group'
+        let currentChatTargetId = null; // friendId or groupId
         let unsubscribeChatListener = null;
-
         let unsubscribeUsersListener = null;
         let unsubscribeFeedListener = null;
         let unsubscribeFriendRequestsListener = null;
+        let unsubscribeGroupsListener = null;
+        let unsubscribeChatsMetaListeners = []; // Array of unsub functions
         let countdownInterval = null;
-        
         let isLoginMode = true;
-        let friendRequestsLoaded = false; 
 
-        // --- VARS IMAGES & QUALITÉ ---
+        // Image Vars
         let currentImageBase64 = null;
         let cropperImage = new Image();
         let cropperState = { scale: 1, x: 0, y: 0, isDragging: false, startX: 0, startY: 0 };
-        // Qualité et taille augmentées
         const CROP_SIZE = 800; 
+        let cropperCtx = null;
 
-        // DOM Elements
-        const authView = document.getElementById('auth-view');
-        const appContainer = document.getElementById('app-container');
-        const viewWrapper = document.getElementById('view-wrapper');
-        const navItems = document.querySelectorAll('.nav-item');
-        const feedContent = document.getElementById('feed-content');
-        
-        const postCreationView = document.getElementById('post-creation-view');
-        const postTextarea = document.getElementById('post-textarea');
-        const charCountSpan = document.getElementById('char-count');
-        const publishButton = document.getElementById('publish-button');
-        const squareContent = document.getElementById('square-content');
-        const anonymousSwitch = document.getElementById('anonymous-switch-input');
-        
-        // Image controls
-        const imageUploadInput = document.getElementById('image-upload-input');
-        const addImageButton = document.getElementById('add-image-button');
-        const removeImageButton = document.getElementById('remove-image-button');
-        const cropperModal = document.getElementById('cropper-modal');
-        const cropperCanvas = document.getElementById('cropper-canvas');
-        const zoomSlider = document.getElementById('zoom-slider');
-        const confirmCropBtn = document.getElementById('confirm-crop-btn');
-        const cancelCropBtn = document.getElementById('cancel-crop-btn');
-        let cropperCtx = null; 
-
-        let currentPostFontIndex = 0;
-        let currentPostColor = POST_COLOR_PALETTE[0];
-        let isAnonymousPost = false;
-
-        let toastTimeout;
-        function showMessage(message, isSuccess) {
-            const toast = document.getElementById('toast-message');
-            toast.textContent = message; toast.className = `show ${isSuccess?'success':'error'}`;
-            clearTimeout(toastTimeout);
-            toastTimeout = setTimeout(() => { toast.className = ''; }, 3000);
-        }
-        function showModal(el) { el.style.display = 'flex'; }
-        function hideModal(el) { el.style.display = 'none'; }
-        function showSecondaryView(el) { el.classList.add('visible'); }
-        function hideSecondaryView(el) { el.classList.remove('visible'); }
-
+        // --- AUTH ---
         const initAuth = async () => { if (initialAuthToken) await signInWithCustomToken(auth, initialAuthToken); };
         initAuth();
 
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUserId = user.uid;
-                authView.style.display = 'none';
-                appContainer.style.display = 'flex'; 
+                document.getElementById('auth-view').style.display = 'none';
+                document.getElementById('app-container').style.display = 'flex';
+                
+                // Join group via link
+                const urlParams = new URLSearchParams(window.location.search);
+                const joinGroupId = urlParams.get('joinGroup');
+                if(joinGroupId) joinGroupViaLink(joinGroupId);
+
                 await upsertUserDocument(user);
                 listenToAllUsers();
                 listenToFeed();
                 listenToFriendRequests();
+                listenToMyGroups();
                 navigateTo('feed-view');
             } else {
                 currentUserId = null;
-                authView.style.display = 'flex';
-                appContainer.style.display = 'none';
+                document.getElementById('auth-view').style.display = 'flex';
+                document.getElementById('app-container').style.display = 'none';
+                // Cleanup
                 if(unsubscribeUsersListener) unsubscribeUsersListener();
                 if(unsubscribeFeedListener) unsubscribeFeedListener();
+                if(unsubscribeGroupsListener) unsubscribeGroupsListener();
+                unsubscribeChatsMetaListeners.forEach(u => u());
             }
         });
 
-        document.getElementById('auth-toggle-link').addEventListener('click', () => {
-            isLoginMode = !isLoginMode;
-            document.getElementById('login-btn').textContent = isLoginMode ? "Se connecter" : "S'inscrire";
-            document.getElementById('auth-toggle-text').textContent = isLoginMode ? "Pas de compte ?" : "Déjà un compte ?";
-            document.getElementById('auth-toggle-link').textContent = isLoginMode ? "S'inscrire" : "Se connecter";
-        });
-        document.getElementById('login-btn').addEventListener('click', async () => {
-            const email = document.getElementById('auth-email').value;
-            const password = document.getElementById('auth-password').value;
-            try {
-                if (isLoginMode) await signInWithEmailAndPassword(auth, email, password);
-                else { await createUserWithEmailAndPassword(auth, email, password); showMessage("Compte créé !", true); }
-            } catch (error) { showMessage("Erreur d'authentification", false); }
-        });
-        document.getElementById('google-btn').addEventListener('click', async () => {
-            try { await signInWithPopup(auth, new GoogleAuthProvider()); } catch (error) { showMessage("Erreur Google", false); }
-        });
-        document.getElementById('logout-btn').addEventListener('click', async () => {
-            await signOut(auth);
-        });
+        // --- GLOBAL FUNCTIONS (Pour HTML onclick) ---
+        window.likePost = async (pid) => { const r=doc(postsCollectionRef,pid); const p=postsData.find(x=>x.id===pid); if(!p)return; const has=(p.likedBy||[]).includes(currentUserId); await updateDoc(r,{likedBy:has?arrayRemove(currentUserId):arrayUnion(currentUserId), dislikedBy:arrayRemove(currentUserId)}); };
+        window.dislikePost = async (pid) => { const r=doc(postsCollectionRef,pid); const p=postsData.find(x=>x.id===pid); if(!p)return; const has=(p.dislikedBy||[]).includes(currentUserId); await updateDoc(r,{dislikedBy:has?arrayRemove(currentUserId):arrayUnion(currentUserId), likedBy:arrayRemove(currentUserId)}); };
+        window.showProfile = showProfile;
+        window.sharePost = sharePost;
+        window.removeMember = removeMember;
 
+        // --- DATA LOGIC ---
         async function upsertUserDocument(user) {
-            const userRef = doc(usersCollectionRef, user.uid);
-            const userDoc = await getDoc(userRef);
-            if (!userDoc.exists()) {
-                await setDoc(userRef, {
+            const ref = doc(usersCollectionRef, user.uid);
+            const snap = await getDoc(ref);
+            if (!snap.exists()) {
+                await setDoc(ref, {
                     username: user.displayName || `user_${user.uid.substring(0, 4)}`, 
                     profileColor: PROFILE_COLORS[Math.floor(Math.random() * PROFILE_COLORS.length)],
-                    accountCreatedAt: serverTimestamp(), friends: [], postsCount: 0
+                    accountCreatedAt: serverTimestamp(), friends: [], postsCount: 0, lastReads: {}
                 });
+            } else {
+                myLastReads = snap.data().lastReads || {};
             }
-        }
-
-        function navigateTo(viewId) {
-            const viewIndex = ['feed-view', 'contacts-view', 'profile-view'].indexOf(viewId);
-            if (viewIndex === -1) return;
-            viewWrapper.style.transform = `translateX(-${viewIndex * 100}%)`;
-            navItems.forEach(item => { item.classList.toggle('active', item.dataset.view === viewId); });
-            if (viewId === 'profile-view' && !activeProfileUserId) showProfile(currentUserId);
-        }
-
-        function generateAvatarUrl(user) {
-            if (!user) return '';
-            return `https://ui-avatars.com/api/?name=${user.username}&background=${(user.profileColor||'888').replace('#','')}&color=fff&size=128&bold=true`;
+            // Listen to my own doc for lastRead updates
+            onSnapshot(ref, s => { 
+                if(s.exists()) {
+                    myLastReads = s.data().lastReads || {};
+                    updateUnreadBadges(null); // Just refresh badges
+                }
+            });
         }
 
         function listenToAllUsers() {
-            unsubscribeUsersListener = onSnapshot(usersCollectionRef, (snapshot) => {
-                usersData = {}; snapshot.forEach((doc) => { usersData[doc.id] = { id: doc.id, ...doc.data() }; });
-                renderFriendsList(); 
-                if (document.getElementById('profile-view').getBoundingClientRect().x === 0 && activeProfileUserId) showProfile(activeProfileUserId); 
+            unsubscribeUsersListener = onSnapshot(usersCollectionRef, (snap) => {
+                usersData = {}; snap.forEach((d) => { usersData[d.id] = { id: d.id, ...d.data() }; });
+                // Update my friends list
+                if(usersData[currentUserId]) {
+                    const newFriends = usersData[currentUserId].friends || [];
+                    if(JSON.stringify(newFriends) !== JSON.stringify(myFriends)) {
+                        myFriends = newFriends;
+                        listenToPrivateChatsMetadata(); // Re-bind listeners for new friends
+                    }
+                }
+                renderDiscussionsList();
+                if (activeProfileUserId && document.getElementById('profile-view').getBoundingClientRect().x === 0) showProfile(activeProfileUserId);
             });
         }
-        
-        function listenToFriendRequests() {
-            if (!currentUserId) return;
-            const requestsRef = collection(db, dbPath, 'users', currentUserId, 'friendRequests');
-            unsubscribeFriendRequestsListener = onSnapshot(requestsRef, (snapshot) => {
-                pendingRequests = [];
-                snapshot.forEach(doc => { pendingRequests.push({ id: doc.id, ...doc.data() }); });
-                updateFriendRequestBadge(pendingRequests.length);
-                if(document.getElementById('friend-requests-modal').style.display === 'flex') renderFriendRequestsList();
+
+        function listenToMyGroups() {
+            unsubscribeGroupsListener = onSnapshot(groupsCollectionRef, (snap) => {
+                myGroups = [];
+                snap.forEach(d => {
+                    const g = { id: d.id, ...d.data() };
+                    if((g.participants || []).includes(currentUserId)) myGroups.push(g);
+                });
+                renderDiscussionsList();
             });
         }
-        function updateFriendRequestBadge(count) {
-            const fab = document.getElementById('add-friend-fab');
-            let badge = fab.querySelector('.request-badge');
-            const modalBadge = document.getElementById('pending-requests-count-badge');
-            if (count > 0) {
-                if (!badge) { badge = document.createElement('div'); badge.className='request-badge'; fab.appendChild(badge); }
-                badge.textContent = count;
-                modalBadge.textContent = count; modalBadge.style.display='inline-block';
-            } else {
-                if (badge) badge.remove();
-                modalBadge.style.display='none';
-            }
+
+        function listenToPrivateChatsMetadata() {
+            unsubscribeChatsMetaListeners.forEach(u => u());
+            unsubscribeChatsMetaListeners = [];
+            myPrivateChatsMeta = {};
+
+            myFriends.forEach(fid => {
+                const cid = getChatId(currentUserId, fid);
+                const unsub = onSnapshot(doc(db, dbPath, 'chats', cid), (s) => {
+                    if(s.exists()) {
+                        myPrivateChatsMeta[cid] = s.data();
+                        renderDiscussionsList();
+                    }
+                });
+                unsubscribeChatsMetaListeners.push(unsub);
+            });
         }
-        function renderFriendRequestsList() {
-            const list = document.getElementById('friend-requests-list'); list.innerHTML = '';
-            pendingRequests.forEach(req => {
-                const u = usersData[req.senderId];
-                const div = document.createElement('div'); div.className='friend-request-item';
-                div.innerHTML = `<div class="friend-request-info"><img src="${generateAvatarUrl(u)}"><span>${u?u.username:'...'}</span></div><div class="friend-request-actions"><button class="request-accept-btn"><i class="fas fa-check"></i></button><button class="request-reject-btn"><i class="fas fa-times"></i></button></div>`;
-                div.querySelector('.request-accept-btn').onclick = () => acceptFriendRequest(req.senderId);
-                div.querySelector('.request-reject-btn').onclick = () => rejectFriendRequest(req.senderId);
+
+        // --- SORTING & UNREAD LOGIC ---
+        function renderDiscussionsList() {
+            const list = document.getElementById('friends-list'); list.innerHTML = '';
+            const term = document.getElementById('search-input').value.toLowerCase();
+            let discussions = [];
+
+            // 1. Private Chats
+            myFriends.forEach(fid => {
+                const u = usersData[fid];
+                if(!u) return;
+                const cid = getChatId(currentUserId, fid);
+                const meta = myPrivateChatsMeta[cid] || {};
+                if(term && !u.username.toLowerCase().includes(term)) return;
+                
+                discussions.push({
+                    type: 'private', id: fid, chatId: cid,
+                    name: u.username, avatar: generateAvatarUrl(u),
+                    lastMsgTime: meta.lastMessageTime ? meta.lastMessageTime.toMillis() : 0,
+                    lastMsgText: meta.lastMessageText || 'Pas de message'
+                });
+            });
+
+            // 2. Groups
+            myGroups.forEach(g => {
+                if(term && !g.name.toLowerCase().includes(term)) return;
+                discussions.push({
+                    type: 'group', id: g.id, chatId: g.id,
+                    name: g.name, avatar: null, iconColor: g.iconColor,
+                    lastMsgTime: g.lastMessageTime ? g.lastMessageTime.toMillis() : 0,
+                    lastMsgText: g.lastMessageText || 'Nouveau groupe'
+                });
+            });
+
+            // Sort by Recency
+            discussions.sort((a, b) => b.lastMsgTime - a.lastMsgTime);
+
+            // Render
+            discussions.forEach(d => {
+                const lastRead = myLastReads[d.chatId] ? myLastReads[d.chatId].toMillis() : 0;
+                const isUnread = d.lastMsgTime > lastRead;
+                
+                const div = document.createElement('div');
+                div.className = 'friend-item';
+                
+                let imgHtml = '';
+                if(d.type === 'private') {
+                    imgHtml = `<img class="friend-pp" src="${d.avatar}">`;
+                } else {
+                    imgHtml = `<div class="group-pp" style="background-color:${d.iconColor}">${d.name.substring(0,2).toUpperCase()}</div>`;
+                }
+
+                div.innerHTML = `
+                    ${imgHtml}
+                    <div class="friend-info">
+                        <h4>${d.name}</h4>
+                        <p style="font-weight:${isUnread?'bold':'normal'};color:${isUnread?'black':'var(--last-seen-color)'}">
+                            ${d.type==='group'?'<i class="fas fa-users" style="font-size:10px;margin-right:4px;"></i>':''}
+                            ${d.lastMsgText}
+                        </p>
+                    </div>
+                    <div class="chat-row-meta">
+                        <span class="last-msg-time">${d.lastMsgTime > 0 ? new Date(d.lastMsgTime).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : ''}</span>
+                        ${isUnread ? '<div class="unread-badge">1</div>' : ''}
+                    </div>
+                `;
+                div.onclick = () => {
+                    if(d.type === 'private') showChat(d.id);
+                    else showGroupChat(d.id);
+                };
                 list.appendChild(div);
             });
+            
+            updateUnreadBadges(discussions);
         }
-        async function sendFriendRequest(rid) {
-            if(!rid || rid === currentUserId) return;
-            try { await setDoc(doc(db, dbPath, 'users', rid, 'friendRequests', currentUserId), { senderId: currentUserId, timestamp: serverTimestamp() }); showMessage("Envoyé !", true); } catch(e){ showMessage("Erreur.", false); }
+
+        function updateUnreadBadges(discussionsList) {
+            // Re-calculate based on existing data if list not provided
+            if(!discussionsList) {
+                // Simpler: trigger re-render of list which calls this
+                renderDiscussionsList(); 
+                return; 
+            }
+            let totalUnread = 0;
+            discussionsList.forEach(d => {
+                const lastRead = myLastReads[d.chatId] ? myLastReads[d.chatId].toMillis() : 0;
+                if(d.lastMsgTime > lastRead) totalUnread++;
+            });
+            
+            const badge = document.getElementById('main-nav-badge');
+            if(totalUnread > 0) {
+                badge.style.display = 'flex';
+                badge.textContent = totalUnread > 99 ? '99+' : totalUnread;
+            } else {
+                badge.style.display = 'none';
+            }
         }
-        async function acceptFriendRequest(sid) {
-            const batch = writeBatch(db);
-            batch.update(doc(usersCollectionRef, currentUserId), { friends: arrayUnion(sid) });
-            batch.delete(doc(db, dbPath, 'users', currentUserId, 'friendRequests', sid));
-            batch.update(doc(usersCollectionRef, sid), { friends: arrayUnion(currentUserId) });
-            try { await batch.commit(); showMessage("Ami ajouté !", true); } catch(e){ showMessage("Erreur.", false); }
-        }
-        async function rejectFriendRequest(sid) {
-            try { await deleteDoc(doc(db, dbPath, 'users', currentUserId, 'friendRequests', sid)); } catch(e){}
+
+        // --- GROUP LOGIC ---
+        function openGroupSettings(g) {
+            document.getElementById('edit-group-name').value = g.name;
+            document.getElementById('edit-group-bio').value = g.bio || '';
+            const isAdmin = (g.admins || []).includes(currentUserId);
+            const list = document.getElementById('group-members-list'); list.innerHTML='';
+            g.participants.forEach(pid => {
+                const u = usersData[pid];
+                const row = document.createElement('div'); row.className='friend-selector-item';
+                const isUserAdmin = (g.admins||[]).includes(pid);
+                row.innerHTML = `<div class="friend-selector-info"><img src="${generateAvatarUrl(u)}"><span>${u?.username} ${isUserAdmin?'(Admin)':''}</span></div>${isAdmin && pid !== currentUserId ? `<button onclick="removeMember('${g.id}', '${pid}')" style="color:red;border:none;background:none;"><i class="fas fa-trash"></i></button>` : ''}`;
+                list.appendChild(row);
+            });
+            document.getElementById('add-member-link-btn').onclick = () => {
+                const link = `${BASE_URL}?joinGroup=${g.id}`;
+                navigator.clipboard.writeText(link).then(() => showMessage("Lien copié !", true));
+            };
+            document.getElementById('save-group-settings').onclick = async () => {
+                if(!isAdmin) return showMessage("Seul un admin peut modifier", false);
+                await updateDoc(doc(groupsCollectionRef, g.id), {
+                    name: document.getElementById('edit-group-name').value,
+                    bio: document.getElementById('edit-group-bio').value
+                });
+                hideModal(document.getElementById('group-settings-modal'));
+            };
+            showModal(document.getElementById('group-settings-modal'));
         }
         
-        function renderFriendsList() {
-            const list = document.getElementById('friends-list'); list.innerHTML='';
-            const term = document.getElementById('search-input').value.toLowerCase();
-            const friends = (usersData[currentUserId]?.friends || []).map(id => usersData[id]).filter(Boolean);
-            friends.filter(u => u.username.toLowerCase().includes(term)).forEach(u => {
-                const d = document.createElement('div'); d.className = 'friend-item';
-                d.innerHTML = `<img class="friend-pp" src="${generateAvatarUrl(u)}"><div class="friend-info"><h4>${u.username}</h4></div><button class="dm-button">Message</button>`;
-                d.querySelector('.dm-button').onclick = (e) => { e.stopPropagation(); showChat(u.id); };
-                d.onclick = () => showProfile(u.id);
-                list.appendChild(d);
+        async function removeMember(gid, uid) {
+            if(!confirm("Retirer ce membre ?")) return;
+            await updateDoc(doc(groupsCollectionRef, gid), {
+                participants: arrayRemove(uid),
+                admins: arrayRemove(uid)
+            });
+            hideModal(document.getElementById('group-settings-modal'));
+        };
+
+        async function joinGroupViaLink(gid) {
+            try {
+                const gRef = doc(groupsCollectionRef, gid);
+                const gSnap = await getDoc(gRef);
+                if(gSnap.exists()) {
+                    await updateDoc(gRef, { participants: arrayUnion(currentUserId) });
+                    showMessage("Groupe rejoint !", true);
+                    window.history.replaceState({}, document.title, "/");
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        // --- CHAT LOGIC ---
+        function getChatId(u1, u2) { return [u1, u2].sort().join('_'); }
+        async function showChat(fid) {
+            currentChatType = 'private'; currentChatTargetId = fid; currentChatId = getChatId(currentUserId, fid);
+            const u = usersData[fid];
+            document.getElementById('chat-username').textContent = u ? u.username : '...';
+            document.getElementById('chat-user-pp').src = generateAvatarUrl(u);
+            document.getElementById('chat-user-pp').style.display='block';
+            document.getElementById('chat-group-pp').style.display='none';
+            document.getElementById('chat-header-info').onclick = () => showProfile(fid);
+            startChatListener(currentChatId);
+        }
+
+        async function showGroupChat(gid) {
+            currentChatType = 'group'; currentChatTargetId = gid; currentChatId = gid;
+            const g = myGroups.find(gr => gr.id === gid);
+            if(!g) return;
+            document.getElementById('chat-username').textContent = g.name;
+            const pp = document.getElementById('chat-group-pp');
+            pp.style.display='flex'; pp.style.backgroundColor = g.iconColor;
+            pp.textContent = g.name.substring(0,2).toUpperCase();
+            document.getElementById('chat-user-pp').style.display='none';
+            document.getElementById('chat-header-info').onclick = () => openGroupSettings(g);
+            startChatListener(gid);
+        }
+
+        function startChatListener(cid) {
+            document.getElementById('chat-body').innerHTML = '';
+            showSecondaryView(document.getElementById('chat-view'));
+            markAsRead(cid);
+
+            if(unsubscribeChatListener) unsubscribeChatListener();
+            
+            let collRef;
+            if(currentChatType === 'group') collRef = collection(db, dbPath, 'groups', cid, 'messages');
+            else collRef = collection(db, dbPath, 'chats', cid, 'messages');
+
+            unsubscribeChatListener = onSnapshot(query(collRef, orderBy('createdAt', 'asc')), snap => {
+                document.getElementById('chat-body').innerHTML = '';
+                snap.forEach(d => renderMessage(d.data()));
+                document.getElementById('chat-content-container').scrollTop = document.getElementById('chat-content-container').scrollHeight;
+                markAsRead(cid);
             });
         }
-        function showProfile(uid) {
-            const u = usersData[uid]; if(!u) return;
-            activeProfileUserId = uid;
-            document.getElementById('profile-username').textContent = u.username;
-            document.getElementById('profile-pic').src = generateAvatarUrl(u);
-            document.getElementById('profile-bio').textContent = u.bio || "";
-            document.getElementById('posts-count').textContent = u.postsCount || 0;
-            document.getElementById('followers-count').textContent = (u.friends||[]).length;
-            
-            // Correction Date d'inscription
-            const date = u.accountCreatedAt?.toDate ? u.accountCreatedAt.toDate().toLocaleDateString('fr-FR') : 'Date inconnue';
-            document.getElementById('creation-date').textContent = date;
 
-            const isMe = uid === currentUserId;
-            document.getElementById('edit-bio-btn').style.display = isMe ? 'block' : 'none';
-            document.getElementById('logout-btn').style.display = isMe ? 'block' : 'none'; // AFFICHER UNIQUEMENT SI C'EST MOI
-            document.getElementById('profile-actions').style.display = isMe ? 'none' : 'flex';
-            
-            if(!isMe) {
-                const isFriend = usersData[currentUserId]?.friends?.includes(uid);
-                document.getElementById('action-add-friend').style.display = isFriend ? 'none' : 'block';
-                document.getElementById('action-message-user').style.display = isFriend ? 'block' : 'none';
-                document.getElementById('action-add-friend').onclick = () => sendFriendRequest(uid);
-                document.getElementById('action-message-user').onclick = () => showChat(uid);
-            }
-            navigateTo('profile-view');
+        async function markAsRead(cid) {
+            const ref = doc(usersCollectionRef, currentUserId);
+            await updateDoc(ref, { [`lastReads.${cid}`]: serverTimestamp() });
         }
 
+        async function sendMessage(text) {
+            if(!text) return;
+            const isGroup = currentChatType === 'group';
+            const collPath = isGroup ? ['groups', currentChatId, 'messages'] : ['chats', currentChatId, 'messages'];
+            const metaDocRef = isGroup ? doc(db, dbPath, 'groups', currentChatId) : doc(db, dbPath, 'chats', currentChatId);
+            const msgData = { text: text, senderId: currentUserId, createdAt: serverTimestamp() };
+            const batch = writeBatch(db);
+            batch.set(doc(collection(db, dbPath, ...collPath)), msgData);
+            const lastMsgTxt = text.startsWith('[sticker:') ? 'Sticker' : text;
+            batch.set(metaDocRef, {
+                lastMessageTime: serverTimestamp(),
+                lastMessageText: (isGroup ? `${usersData[currentUserId].username}: ` : '') + lastMsgTxt
+            }, { merge: true });
+            await batch.commit();
+        }
+
+        function renderMessage(m) {
+            const div = document.createElement('div');
+            const isMe = m.senderId === currentUserId;
+            const time = m.createdAt ? new Date(m.createdAt.toMillis()).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '';
+            let content = m.text;
+            if(content.startsWith('[sticker:') && content.endsWith(']')) {
+                const fname = content.substring(9, content.length - 1);
+                content = `<img src="${fname}" class="chat-sticker">`;
+            } else {
+                content = content.replace(/@(\w+)/g, '<span class="mention">@$1</span>');
+            }
+            const senderName = (currentChatType === 'group' && !isMe) ? `<span class="message-sender-name">${usersData[m.senderId]?.username||'Inconnu'}</span>` : '';
+            div.className = `message-container ${isMe?'sent':'received'}`;
+            div.innerHTML = `<div class="message-bubble ${isMe?'sent':'received'}" style="${m.text.startsWith('[')?'background:transparent;box-shadow:none;padding:0;':''}">${senderName}${content}<span class="message-time" style="${m.text.startsWith('[')?'color:black':''}">${time}</span></div>`;
+            document.getElementById('chat-body').appendChild(div);
+        }
+
+        // --- FEED ---
         function listenToFeed() {
             unsubscribeFeedListener = onSnapshot(query(postsCollectionRef), (snap) => {
                 const now = new Date();
@@ -1100,11 +723,8 @@
                 snap.forEach(d => {
                     const p = { id: d.id, ...d.data() };
                     const date = p.createdAt?.toDate ? p.createdAt.toDate() : new Date();
-                    
                     if (now.getTime() - date.getTime() > 86400000) {
-                        if (p.publisherId === currentUserId) {
-                            deleteDoc(doc(postsCollectionRef, p.id)).catch(err => console.log("Cleanup err", err));
-                        }
+                        if (p.publisherId === currentUserId) deleteDoc(doc(postsCollectionRef, p.id)).catch(err => console.log(err));
                     } else {
                         p.expiresAt = new Date(date.getTime() + 86400000);
                         postsData.push(p);
@@ -1117,443 +737,140 @@
 
         function renderFeed() {
             const term = document.getElementById('feed-search-input').value.toLowerCase();
-            
-            // FILTRE AMÉLIORÉ (Message OU Nom d'auteur)
             filteredPostsData = term ? postsData.filter(p => {
                 const authorName = (usersData[p.publisherId]?.username || '').toLowerCase();
                 return p.message.toLowerCase().includes(term) || authorName.includes(term);
             }) : postsData;
             
-            if (!filteredPostsData.length) { feedContent.innerHTML = "<p style='text-align:center;color:gray;padding:20px;'>Rien à afficher.</p>"; return; }
+            const c = document.getElementById('feed-content');
+            if (!filteredPostsData.length) { c.innerHTML = "<p style='text-align:center;color:gray;padding:20px;'>Rien.</p>"; return; }
             
-            feedContent.innerHTML = filteredPostsData.map(p => {
+            c.innerHTML = filteredPostsData.map(p => {
                 const author = usersData[p.publisherId] || {username: 'Inconnu'};
                 const rem = p.expiresAt - new Date();
-                
                 let bgStyle = `background-color:${p.backgroundColor}`;
                 let txtClass = p.fontClass;
-                if(p.imageBase64) {
-                    bgStyle = `background-image: url('${p.imageBase64}')`;
-                    txtClass += " snap-text";
-                }
-
-                // BOUTONS RESTAURÉS
+                if(p.imageBase64) { bgStyle = `background-image: url('${p.imageBase64}')`; txtClass += " snap-text"; }
                 const hasLiked = (p.likedBy||[]).includes(currentUserId);
                 const hasDisliked = (p.dislikedBy||[]).includes(currentUserId);
-                const likes = (p.likedBy||[]).length;
-                const dislikes = (p.dislikedBy||[]).length;
-
                 return `<div class="post-card" data-post-id="${p.id}">
-                    <div class="post-header"><span class="post-publisher" onclick="showProfile('${p.publisherId}')">${p.isAnon?'Anonyme':author.username}</span><span class="post-countdown" data-exp="${p.expiresAt.getTime()}">${formatCountdown(rem)}</span></div>
+                    <div class="post-header"><span class="post-publisher" onclick="showProfile('${p.publisherId}')">${p.isAnon?'Anonyme':author.username}</span><span class="post-countdown">${formatCountdown(rem)}</span></div>
                     <div class="post-image-wrapper" style="${bgStyle}"><div class="post-content-inner"><p class="post-message ${txtClass}">${p.message}</p></div></div>
                     <div class="post-actions">
-                        <div class="action-button ${hasLiked?'liked':''}" onclick="likePost('${p.id}')"><i class="fas fa-thumbs-up"></i><span>${likes}</span></div>
-                        <div class="action-button ${hasDisliked?'disliked':''}" onclick="dislikePost('${p.id}')"><i class="fas fa-thumbs-down"></i><span>${dislikes}</span></div>
+                        <div class="action-button ${hasLiked?'liked':''}" onclick="likePost('${p.id}')"><i class="fas fa-thumbs-up"></i><span>${(p.likedBy||[]).length}</span></div>
+                        <div class="action-button ${hasDisliked?'disliked':''}" onclick="dislikePost('${p.id}')"><i class="fas fa-thumbs-down"></i><span>${(p.dislikedBy||[]).length}</span></div>
                         <div class="action-button share-btn" onclick="sharePost('${p.id}')"><i class="fas fa-share-square"></i></div>
                     </div>
                 </div>`;
             }).join('');
-            
-            if(countdownInterval) clearInterval(countdownInterval);
-            countdownInterval = setInterval(() => {
-                document.querySelectorAll('.post-countdown').forEach(el => {
-                    const rem = parseInt(el.dataset.exp) - Date.now();
-                    if(rem>0) el.textContent = formatCountdown(rem); else el.closest('.post-card').remove();
-                });
-            }, 1000);
         }
-        function formatCountdown(ms) {
-            const s = Math.floor(ms/1000);
-            return `${Math.floor(s/3600).toString().padStart(2,'0')}:${Math.floor((s%3600)/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`;
+        function formatCountdown(ms) { const s = Math.floor(ms/1000); return `${Math.floor(s/3600)}:${Math.floor((s%3600)/60).toString().padStart(2,'0')}`; }
+
+        function showProfile(uid) {
+            const u = usersData[uid]; if(!u) return;
+            activeProfileUserId = uid;
+            document.getElementById('profile-username').textContent = u.username;
+            document.getElementById('profile-pic').src = generateAvatarUrl(u);
+            document.getElementById('profile-bio').textContent = u.bio || "";
+            document.getElementById('posts-count').textContent = u.postsCount || 0;
+            document.getElementById('followers-count').textContent = (u.friends||[]).length;
+            const date = u.accountCreatedAt?.toDate ? u.accountCreatedAt.toDate().toLocaleDateString('fr-FR') : 'Date inconnue';
+            document.getElementById('creation-date').textContent = date;
+            const isMe = uid === currentUserId;
+            document.getElementById('edit-bio-btn').style.display = isMe ? 'block' : 'none';
+            document.getElementById('logout-btn').style.display = isMe ? 'block' : 'none';
+            document.getElementById('profile-actions').style.display = isMe ? 'none' : 'flex';
+            if(!isMe) {
+                const isFriend = usersData[currentUserId]?.friends?.includes(uid);
+                document.getElementById('action-add-friend').style.display = isFriend ? 'none' : 'block';
+                document.getElementById('action-message-user').style.display = isFriend ? 'block' : 'none';
+                document.getElementById('action-add-friend').onclick = () => sendFriendRequest(uid);
+                document.getElementById('action-message-user').onclick = () => showChat(uid);
+            }
+            navigateTo('profile-view');
         }
-        
-        // --- ACTIONS GLOBALES ---
-        window.likePost = async (pid) => {
-            const p = postsData.find(x => x.id === pid); if(!p) return;
-            const ref = doc(postsCollectionRef, pid);
-            const has = (p.likedBy||[]).includes(currentUserId);
-            // Si on like, on enlève le dislike éventuel
-            if(!has) await updateDoc(ref, { likedBy: arrayUnion(currentUserId), dislikedBy: arrayRemove(currentUserId) });
-            else await updateDoc(ref, { likedBy: arrayRemove(currentUserId) });
-        };
-        window.dislikePost = async (pid) => {
-            const p = postsData.find(x => x.id === pid); if(!p) return;
-            const ref = doc(postsCollectionRef, pid);
-            const has = (p.dislikedBy||[]).includes(currentUserId);
-            // Si on dislike, on enlève le like éventuel
-            if(!has) await updateDoc(ref, { dislikedBy: arrayUnion(currentUserId), likedBy: arrayRemove(currentUserId) });
-            else await updateDoc(ref, { dislikedBy: arrayRemove(currentUserId) });
-        };
-        window.sharePost = async (pid) => {
+        async function sharePost(pid) {
             const p = postsData.find(x => x.id === pid); if(!p) return;
             const pub = p.isAnon ? "Anonyme" : (usersData[p.publisherId]?.username || "...");
             const card = document.createElement('div'); card.className = 'capture-card';
             if(p.imageBase64) card.style.backgroundImage = `url('${p.imageBase64}')`;
             else card.style.backgroundColor = p.backgroundColor;
-            
-            card.innerHTML = `
-                <div class="capture-publisher" style="position:absolute;top:20px;width:100%;text-align:center;font-weight:700;font-size:24px;color:rgba(0,0,0,0.5);">${pub}</div>
-                <div style="display:flex;align-items:center;justify-content:center;height:100%;padding:40px;"><p class="post-message ${p.fontClass} ${p.imageBase64?'snap-text':''}" style="font-size:22px;text-align:center;color:${p.imageBase64?'white':'var(--text-color)'};">${p.message}</p></div>
-                <div class="capture-watermark" style="position:absolute;bottom:10px;right:15px;font-size:12px;font-weight:600;color:rgba(0,0,0,0.3);font-family:'Pacifico';">Drop</div>
-            `;
-            
-            const cont = document.getElementById('share-capture-container');
-            cont.innerHTML = ''; cont.appendChild(card);
-            
-            try {
-                const canvas = await html2canvas(card, { useCORS: true, scale: 2 });
-                canvas.toBlob(async (blob) => {
-                    if (!blob) return showMessage("Erreur image.", false);
-                    const file = new File([blob], 'drop_share.png', { type: 'image/png' });
-                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                        try { await navigator.share({ files: [file], title: 'Drop', text: `Post de ${pub}` }); } catch (err) {}
-                    } else {
-                        const a = document.createElement('a'); a.href = canvas.toDataURL(); a.download = 'drop.png'; a.click(); showMessage("Image téléchargée.", true);
-                    }
-                    cont.innerHTML = '';
-                });
-            } catch(e) { showMessage("Erreur partage.", false); }
-        };
-        window.showProfile = showProfile; 
-
-        // Fonction pour envoyer un Sticker (GIF)
-        async function sendSticker(filename) {
-            if(!currentChatFriendId) return;
-            
-            // On envoie le message avec un format spécial pour le sticker
-            await addDoc(collection(db, dbPath, 'chats', getChatId(currentUserId, currentChatFriendId), 'messages'), {
-                text: `[sticker:${filename}]`, 
-                senderId: currentUserId, 
-                receiverId: currentChatFriendId, 
-                createdAt: serverTimestamp()
-            });
+            card.innerHTML = `<div class="capture-publisher" style="position:absolute;top:20px;width:100%;text-align:center;font-weight:700;font-size:24px;color:rgba(0,0,0,0.5);">${pub}</div><div style="display:flex;align-items:center;justify-content:center;height:100%;padding:40px;"><p class="post-message ${p.fontClass} ${p.imageBase64?'snap-text':''}" style="font-size:22px;text-align:center;color:${p.imageBase64?'white':'var(--text-color)'};">${p.message}</p></div><div class="capture-watermark" style="position:absolute;bottom:10px;right:15px;font-size:12px;font-weight:600;color:rgba(0,0,0,0.3);font-family:'Pacifico';">Drop</div>`;
+            const cont = document.getElementById('share-capture-container'); cont.innerHTML = ''; cont.appendChild(card);
+            try { const canvas = await html2canvas(card, { useCORS: true, scale: 2 }); canvas.toBlob(async (blob) => { if (!blob) return showMessage("Erreur image.", false); const file = new File([blob], 'drop_share.png', { type: 'image/png' }); if (navigator.canShare && navigator.canShare({ files: [file] })) { try { await navigator.share({ files: [file], title: 'Drop', text: `Post de ${pub}` }); } catch (err) {} } else { const a = document.createElement('a'); a.href = canvas.toDataURL(); a.download = 'drop.png'; a.click(); showMessage("Image téléchargée.", true); } cont.innerHTML = ''; }); } catch(e) { showMessage("Erreur partage.", false); }
         }
 
-        // --- IMAGE & CROP LOGIC ---
+        // --- DOM ---
         document.addEventListener('DOMContentLoaded', () => {
-            cropperCtx = cropperCanvas.getContext('2d');
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => item.addEventListener('click', () => { if(item.dataset.view === 'profile-view') { activeProfileUserId = null; showProfile(currentUserId); } else navigateTo(item.dataset.view); }));
             
-            document.getElementById('create-post-header-btn').onclick = () => {
-                resetPostCreator();
-                generatePostColorSwatches();
-                showSecondaryView(postCreationView);
-            };
-            document.getElementById('post-creation-back-btn').onclick = () => hideSecondaryView(postCreationView);
+            cropperCtx = document.getElementById('cropper-canvas').getContext('2d');
+            document.getElementById('create-post-header-btn').onclick = () => showSecondaryView(document.getElementById('post-creation-view'));
+            document.getElementById('post-creation-back-btn').onclick = () => hideSecondaryView(document.getElementById('post-creation-view'));
+            document.getElementById('publish-button').onclick = handlePublish;
+            document.getElementById('add-image-button').onclick = () => document.getElementById('image-upload-input').click();
+            document.getElementById('image-upload-input').onchange = e => { if(e.target.files[0]) { const r = new FileReader(); r.onload = evt => { cropperImage.src = evt.target.result; cropperImage.onload = () => { initCropper(); showModal(document.getElementById('cropper-modal')); }}; r.readAsDataURL(e.target.files[0]); }};
+            document.getElementById('confirm-crop-btn').onclick = () => { const cvs = document.createElement('canvas'); cvs.width=CROP_SIZE; cvs.height=CROP_SIZE; const ctx = cvs.getContext('2d'); ctx.fillStyle="#000"; ctx.fillRect(0,0,CROP_SIZE,CROP_SIZE); const ratio = CROP_SIZE/300; const scale = parseFloat(document.getElementById('zoom-slider').value)*ratio; const dx = (CROP_SIZE/2)-(cropperImage.width*scale/2)+(cropperState.x*ratio); const dy = (CROP_SIZE/2)-(cropperImage.height*scale/2)+(cropperState.y*ratio); ctx.drawImage(cropperImage, dx, dy, cropperImage.width*scale, cropperImage.height*scale); currentImageBase64 = cvs.toDataURL('image/jpeg', 0.92); document.getElementById('square-content').style.backgroundImage = `url('${currentImageBase64}')`; hideModal(document.getElementById('cropper-modal')); };
+            document.getElementById('zoom-slider').oninput = drawCropper;
+            document.getElementById('close-group-settings').onclick = () => hideModal(document.getElementById('group-settings-modal'));
+            document.getElementById('chat-back-btn').onclick = () => hideSecondaryView(document.getElementById('chat-view'));
             
-            addImageButton.onclick = () => imageUploadInput.click();
-            imageUploadInput.onchange = (e) => {
-                if(e.target.files && e.target.files[0]) {
-                    const reader = new FileReader();
-                    reader.onload = (evt) => {
-                        cropperImage.src = evt.target.result;
-                        cropperImage.onload = () => { initCropper(); showModal(cropperModal); }
-                    };
-                    reader.readAsDataURL(e.target.files[0]);
-                }
-                e.target.value = '';
-            };
-            
-            zoomSlider.oninput = () => drawCropper();
-            
-            const startDrag = (x, y) => { cropperState.isDragging=true; cropperState.startX=x; cropperState.startY=y; };
-            const moveDrag = (x, y) => {
-                if(!cropperState.isDragging) return;
-                cropperState.x += x - cropperState.startX;
-                cropperState.y += y - cropperState.startY;
-                cropperState.startX = x; cropperState.startY = y;
-                drawCropper();
-            };
-            const endDrag = () => cropperState.isDragging = false;
-            
-            cropperCanvas.addEventListener('mousedown', e => startDrag(e.clientX, e.clientY));
-            window.addEventListener('mousemove', e => moveDrag(e.clientX, e.clientY));
-            window.addEventListener('mouseup', endDrag);
-            
-            cropperCanvas.addEventListener('touchstart', e => { e.preventDefault(); startDrag(e.touches[0].clientX, e.touches[0].clientY); }, {passive: false});
-            window.addEventListener('touchmove', e => { if(cropperState.isDragging) e.preventDefault(); moveDrag(e.touches[0].clientX, e.touches[0].clientY); }, {passive: false});
-            window.addEventListener('touchend', endDrag);
-            
-            confirmCropBtn.onclick = () => {
-                const tempCvs = document.createElement('canvas');
-                tempCvs.width = CROP_SIZE; tempCvs.height = CROP_SIZE;
-                const ctx = tempCvs.getContext('2d');
-                
-                ctx.fillStyle = "#000000"; 
-                ctx.fillRect(0,0,CROP_SIZE,CROP_SIZE);
-                
-                const ratio = CROP_SIZE / 300;
-                const scale = parseFloat(zoomSlider.value) * ratio;
-                const dx = (CROP_SIZE/2) - (cropperImage.width*scale/2) + (cropperState.x*ratio);
-                const dy = (CROP_SIZE/2) - (cropperImage.height*scale/2) + (cropperState.y*ratio);
-                
-                ctx.drawImage(cropperImage, dx, dy, cropperImage.width*scale, cropperImage.height*scale);
-                
-                // Qualité 0.92 pour une meilleure netteté
-                currentImageBase64 = tempCvs.toDataURL('image/jpeg', 0.92);
-                
-                squareContent.style.backgroundImage = `url('${currentImageBase64}')`;
-                squareContent.style.backgroundColor = 'transparent';
-                postTextarea.classList.add('has-image');
-                document.getElementById('bg-color-control-row').style.display = 'none';
-                addImageButton.style.display = 'none';
-                removeImageButton.style.display = 'block';
-                hideModal(cropperModal);
-            };
-            
-            cancelCropBtn.onclick = () => hideModal(cropperModal);
-            
-            removeImageButton.onclick = () => {
-                resetPostImage();
-            };
-            
-            publishButton.onclick = handlePublish;
-            
-            navItems.forEach(item => {
-                item.addEventListener('click', () => {
-                     if(item.dataset.view === 'profile-view') { activeProfileUserId = null; showProfile(currentUserId); }
-                     else navigateTo(item.dataset.view);
-                });
-            });
-            document.getElementById('my-profile-nav-item').addEventListener('click', () => navigateTo('contacts-view'));
+            const cvs = document.getElementById('cropper-canvas');
+            const start = (x,y)=>{cropperState.isDragging=true;cropperState.startX=x;cropperState.startY=y;};
+            const move = (x,y)=>{if(cropperState.isDragging){cropperState.x+=x-cropperState.startX;cropperState.y+=y-cropperState.startY;cropperState.startX=x;cropperState.startY=y;drawCropper();}};
+            cvs.onmousedown=e=>start(e.clientX,e.clientY); window.onmousemove=e=>move(e.clientX,e.clientY); window.onmouseup=()=>cropperState.isDragging=false;
+            cvs.ontouchstart=e=>start(e.touches[0].clientX,e.touches[0].clientY); window.ontouchmove=e=>move(e.touches[0].clientX,e.touches[0].clientY); window.ontouchend=()=>cropperState.isDragging=false;
 
-            document.getElementById('feed-search-input').addEventListener('input', renderFeed);
-            document.getElementById('search-input').addEventListener('input', renderFriendsList);
+            document.getElementById('auth-toggle-link').onclick = () => { isLoginMode = !isLoginMode; document.getElementById('login-btn').textContent = isLoginMode ? "Se connecter" : "S'inscrire"; document.getElementById('auth-toggle-text').textContent = isLoginMode ? "Pas de compte ?" : "Déjà un compte ?"; document.getElementById('auth-toggle-link').textContent = isLoginMode ? "S'inscrire" : "Se connecter"; };
+            document.getElementById('login-btn').onclick = async () => { const e = document.getElementById('auth-email').value; const p = document.getElementById('auth-password').value; try { if (isLoginMode) await signInWithEmailAndPassword(auth, e, p); else { await createUserWithEmailAndPassword(auth, e, p); showMessage("Compte créé !", true); } } catch (err) { showMessage("Erreur d'authentification", false); }};
+            document.getElementById('google-btn').onclick = async () => { try { await signInWithPopup(auth, new GoogleAuthProvider()); } catch (error) { showMessage("Erreur Google", false); }};
+            document.getElementById('logout-btn').onclick = async () => { await signOut(auth); };
 
+            document.getElementById('feed-search-input').oninput = renderFeed;
+            document.getElementById('search-input').oninput = renderDiscussionsList;
             document.getElementById('add-friend-fab').onclick = () => showModal(document.getElementById('friend-options-modal'));
             document.getElementById('cancel-friend-options-btn').onclick = () => hideModal(document.getElementById('friend-options-modal'));
-            
+            document.getElementById('create-group-btn').onclick = () => { const list = document.getElementById('group-friend-selector'); list.innerHTML = ''; myFriends.forEach(fid => { const u = usersData[fid]; const div = document.createElement('div'); div.className = 'friend-selector-item'; div.innerHTML = `<div class="friend-selector-info"><img src="${generateAvatarUrl(u)}"><span>${u.username}</span></div><input type="checkbox" value="${fid}" class="group-friend-cb">`; list.appendChild(div); }); const cDiv = document.getElementById('group-color-swatches'); cDiv.innerHTML=''; PROFILE_COLORS.forEach(c => { const s = document.createElement('div'); s.className='color-swatch'; s.style.backgroundColor=c; s.dataset.color=c; s.onclick = () => { cDiv.querySelectorAll('.selected').forEach(e=>e.classList.remove('selected')); s.classList.add('selected'); }; cDiv.appendChild(s); }); showModal(document.getElementById('group-creation-modal')); };
+            document.getElementById('cancel-group-creation').onclick = () => hideModal(document.getElementById('group-creation-modal'));
+            document.getElementById('confirm-group-creation').onclick = async () => { const name = document.getElementById('group-name-input').value.trim(); const bio = document.getElementById('group-bio-input').value.trim(); const color = document.querySelector('#group-color-swatches .selected')?.dataset.color || PROFILE_COLORS[0]; const checkboxes = document.querySelectorAll('.group-friend-cb:checked'); const selectedFriends = Array.from(checkboxes).map(cb => cb.value); if(!name) return showMessage("Nom requis", false); const participants = [currentUserId, ...selectedFriends]; try { await addDoc(groupsCollectionRef, { name: name, bio: bio, iconColor: color, participants: participants, admins: [currentUserId], createdAt: serverTimestamp(), lastMessageTime: serverTimestamp(), lastMessageText: "Groupe créé" }); showMessage("Groupe créé !", true); hideModal(document.getElementById('group-creation-modal')); } catch(e) { showMessage("Erreur création", false); } };
+            document.getElementById('send-button').onclick = () => { const i = document.getElementById('message-input'); sendMessage(i.value.trim()); i.value = ''; };
+            document.getElementById('message-input').onkeypress = (e) => { if(e.key === 'Enter') document.getElementById('send-button').click(); };
+            document.getElementById('emoji-btn').onclick = () => { const p = document.getElementById('emoji-picker'); if(p.style.display==='grid') { p.style.display='none'; } else { p.innerHTML=''; STICKERS.forEach(s=>{ const img=document.createElement('img'); img.src=s; img.className='picker-sticker'; img.onclick=()=>{sendMessage(`[sticker:${s}]`); p.style.display='none';}; p.appendChild(img); }); p.style.display='grid'; } };
+            document.getElementById('post-textarea').oninput = () => { document.getElementById('char-count').textContent = document.getElementById('post-textarea').value.length; document.getElementById('publish-button').disabled = document.getElementById('post-textarea').value.length === 0 || document.getElementById('post-textarea').value.length > MAX_CHARS; };
+            document.getElementById('font-style-button').onclick = () => { document.getElementById('square-content').classList.remove(POST_FONT_FAMILIES[currentPostFontIndex]); currentPostFontIndex = (currentPostFontIndex+1)%POST_FONT_FAMILIES.length; document.getElementById('square-content').classList.add(POST_FONT_FAMILIES[currentPostFontIndex]); };
+            document.getElementById('show-friend-requests').onclick = () => { hideModal(document.getElementById('friend-options-modal')); showModal(document.getElementById('friend-requests-modal')); renderFriendRequestsList(); };
+            document.getElementById('cancel-friend-requests-btn').onclick = () => hideModal(document.getElementById('friend-requests-modal'));
+            document.getElementById('enter-id-manually').onclick = () => { hideModal(document.getElementById('friend-options-modal')); document.getElementById('paste-id-input').value = ''; showModal(document.getElementById('paste-id-modal')); };
+            document.getElementById('cancel-paste-id-btn').onclick = () => hideModal(document.getElementById('paste-id-modal'));
+            document.getElementById('send-friend-request-btn').onclick = async () => { await sendFriendRequest(document.getElementById('paste-id-input').value.trim()); hideModal(document.getElementById('paste-id-modal')); };
             document.getElementById('share-profile-link').onclick = () => shareProfileLink();
             document.getElementById('show-my-qr').onclick = () => showMyQrCode();
             document.getElementById('close-qr-modal-btn').onclick = () => hideModal(document.getElementById('qr-code-modal'));
-            
-            document.getElementById('show-friend-requests').onclick = () => {
-                hideModal(document.getElementById('friend-options-modal'));
-                showModal(document.getElementById('friend-requests-modal'));
-                renderFriendRequestsList();
-            };
-            document.getElementById('cancel-friend-requests-btn').onclick = () => hideModal(document.getElementById('friend-requests-modal'));
-
-            document.getElementById('enter-id-manually').onclick = () => {
-                hideModal(document.getElementById('friend-options-modal'));
-                document.getElementById('paste-id-input').value = '';
-                showModal(document.getElementById('paste-id-modal'));
-            };
-            document.getElementById('cancel-paste-id-btn').onclick = () => hideModal(document.getElementById('paste-id-modal'));
-            document.getElementById('send-friend-request-btn').onclick = async () => {
-                await sendFriendRequest(document.getElementById('paste-id-input').value.trim());
-                hideModal(document.getElementById('paste-id-modal'));
-            };
-
-            postTextarea.addEventListener('input', () => {
-                charCountSpan.textContent = postTextarea.value.length;
-                publishButton.disabled = postTextarea.value.length === 0 || postTextarea.value.length > MAX_CHARS;
-            });
-            document.getElementById('font-style-button').onclick = () => {
-                squareContent.classList.remove(POST_FONT_FAMILIES[currentPostFontIndex]);
-                currentPostFontIndex = (currentPostFontIndex+1)%POST_FONT_FAMILIES.length;
-                squareContent.classList.add(POST_FONT_FAMILIES[currentPostFontIndex]);
-            };
-
-            // Ajout Chat 'Enter' Key
-            document.getElementById('message-input').addEventListener('keypress', (e) => {
-                if(e.key === 'Enter') document.getElementById('send-button').click();
-            });
+            document.getElementById('edit-bio-btn').onclick = () => { const u = usersData[currentUserId]; document.getElementById('edit-username-input').value = u.username; document.getElementById('edit-bio-textarea').value = u.bio; const cDiv = document.getElementById('edit-color-swatches'); cDiv.innerHTML=''; PROFILE_COLORS.forEach(c => { const d = document.createElement('div'); d.className='edit-color-swatch'; d.style.backgroundColor=c; d.dataset.color=c; if(u.profileColor===c) d.classList.add('selected'); d.onclick=()=>{cDiv.querySelector('.selected')?.classList.remove('selected'); d.classList.add('selected');}; cDiv.appendChild(d); }); showModal(document.getElementById('edit-profile-modal')); };
+            document.getElementById('cancel-edit-btn').onclick = () => hideModal(document.getElementById('edit-profile-modal'));
+            document.getElementById('save-profile-btn').onclick = async () => { await updateDoc(doc(usersCollectionRef, currentUserId), { username: document.getElementById('edit-username-input').value, bio: document.getElementById('edit-bio-textarea').value, profileColor: document.querySelector('#edit-color-swatches .selected')?.dataset.color }); hideModal(document.getElementById('edit-profile-modal')); };
         });
 
-        function initCropper() {
-            cropperState = { scale: 1, x: 0, y: 0, isDragging: false, startX: 0, startY: 0 };
-            zoomSlider.value = 1;
-            drawCropper();
-        }
-        function drawCropper() {
-            if(!cropperCtx) return;
-            // Fond noir
-            cropperCtx.fillStyle = "#000"; 
-            cropperCtx.fillRect(0,0,300,300);
-            
-            const scale = parseFloat(zoomSlider.value);
-            const dx = 150 - (cropperImage.width * scale / 2) + cropperState.x;
-            const dy = 150 - (cropperImage.height * scale / 2) + cropperState.y;
-            
-            cropperCtx.drawImage(cropperImage, dx, dy, cropperImage.width*scale, cropperImage.height*scale);
-        }
-
-        function resetPostCreator() {
-            resetPostImage();
-            postTextarea.value = '';
-            charCountSpan.textContent = '0';
-            squareContent.className = 'font-inter';
-        }
-        function resetPostImage() {
-            currentImageBase64 = null;
-            squareContent.style.backgroundImage = '';
-            squareContent.style.backgroundColor = currentPostColor;
-            postTextarea.classList.remove('has-image');
-            document.getElementById('bg-color-control-row').style.display = 'flex';
-            addImageButton.style.display = 'block';
-            removeImageButton.style.display = 'none';
-        }
-        function generatePostColorSwatches() {
-            const div = document.getElementById('post-color-swatches'); div.innerHTML='';
-            POST_COLOR_PALETTE.forEach(c => {
-                const s = document.createElement('div'); s.className='color-swatch'; s.style.backgroundColor=c;
-                if(c===currentPostColor) s.classList.add('selected');
-                s.onclick = () => { 
-                    currentPostColor=c; 
-                    if(!currentImageBase64) squareContent.style.backgroundColor=c;
-                    div.querySelector('.selected')?.classList.remove('selected'); s.classList.add('selected'); 
-                };
-                div.appendChild(s);
-            });
-            if(!currentImageBase64) squareContent.style.backgroundColor = currentPostColor;
-        }
-
-        async function handlePublish() {
-            const txt = postTextarea.value.trim();
-            if(!txt && !currentImageBase64) return;
-            
-            publishButton.disabled = true;
-            try {
-                await addDoc(postsCollectionRef, {
-                    message: txt,
-                    publisherId: anonymousSwitch.checked ? null : currentUserId,
-                    isAnon: anonymousSwitch.checked,
-                    createdAt: serverTimestamp(),
-                    backgroundColor: currentImageBase64 ? 'transparent' : currentPostColor,
-                    fontClass: POST_FONT_FAMILIES[currentPostFontIndex],
-                    likedBy: [],
-                    dislikedBy: [], // Ajout champ manquant
-                    imageBase64: currentImageBase64
-                });
-                
-                const uRef = doc(usersCollectionRef, currentUserId);
-                const uDoc = await getDoc(uRef);
-                updateDoc(uRef, { postsCount: (uDoc.data().postsCount||0)+1 });
-                
-                hideSecondaryView(postCreationView);
-                showMessage("Publié !", true);
-            } catch(e) {
-                console.error(e);
-                if(e.code === 'resource-exhausted') showMessage("Image trop lourde.", false);
-                else showMessage("Erreur publication.", false);
-            }
-            publishButton.disabled = false;
-        }
-
+        // Helpers
+        function initCropper() { cropperState={scale:1,x:0,y:0,isDragging:false,startX:0,startY:0}; document.getElementById('zoom-slider').value=1; drawCropper(); }
+        function drawCropper() { cropperCtx.fillStyle="#000"; cropperCtx.fillRect(0,0,300,300); const scale = parseFloat(document.getElementById('zoom-slider').value); const dx = 150-(cropperImage.width*scale/2)+cropperState.x; const dy = 150-(cropperImage.height*scale/2)+cropperState.y; cropperCtx.drawImage(cropperImage, dx, dy, cropperImage.width*scale, cropperImage.height*scale); }
+        async function handlePublish() { const txt = document.getElementById('post-textarea').value.trim(); if(!txt && !currentImageBase64) return; const isAnon = document.getElementById('anonymous-switch-input').checked; await addDoc(postsCollectionRef, { message: txt, publisherId: isAnon ? null : currentUserId, isAnon: isAnon, createdAt: serverTimestamp(), backgroundColor: currentImageBase64 ? 'transparent' : '#f1f1f1', likedBy: [], dislikedBy: [], imageBase64: currentImageBase64 }); hideSecondaryView(document.getElementById('post-creation-view')); currentImageBase64=null; document.getElementById('post-textarea').value=''; }
+        function showMessage(msg, s) { const t = document.getElementById('toast-message'); t.textContent=msg; t.className=`show ${s?'success':'error'}`; setTimeout(()=>t.className='', 3000); }
+        function showModal(el) { el.style.display='flex'; }
+        function hideModal(el) { el.style.display='none'; }
+        function showSecondaryView(el) { el.classList.add('visible'); }
+        function hideSecondaryView(el) { el.classList.remove('visible'); }
+        function generateAvatarUrl(user) { if (!user) return ''; return `https://ui-avatars.com/api/?name=${user.username}&background=${(user.profileColor||'888').replace('#','')}&color=fff&size=128&bold=true`; }
         function getChatId(u1, u2) { return [u1, u2].sort().join('_'); }
-        async function showChat(fid) {
-            currentChatFriendId = fid;
-            const u = usersData[fid];
-            document.getElementById('chat-username').textContent = u ? u.username : '...';
-            document.getElementById('chat-user-pp').src = generateAvatarUrl(u);
-            document.getElementById('chat-body').innerHTML = '';
-            showSecondaryView(document.getElementById('chat-view'));
-            
-            if(unsubscribeChatListener) unsubscribeChatListener();
-            const q = query(collection(db, dbPath, 'chats', getChatId(currentUserId, fid), 'messages'));
-            unsubscribeChatListener = onSnapshot(q, snap => {
-                document.getElementById('chat-body').innerHTML = '';
-                const msgs = []; snap.forEach(d => msgs.push(d.data()));
-                msgs.sort((a,b)=>(a.createdAt?.seconds||0)-(b.createdAt?.seconds||0));
-                
-                msgs.forEach(m => {
-                    const div = document.createElement('div');
-                    const isMe = m.senderId === currentUserId;
-                    // Formatage Heure
-                    const time = m.createdAt ? new Date(m.createdAt.seconds * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
-                    
-                    div.className = `message-container ${isMe?'sent':'received'}`;
-                    
-                    // --- GESTION DES STICKERS ---
-                    // On vérifie si le message est un sticker (format: [sticker:nom_fichier])
-                    if (m.text.startsWith('[sticker:') && m.text.endsWith(']')) {
-                        const fileName = m.text.substring(9, m.text.length - 1);
-                        div.innerHTML = `<div class="message-bubble ${isMe?'sent':'received'}" style="background:transparent;box-shadow:none;padding:0;">
-                            <img src="${fileName}" class="chat-sticker" alt="sticker">
-                            <span class="message-time" style="color:black;">${time}</span>
-                        </div>`;
-                    } else {
-                        // Message normal
-                        div.innerHTML = `<div class="message-bubble ${isMe?'sent':'received'}">${m.text}<span class="message-time">${time}</span></div>`;
-                    }
-                    
-                    document.getElementById('chat-body').appendChild(div);
-                });
-                // Scroll en bas
-                document.getElementById('chat-content-container').scrollTop = document.getElementById('chat-content-container').scrollHeight;
-            });
-        }
-        document.getElementById('send-button').onclick = async () => {
-            const i = document.getElementById('message-input');
-            const txt = i.value.trim();
-            if(!txt || !currentChatFriendId) return;
-            i.value = '';
-            await addDoc(collection(db, dbPath, 'chats', getChatId(currentUserId, currentChatFriendId), 'messages'), {
-                text: txt, senderId: currentUserId, receiverId: currentChatFriendId, createdAt: serverTimestamp()
-            });
-        };
-        document.getElementById('chat-back-btn').onclick = () => hideSecondaryView(document.getElementById('chat-view'));
+        async function sendFriendRequest(rid) { if(!rid || rid === currentUserId) return; try { await setDoc(doc(db, dbPath, 'users', rid, 'friendRequests', currentUserId), { senderId: currentUserId, timestamp: serverTimestamp() }); showMessage("Envoyé !", true); } catch(e){ showMessage("Erreur.", false); } }
+        async function shareProfileLink() { const link = `${BASE_URL}?uid=${currentUserId}`; try { await navigator.share({ title: 'Drop', text: `Rejoins-moi !`, url: link }); } catch (err) { if (err.name !== 'AbortError') navigator.clipboard.writeText(link).then(() => showMessage("Lien copié !", true)); } }
+        function showMyQrCode() { const canvas = document.getElementById('qr-code-canvas'); if (!currentUserId) return; document.getElementById('qr-user-id').textContent = currentUserId; QRCode.toCanvas(canvas, `${BASE_URL}?uid=${currentUserId}`, { width: 200, margin: 2 }, function (error) { if (error) return; hideModal(document.getElementById('friend-options-modal')); showModal(document.getElementById('qr-code-modal')); }); }
         
-        // --- NOUVEAU PICKER DE STICKERS ---
-        document.getElementById('emoji-btn').onclick = () => {
-            const p = document.getElementById('emoji-picker');
-            if(p.style.display==='grid') { 
-                p.style.display='none'; 
-            } else {
-                p.innerHTML=''; 
-                STICKERS.forEach(s => {
-                    const img = document.createElement('img');
-                    img.src = s;
-                    img.className = 'picker-sticker';
-                    img.onclick = () => {
-                        sendSticker(s); // Envoi immédiat
-                        p.style.display = 'none';
-                    };
-                    p.appendChild(img);
-                }); 
-                p.style.display='grid';
-            }
-        };
-
-        document.getElementById('edit-bio-btn').onclick = () => {
-             const u = usersData[currentUserId];
-             document.getElementById('edit-username-input').value = u.username;
-             document.getElementById('edit-bio-textarea').value = u.bio;
-             const cDiv = document.getElementById('edit-color-swatches'); cDiv.innerHTML='';
-             PROFILE_COLORS.forEach(c => {
-                 const d = document.createElement('div'); d.className='edit-color-swatch'; d.style.backgroundColor=c; d.dataset.color=c;
-                 if(u.profileColor===c) d.classList.add('selected');
-                 d.onclick=()=>{cDiv.querySelector('.selected')?.classList.remove('selected'); d.classList.add('selected');};
-                 cDiv.appendChild(d);
-             });
-             showModal(document.getElementById('edit-profile-modal'));
-        };
-        document.getElementById('cancel-edit-btn').onclick = () => hideModal(document.getElementById('edit-profile-modal'));
-        document.getElementById('save-profile-btn').onclick = async () => {
-            await updateDoc(doc(usersCollectionRef, currentUserId), {
-                username: document.getElementById('edit-username-input').value,
-                bio: document.getElementById('edit-bio-textarea').value,
-                profileColor: document.querySelector('#edit-color-swatches .selected')?.dataset.color
-            });
-            hideModal(document.getElementById('edit-profile-modal'));
-        };
-
-        async function shareProfileLink() {
-            const link = `${BASE_URL}?uid=${currentUserId}`;
-            try { await navigator.share({ title: 'Rejoins-moi sur Drop !', text: `Ajoute-moi sur Drop !`, url: link }); } catch (err) { if (err.name !== 'AbortError') navigator.clipboard.writeText(link).then(() => showMessage("Lien copié !", true)); }
-        }
-        function showMyQrCode() {
-            const canvas = document.getElementById('qr-code-canvas');
-            if (!currentUserId) return showMessage("Erreur ID.", false);
-            const link = `${BASE_URL}?uid=${currentUserId}`;
-            document.getElementById('qr-user-id').textContent = currentUserId; 
-            QRCode.toCanvas(canvas, link, { width: 200, margin: 2 }, function (error) {
-                if (error) return showMessage("Erreur QR.", false);
-                hideModal(document.getElementById('friend-options-modal'));
-                showModal(document.getElementById('qr-code-modal'));
-            });
-        }
-
+        // CORRECTION IMPORTANTE: Cette fonction est maintenant définie avant d'être utilisée
+        function listenToFriendRequests() { const requestsRef = collection(db, dbPath, 'users', currentUserId, 'friendRequests'); unsubscribeFriendRequestsListener = onSnapshot(requestsRef, (snapshot) => { pendingRequests = []; snapshot.forEach(doc => { pendingRequests.push({ id: doc.id, ...doc.data() }); }); updateFriendRequestBadge(pendingRequests.length); if(document.getElementById('friend-requests-modal').style.display === 'flex') renderFriendRequestsList(); }); }
+        
+        function updateFriendRequestBadge(count) { const fab = document.getElementById('add-friend-fab'); let badge = fab.querySelector('.request-badge'); const modalBadge = document.getElementById('pending-requests-count-badge'); if (count > 0) { if (!badge) { badge = document.createElement('div'); badge.className='request-badge'; fab.appendChild(badge); } badge.textContent = count; modalBadge.textContent = count; modalBadge.style.display='inline-block'; } else { if (badge) badge.remove(); modalBadge.style.display='none'; } }
     </script>
 </body>
 </html>
