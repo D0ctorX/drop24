@@ -263,6 +263,18 @@
         #cropper-modal .modal-content { max-width: 90vw; width: 400px; align-items: center; }
         #cropper-canvas { max-width: 100%; border: 1px solid var(--border-color); background: #eee; touch-action: none; }
 
+        /* Friend request item */
+        .friend-request-item {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px; border-bottom: 1px solid #eee;
+        }
+        .friend-request-info { display: flex; align-items: center; gap: 10px; }
+        .friend-request-info img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+        .request-actions { display: flex; gap: 5px; }
+        .request-btn { border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; color: white; }
+        .btn-accept { background-color: var(--switch-on); }
+        .btn-reject { background-color: var(--dislike-color); }
+
     </style>
 </head>
 <body>
@@ -423,7 +435,7 @@
 <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, doc, getDoc, setDoc, updateDoc, onSnapshot, query, arrayUnion, arrayRemove, writeBatch, serverTimestamp, addDoc, deleteDoc, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, getDoc, setDoc, updateDoc, onSnapshot, query, arrayUnion, arrayRemove, writeBatch, serverTimestamp, addDoc, deleteDoc, orderBy, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         const appId = '1:541715107757:web:0141b71ee3cd1ce5ec5b24';
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "AIzaSyB_z5U4yKJERho93p9696NujcG5R5fvlD8", authDomain: "studio-3374032724-f28d6.firebaseapp.com", projectId: "studio-3374032724-f28d6", appId: appId };
@@ -438,12 +450,16 @@
         const usersCollectionRef = collection(db, dbPath, 'users');
         const postsCollectionRef = collection(db, dbPath, 'posts');
         const groupsCollectionRef = collection(db, dbPath, 'groups');
+        const friendRequestsCollectionRef = collection(db, dbPath, 'friend_requests');
         
         const PROFILE_COLORS = ['#e57373', '#81c784', '#64b5f6', '#f06292', '#ba68c8', '#ffd54f', '#7986cb', '#4db6ac', '#9575cd', '#4fc3f7', '#a1887f', '#90a4ae'];
         const POST_FONT_FAMILIES = ['font-inter', 'font-pacifico', 'font-mono', 'font-montserrat'];
         const STICKERS = ["mal_à_l'aise.gif", "amour.gif", "triste.gif", "colère.gif", "soulé.gif", "choqué.gif", "cligne.gif"];
         const POST_COLOR_PALETTE = ['#f1f1f1', '#D6E9F7', '#D1F7D1', '#FFF7D1', '#F7D1D1', '#A0D4FE', '#84E084', '#FEEA84', '#FE8484'];
         const MAX_CHARS = 70; const BASE_URL = 'https://drop-24.netlify.app/';
+
+        // --- DEFINITION DE navItems (CORRECTION 1) ---
+        const navItems = document.querySelectorAll('.nav-item');
 
         let currentUserId = null;
         let activeProfileUserId = null;
@@ -493,7 +509,7 @@
                 await upsertUserDocument(user);
                 listenToAllUsers();
                 listenToFeed();
-                listenToFriendRequests();
+                listenToFriendRequests(); // Appel qui posait problème
                 listenToMyGroups();
                 navigateTo('feed-view');
             } else {
@@ -504,6 +520,7 @@
                 if(unsubscribeUsersListener) unsubscribeUsersListener();
                 if(unsubscribeFeedListener) unsubscribeFeedListener();
                 if(unsubscribeGroupsListener) unsubscribeGroupsListener();
+                if(unsubscribeFriendRequestsListener) unsubscribeFriendRequestsListener();
                 unsubscribeChatsMetaListeners.forEach(u => u());
             }
         });
@@ -545,6 +562,120 @@
                 if (activeProfileUserId && document.getElementById('profile-view').getBoundingClientRect().x === 0) showProfile(activeProfileUserId);
             });
         }
+
+        // --- FRIEND REQUESTS LOGIC (CORRECTION 2) ---
+        function listenToFriendRequests() {
+            if (unsubscribeFriendRequestsListener) unsubscribeFriendRequestsListener();
+            
+            // On écoute la collection globale friend_requests où 'to' est l'utilisateur courant
+            const q = query(friendRequestsCollectionRef, where('to', '==', currentUserId));
+            
+            unsubscribeFriendRequestsListener = onSnapshot(q, (snap) => {
+                pendingRequests = [];
+                snap.forEach(doc => {
+                    pendingRequests.push({ id: doc.id, ...doc.data() });
+                });
+                
+                // Update Badge
+                const badge = document.getElementById('pending-requests-count-badge');
+                if(pendingRequests.length > 0) {
+                    badge.textContent = pendingRequests.length;
+                    badge.style.display = 'flex';
+                } else {
+                    badge.style.display = 'none';
+                }
+                
+                // Render List inside modal
+                renderFriendRequestsList();
+            });
+        }
+        
+        function renderFriendRequestsList() {
+            const list = document.getElementById('friend-requests-list');
+            list.innerHTML = '';
+            
+            if(pendingRequests.length === 0) {
+                list.innerHTML = '<p style="text-align:center;color:grey;padding:20px;">Aucune demande.</p>';
+                return;
+            }
+            
+            pendingRequests.forEach(req => {
+                const u = usersData[req.from];
+                if(!u) return;
+                
+                const div = document.createElement('div');
+                div.className = 'friend-request-item';
+                div.innerHTML = `
+                    <div class="friend-request-info">
+                        <img src="${generateAvatarUrl(u)}">
+                        <span>${u.username}</span>
+                    </div>
+                    <div class="request-actions">
+                        <button class="request-btn btn-accept" onclick="acceptRequest('${req.id}', '${req.from}')">Accepter</button>
+                        <button class="request-btn btn-reject" onclick="rejectRequest('${req.id}')">Refuser</button>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+        }
+        
+        window.acceptRequest = async (reqId, fromId) => {
+            const batch = writeBatch(db);
+            
+            // Add friend to me
+            batch.update(doc(usersCollectionRef, currentUserId), {
+                friends: arrayUnion(fromId)
+            });
+            // Add me to friend
+            batch.update(doc(usersCollectionRef, fromId), {
+                friends: arrayUnion(currentUserId)
+            });
+            // Delete request
+            batch.delete(doc(friendRequestsCollectionRef, reqId));
+            
+            await batch.commit();
+            showMessage("Ami ajouté !", true);
+            hideModal(document.getElementById('friend-requests-modal'));
+        };
+        
+        window.rejectRequest = async (reqId) => {
+            await deleteDoc(doc(friendRequestsCollectionRef, reqId));
+            showMessage("Demande refusée", false);
+        };
+        
+        // Envoi de demande d'ami
+        document.getElementById('send-friend-request-btn').onclick = async () => {
+            const targetId = document.getElementById('paste-id-input').value.trim();
+            if(!targetId) return;
+            if(targetId === currentUserId) return showMessage("C'est vous !", false);
+            
+            // Vérifier si l'user existe
+            const targetRef = doc(usersCollectionRef, targetId);
+            const targetSnap = await getDoc(targetRef);
+            
+            if(!targetSnap.exists()) {
+                return showMessage("ID introuvable", false);
+            }
+            
+            // Vérifier si déjà amis
+            if(myFriends.includes(targetId)) {
+                return showMessage("Déjà amis !", false);
+            }
+            
+            try {
+                await addDoc(friendRequestsCollectionRef, {
+                    from: currentUserId,
+                    to: targetId,
+                    createdAt: serverTimestamp()
+                });
+                showMessage("Demande envoyée !", true);
+                hideModal(document.getElementById('paste-id-modal'));
+            } catch(e) {
+                console.error(e);
+                showMessage("Erreur envoi", false);
+            }
+        };
+
 
         function listenToMyGroups() {
             unsubscribeGroupsListener = onSnapshot(groupsCollectionRef, (snap) => {
@@ -628,9 +759,6 @@
             discussions.forEach(d => {
                 const lastRead = myLastReads[d.chatId] ? myLastReads[d.chatId].toMillis() : 0;
                 const isUnread = d.lastMsgTime > lastRead;
-                // Calcul unread count (approximatif: 1 si unread) ou on stocke le vrai count ?
-                // Pour simplifier on met une pastille "1+" si unread.
-                // Si on veut un vrai count il faut le stocker dans chats/{chatId}/unreadCounts/{userId}
                 
                 const div = document.createElement('div');
                 div.className = 'friend-item';
@@ -670,7 +798,6 @@
             // Recalculate global unread
             if(!discussionsList) {
                 // If not provided, fetch basic list again (simplified)
-                // Actually we just rely on the next render loop or existing data
                 return; 
             }
             let totalUnread = 0;
@@ -791,8 +918,7 @@
 
             if(unsubscribeChatListener) unsubscribeChatListener();
             
-            // Query depends on type? No, we use 'chats' collection for Private and 'groups' for Group messages?
-            // WAIT: To simplify, I put group messages in `groups/{gid}/messages` and private in `chats/{cid}/messages`.
+            // Query depends on type
             let collRef;
             if(currentChatType === 'group') collRef = collection(db, dbPath, 'groups', cid, 'messages');
             else collRef = collection(db, dbPath, 'chats', cid, 'messages');
@@ -820,9 +946,6 @@
             const collPath = isGroup ? ['groups', currentChatId, 'messages'] : ['chats', currentChatId, 'messages'];
             const metaDocRef = isGroup ? doc(db, dbPath, 'groups', currentChatId) : doc(db, dbPath, 'chats', currentChatId);
             
-            // Handle Mentions (Simple color coding in display, stored as plain text)
-            // Enhanced: Detect @User
-            
             const msgData = {
                 text: text,
                 senderId: currentUserId,
@@ -833,7 +956,6 @@
             batch.set(doc(collection(db, dbPath, ...collPath)), msgData);
             
             // Update Metadata for Sorting & Snippet
-            // For Private Chat, we must ensure parent doc exists
             const lastMsgTxt = text.startsWith('[sticker:') ? 'Sticker' : text;
             batch.set(metaDocRef, {
                 lastMessageTime: serverTimestamp(),
@@ -914,7 +1036,6 @@
                 participants: arrayRemove(uid),
                 admins: arrayRemove(uid)
             });
-            // Close modal to refresh or keep open and refresh? Simple: close.
             hideModal(document.getElementById('group-settings-modal'));
         };
 
@@ -976,12 +1097,32 @@
         function hideModal(el) { el.style.display='none'; }
         function showSecondaryView(el) { el.classList.add('visible'); }
         function hideSecondaryView(el) { el.classList.remove('visible'); }
+        
+        // Add friends / ID modals
+        document.getElementById('add-friend-fab').onclick = () => showModal(document.getElementById('friend-options-modal'));
+        document.getElementById('cancel-friend-options-btn').onclick = () => hideModal(document.getElementById('friend-options-modal'));
+        document.getElementById('enter-id-manually').onclick = () => {
+            hideModal(document.getElementById('friend-options-modal'));
+            showModal(document.getElementById('paste-id-modal'));
+        };
+        document.getElementById('cancel-paste-id-btn').onclick = () => hideModal(document.getElementById('paste-id-modal'));
+        document.getElementById('show-friend-requests').onclick = () => {
+            hideModal(document.getElementById('friend-options-modal'));
+            showModal(document.getElementById('friend-requests-modal'));
+        };
+        document.getElementById('cancel-friend-requests-btn').onclick = () => hideModal(document.getElementById('friend-requests-modal'));
+        document.getElementById('show-my-qr').onclick = () => {
+            document.getElementById('qr-user-id').textContent = currentUserId;
+            QRCode.toCanvas(document.getElementById('qr-code-canvas'), currentUserId, function (error) { if (error) console.error(error) });
+            hideModal(document.getElementById('friend-options-modal'));
+            showModal(document.getElementById('qr-code-modal'));
+        };
+        document.getElementById('close-qr-modal-btn').onclick = () => hideModal(document.getElementById('qr-code-modal'));
 
         // --- INIT FEED / SEARCH ---
         document.getElementById('feed-search-input').addEventListener('input', renderFeed);
         document.getElementById('search-input').addEventListener('input', renderDiscussionsList);
         
-        // Feed Logic reused from prev (Simplified for length)
         function listenToFeed() {
             unsubscribeFeedListener = onSnapshot(query(postsCollectionRef), (snap) => {
                 const now = new Date(); postsData = [];
@@ -1021,7 +1162,45 @@
         }
         function formatCountdown(ms) { const s=Math.floor(ms/1000); return `${Math.floor(s/3600)}:${Math.floor((s%3600)/60).toString().padStart(2,'0')}`; }
         window.likePost = async (pid) => { const r=doc(postsCollectionRef,pid); const p=postsData.find(x=>x.id===pid); if(!p)return; const has=(p.likedBy||[]).includes(currentUserId); await updateDoc(r,{likedBy:has?arrayRemove(currentUserId):arrayUnion(currentUserId)}); };
-        window.showProfile = showProfile;
+        
+        window.showProfile = (uid) => {
+            activeProfileUserId = uid;
+            const u = usersData[uid];
+            if(!u) return;
+            document.getElementById('profile-username').textContent = u.username;
+            document.getElementById('profile-pic').src = generateAvatarUrl(u);
+            document.getElementById('posts-count').textContent = u.postsCount || 0;
+            document.getElementById('followers-count').textContent = (u.friends || []).length;
+            document.getElementById('creation-date').textContent = u.accountCreatedAt ? new Date(u.accountCreatedAt.toMillis()).toLocaleDateString() : '...';
+            
+            const isMe = uid === currentUserId;
+            document.getElementById('edit-bio-btn').style.display = isMe ? 'block' : 'none';
+            document.getElementById('profile-actions').style.display = isMe ? 'none' : 'flex';
+            document.getElementById('logout-btn').style.display = isMe ? 'block' : 'none';
+            document.getElementById('profile-username-header').textContent = isMe ? 'Mon Profil' : u.username;
+            
+            // Actions logic
+            const isFriend = myFriends.includes(uid);
+            const addBtn = document.getElementById('action-add-friend');
+            if(isFriend) {
+                addBtn.textContent = 'Amis';
+                addBtn.disabled = true;
+            } else {
+                addBtn.textContent = 'Ajouter';
+                addBtn.disabled = false;
+                addBtn.onclick = () => {
+                     // Auto-fill ID into paste modal for ease
+                     document.getElementById('paste-id-input').value = uid;
+                     showModal(document.getElementById('paste-id-modal'));
+                };
+            }
+            
+            document.getElementById('action-message-user').onclick = () => {
+                showChat(uid);
+            };
+
+            navigateTo('profile-view');
+        };
 
         // --- CROPPER, IMAGE, PROFILE EDIT, QR, ETC... KEEPING AS IS ---
         document.addEventListener('DOMContentLoaded', () => {
