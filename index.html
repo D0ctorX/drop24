@@ -178,6 +178,7 @@
             transition: transform 0.3s ease-in-out;
             z-index: 20;
             visibility: hidden;
+            background-color: var(--secondary-bg); /* Ajout fond blanc pour nouvelles vues */
         }
         
         .view.secondary.visible {
@@ -224,18 +225,18 @@
         .header-placeholder { width: 40px; } 
         .back-button { font-size: 20px; cursor: pointer; width: 40px; text-align: left; }
 
-        /* Scroll Fix - Augmentation MASSIVE du padding bottom pour éviter le masquage par la navbar */
-        .feed-content, .contacts-content, .chat-content, .profile-content, #friend-requests-list {
+        /* Scroll Fix */
+        .feed-content, .contacts-content, .chat-content, .profile-content, #friend-requests-list, .group-info-content {
             flex: 1 1 0;
             overflow-y: auto;
-            padding-bottom: 140px; /* 140px pour être sûr */
+            padding-bottom: 140px;
             -webkit-overflow-scrolling: touch;
             -ms-overflow-style: none;  
             scrollbar-width: none;  
         }
         .feed-content::-webkit-scrollbar, .contacts-content::-webkit-scrollbar, 
         .chat-content::-webkit-scrollbar, .profile-content::-webkit-scrollbar,
-        #friend-requests-list::-webkit-scrollbar { display: none; }
+        #friend-requests-list::-webkit-scrollbar, .group-info-content::-webkit-scrollbar { display: none; }
         
         #friend-requests-list { max-height: 300px; flex: initial; }
 
@@ -311,7 +312,6 @@
 
         /* --- Amis / Groupes --- */
         .contacts-view { position: relative; } 
-        /* Barre de recherche modifiée pour inclure le bouton Groupe */
         .search-bar-container { 
             display: flex; 
             gap: 10px; 
@@ -335,7 +335,7 @@
         .friend-item { display: flex; align-items: center; padding: 10px 15px; border-bottom: 1px solid var(--border-color); cursor: pointer; transition: background-color 0.2s; }
         .friend-item:hover { background-color: #f9f9f9; }
         .friend-pp { width: 50px; height: 50px; border-radius: 50%; margin-right: 15px; object-fit: cover; }
-        .friend-info { flex-grow: 1; min-width: 0; } /* min-width: 0 pour l'ellipsis */
+        .friend-info { flex-grow: 1; min-width: 0; }
         .friend-info h4 { margin: 0 0 4px 0; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .friend-info p { margin: 0; font-size: 12px; color: var(--last-seen-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .dm-button-container { position: relative; }
@@ -585,13 +585,30 @@
         }
         .group-friend-select-item:last-child { border-bottom: none; }
         .group-friend-select-item input { width: auto; margin-right: 10px; }
-        
-        #group-members-list-info { display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto; }
-        .group-member-item { display: flex; align-items: center; justify-content: space-between; padding: 8px; background: #f9f9f9; border-radius: 6px; }
+
+        /* --- STYLES INFO GROUPE PLEIN ECRAN --- */
+        .group-info-header-icon {
+            width: 80px; height: 80px; background: #eee; border-radius: 50%; margin: 20px auto;
+            display: flex; align-items: center; justify-content: center; font-size: 30px; color: #888;
+        }
+        .group-field-container { padding: 15px; border-bottom: 1px solid #f0f0f0; background: white; }
+        .group-input-clean {
+            width: 100%; border: none; border-bottom: 1px solid var(--border-color);
+            padding: 10px 0; font-size: 16px; outline: none; background: transparent;
+        }
+        .group-input-clean:disabled { color: var(--text-color); border-bottom: none; background: transparent; }
+        .section-label { font-size: 12px; font-weight: bold; color: var(--highlight-color); margin-bottom: 5px; text-transform: uppercase; }
+        .group-members-list { margin-top: 0; background: white; }
+        .group-member-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 15px; background: #fff; border-bottom: 1px solid #f0f0f0; border-radius: 0; }
         .group-member-info { display: flex; align-items: center; gap: 10px; }
-        .group-member-info img { width: 30px; height: 30px; border-radius: 50%; }
-        .admin-badge { background: black; color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 5px; }
+        .group-member-info img { width: 40px; height: 40px; border-radius: 50%; }
+        .admin-badge { background: #e0f2f1; color: #00695c; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 5px; font-weight: bold; }
         .remove-member-btn { color: var(--dislike-color); border: none; background: none; cursor: pointer; }
+        .group-danger-zone { padding: 30px 15px; text-align: center; }
+        .btn-danger-outline {
+            border: 1px solid var(--dislike-color); color: var(--dislike-color); background: transparent;
+            padding: 12px 20px; border-radius: 8px; font-weight: 600; width: 100%; cursor: pointer;
+        }
 
         /* --- Styles Création de post --- */
         #post-creation-view .view-header { justify-content: space-between; }
@@ -746,11 +763,13 @@
             max-width: 90vw;
             width: 400px;
             align-items: center;
+            background: #222; /* Fond sombre pour mieux voir */
+            color: white;
         }
         #cropper-canvas {
             max-width: 100%;
             border: 1px solid var(--border-color);
-            background: #eee;
+            background: #000;
             touch-action: none; 
         }
 
@@ -838,6 +857,38 @@
             </div>
         </div>
         
+        <!-- NOUVELLE VUE: INFOS GROUPE PLEIN ECRAN -->
+        <div id="group-info-view" class="view secondary">
+            <div class="view-header">
+                <i id="group-info-back-btn" class="fas fa-arrow-left back-button"></i>
+                <h1 class="header-title">Infos du groupe</h1>
+                <button id="group-save-info-btn" style="border:none; background:none; color:var(--highlight-color); font-weight:bold; display:none; font-size:16px;">Sauver</button>
+                <div id="group-save-placeholder" class="header-placeholder"></div>
+            </div>
+            <div class="group-info-content" style="background:var(--page-bg);">
+                <div style="background:#fff; padding-bottom:20px; margin-bottom:10px; border-bottom:1px solid #DBDBDB;">
+                    <div class="group-info-header-icon"><i class="fas fa-users"></i></div>
+                    <div class="group-field-container">
+                        <div class="section-label">Nom du groupe</div>
+                        <input type="text" id="group-info-name" class="group-input-clean" disabled>
+                    </div>
+                    <div class="group-field-container" style="border:none;">
+                        <div class="section-label">Description</div>
+                        <input type="text" id="group-info-desc" class="group-input-clean" disabled>
+                    </div>
+                </div>
+
+                <div style="background:#fff; border-top:1px solid #DBDBDB; border-bottom:1px solid #DBDBDB; margin-bottom:20px;">
+                    <div class="section-label" style="padding:15px 15px 5px 15px;">Participants</div>
+                    <div id="group-members-list-info" class="group-members-list"></div>
+                </div>
+
+                <div class="group-danger-zone">
+                    <button id="group-leave-btn" class="btn-danger-outline"><i class="fas fa-sign-out-alt"></i> Quitter le groupe</button>
+                </div>
+            </div>
+        </div>
+
         <div id="post-creation-view" class="view post-creation-view secondary">
             <div class="view-header"><i id="post-creation-back-btn" class="fas fa-arrow-left back-button"></i><h1 class="header-title">Nouveau Post</h1><button id="publish-button" disabled>Publier</button></div>
             <div class="post-input-area">
@@ -894,26 +945,6 @@
         </div>
     </div>
 
-    <!-- Modale Infos Groupe -->
-    <div id="group-info-modal" class="modal-backdrop">
-        <div class="modal-content">
-            <h3>Infos du Groupe</h3>
-            <div id="group-info-display">
-                <div style="margin-bottom:10px;"><label>Nom</label><input type="text" id="group-info-name" disabled></div>
-                <div style="margin-bottom:10px;"><label>Description</label><textarea id="group-info-desc" disabled></textarea></div>
-                <button id="group-save-info-btn" style="display:none; background-color: var(--highlight-color); color:white; margin-bottom:10px;">Enregistrer</button>
-            </div>
-            <div>
-                <label>Membres</label>
-                <div id="group-members-list-info"></div>
-            </div>
-            <div class="modal-actions" style="flex-direction: column;">
-                <button id="group-leave-btn" style="background-color: var(--dislike-color); color: white;">Quitter le groupe</button>
-                <button id="cancel-group-info-btn">Fermer</button>
-            </div>
-        </div>
-    </div>
-
     <!-- Modale de Recadrage d'Image -->
     <div id="cropper-modal" class="modal-backdrop">
         <div class="modal-content">
@@ -921,7 +952,7 @@
             <div style="width: 100%; display: flex; justify-content: center; background: #000;">
                  <canvas id="cropper-canvas" width="300" height="300"></canvas>
             </div>
-            <input type="range" id="zoom-slider" min="1" max="3" step="0.1" value="1" style="width: 100%; margin-top: 10px;">
+            <input type="range" id="zoom-slider" step="0.01" style="width: 100%; margin-top: 10px;">
             <div class="modal-actions">
                 <button id="cancel-crop-btn">Annuler</button>
                 <button id="confirm-crop-btn" style="background-color: var(--highlight-color); color: white;">Valider</button>
@@ -959,7 +990,7 @@
         const PROFILE_COLORS = ['#e57373', '#81c784', '#64b5f6', '#f06292', '#ba68c8', '#ffd54f', '#7986cb', '#4db6ac', '#9575cd', '#4fc3f7', '#a1887f', '#90a4ae'];
         const POST_FONT_FAMILIES = ['font-inter', 'font-pacifico', 'font-mono', 'font-montserrat'];
         
-        // --- NOUVEAUX STICKERS GIF ---
+        // --- STICKERS GIF ---
         const STICKERS = [
             "mal_à_l'aise.gif",
             "amour.gif",
@@ -983,10 +1014,11 @@
         
         let currentChatId = null; 
         let currentChatType = 'user'; // 'user' or 'group'
-        let currentChatMetadata = null; // Store group info or friend info
+        
+        // Stockage local des conversations pour le tri
+        let conversationsData = {}; 
 
         let unsubscribeChatListener = null;
-
         let unsubscribeUsersListener = null;
         let unsubscribeFeedListener = null;
         let unsubscribeFriendRequestsListener = null;
@@ -995,10 +1027,6 @@
         let countdownInterval = null;
         
         let isLoginMode = true;
-        let friendRequestsLoaded = false; 
-
-        // Stockage local des conversations pour le tri
-        let conversationsData = {}; // Key: chatID/groupID, Value: { timestamp, unreadCount, ... }
 
         // --- VARS IMAGES & QUALITÉ ---
         let currentImageBase64 = null;
@@ -1118,7 +1146,6 @@
             return `https://ui-avatars.com/api/?name=${user.username}&background=${(user.profileColor||'888').replace('#','')}&color=fff&size=128&bold=true`;
         }
 
-        // --- ECOUTEURS DE DONNÉES ---
         function listenToAllUsers() {
             unsubscribeUsersListener = onSnapshot(usersCollectionRef, (snapshot) => {
                 usersData = {}; snapshot.forEach((doc) => { usersData[doc.id] = { id: doc.id, ...doc.data() }; });
@@ -1127,42 +1154,26 @@
             });
         }
         
-        // Nouvelle fonction pour écouter les conversations (Chats & Groupes)
         function listenToConversations() {
             if (!currentUserId) return;
-
-            // 1. Ecouter les Groupes où je suis membre
+            // 1. Groupes
             const qGroups = query(groupsCollectionRef, where('members', 'array-contains', currentUserId));
             unsubscribeGroupsListener = onSnapshot(qGroups, (snap) => {
                 snap.forEach(d => {
                     const data = d.data();
                     const unread = data[`unreadCount_${currentUserId}`] || 0;
-                    conversationsData[d.id] = {
-                        type: 'group',
-                        id: d.id,
-                        name: data.name,
-                        data: data,
-                        timestamp: data.lastMessageTime ? data.lastMessageTime.seconds : 0,
-                        unreadCount: unread
-                    };
+                    conversationsData[d.id] = { type: 'group', id: d.id, name: data.name, data: data, timestamp: data.lastMessageTime ? data.lastMessageTime.seconds : 0, unreadCount: unread };
                 });
                 updateGlobalUnreadBadge();
                 renderFriendsList();
             });
-
-            // 2. Ecouter les Chats privés où je suis participant
+            // 2. Chats privés
             const qChats = query(chatsCollectionRef, where('participants', 'array-contains', currentUserId));
             unsubscribeChatsMetaListener = onSnapshot(qChats, (snap) => {
                 snap.forEach(d => {
                     const data = d.data();
                     const unread = data[`unreadCount_${currentUserId}`] || 0;
-                    conversationsData[d.id] = {
-                        type: 'user',
-                        id: d.id,
-                        data: data,
-                        timestamp: data.lastMessageTime ? data.lastMessageTime.seconds : 0,
-                        unreadCount: unread
-                    };
+                    conversationsData[d.id] = { type: 'user', id: d.id, data: data, timestamp: data.lastMessageTime ? data.lastMessageTime.seconds : 0, unreadCount: unread };
                 });
                 updateGlobalUnreadBadge();
                 renderFriendsList();
@@ -1172,14 +1183,8 @@
         function updateGlobalUnreadBadge() {
             let total = 0;
             Object.values(conversationsData).forEach(c => total += (c.unreadCount || 0));
-            
             const badge = document.getElementById('nav-badge-contacts');
-            if (total > 0) {
-                badge.style.display = 'block';
-                badge.textContent = total > 99 ? '99+' : total;
-            } else {
-                badge.style.display = 'none';
-            }
+            if (total > 0) { badge.style.display = 'block'; badge.textContent = total > 99 ? '99+' : total; } else { badge.style.display = 'none'; }
         }
         
         function listenToFriendRequests() {
@@ -1234,76 +1239,44 @@
         function renderFriendsList() {
             const list = document.getElementById('friends-list'); list.innerHTML='';
             const term = document.getElementById('search-input').value.toLowerCase();
-            
-            // Liste combinée : Amis + Groupes
             let allItems = [];
 
-            // 1. Ajouter les amis
+            // 1. Amis
             const friends = (usersData[currentUserId]?.friends || []).map(id => usersData[id]).filter(Boolean);
             friends.forEach(f => {
                 const cid = getChatId(currentUserId, f.id);
                 const meta = conversationsData[cid] || { timestamp: 0, unreadCount: 0 };
-                allItems.push({
-                    type: 'user',
-                    data: f,
-                    id: f.id,
-                    sortTime: meta.timestamp,
-                    unread: meta.unreadCount,
-                    name: f.username
-                });
+                allItems.push({ type: 'user', data: f, id: f.id, sortTime: meta.timestamp, unread: meta.unreadCount, name: f.username });
             });
 
-            // 2. Ajouter les groupes
+            // 2. Groupes
             Object.values(conversationsData).filter(c => c.type === 'group').forEach(g => {
-                allItems.push({
-                    type: 'group',
-                    data: g.data,
-                    id: g.id,
-                    sortTime: g.timestamp,
-                    unread: g.unreadCount,
-                    name: g.name
-                });
+                allItems.push({ type: 'group', data: g.data, id: g.id, sortTime: g.timestamp, unread: g.unreadCount, name: g.name });
             });
 
-            // TRI PAR DATE DÉCROISSANTE
             allItems.sort((a, b) => b.sortTime - a.sortTime);
 
-            // Filtrage et Affichage
             allItems.filter(item => item.name.toLowerCase().includes(term)).forEach(item => {
                 const d = document.createElement('div'); d.className = 'friend-item';
-                
-                let avatarHTML = '';
-                let title = '';
-                let subtitle = '';
+                let avatarHTML = '', title = '', subtitle = '';
 
                 if (item.type === 'user') {
                     avatarHTML = `<img class="friend-pp" src="${generateAvatarUrl(item.data)}">`;
-                    title = item.name;
-                    subtitle = "Ami";
+                    title = item.name; subtitle = "Ami";
                 } else {
                     avatarHTML = `<div class="friend-pp" style="background:#333;color:white;display:flex;align-items:center;justify-content:center;font-size:20px;"><i class="fas fa-users"></i></div>`;
-                    title = item.name;
-                    subtitle = "Groupe";
+                    title = item.name; subtitle = "Groupe";
                 }
 
-                // Badge de messages non lus
                 let badgeHTML = '';
                 if (item.unread > 0) {
                     badgeHTML = `<div class="dm-unread-badge">${item.unread > 99 ? '99+' : item.unread}</div>`;
                 }
 
                 d.innerHTML = `${avatarHTML}<div class="friend-info"><h4>${title}</h4><p>${subtitle}</p></div><div class="dm-button-container"><button class="dm-button">Message</button>${badgeHTML}</div>`;
-                
-                d.querySelector('.dm-button').onclick = (e) => { 
-                    e.stopPropagation(); 
-                    if(item.type === 'user') showChat(item.id, 'user');
-                    else showChat(item.id, 'group');
-                };
-                
+                d.querySelector('.dm-button').onclick = (e) => { e.stopPropagation(); showChat(item.id, item.type === 'user' ? 'user' : 'group'); };
                 if (item.type === 'user') d.onclick = () => showProfile(item.id);
-                // Si c'est un groupe, clic ouvre le chat aussi (ou les infos)
                 else d.onclick = () => showChat(item.id, 'group');
-
                 list.appendChild(d);
             });
         }
@@ -1317,7 +1290,6 @@
             document.getElementById('posts-count').textContent = u.postsCount || 0;
             document.getElementById('followers-count').textContent = (u.friends||[]).length;
             
-            // Correction Date d'inscription
             const date = u.accountCreatedAt?.toDate ? u.accountCreatedAt.toDate().toLocaleDateString('fr-FR') : 'Date inconnue';
             document.getElementById('creation-date').textContent = date;
 
@@ -1479,7 +1451,6 @@
         // --- CHAT LOGIC ---
         function getChatId(u1, u2) { return [u1, u2].sort().join('_'); }
         
-        // Fonction globale pour ouvrir un chat (Ami ou Groupe)
         async function showChat(id, type = 'user') {
             currentChatId = id;
             currentChatType = type;
@@ -1487,35 +1458,30 @@
             document.getElementById('chat-body').innerHTML = '';
             const chatView = document.getElementById('chat-view');
             
-            // UI Header
             const headerTitle = document.getElementById('chat-username');
             const headerImg = document.getElementById('chat-user-pp');
             const infoBtn = document.getElementById('group-info-btn');
             const placeholderRight = document.getElementById('chat-placeholder-right');
 
             if (type === 'group') {
-                const group = conversationsData[id]?.data; 
-                // Si pas encore chargé dans conversationsData, fetch manuel
-                let groupData = group;
+                // ... (Chargement groupe existant inchangé)
+                let groupData = conversationsData[id]?.data; 
                 if(!groupData) {
                     const snap = await getDoc(doc(groupsCollectionRef, id));
                     if(snap.exists()) groupData = snap.data();
                 }
                 
                 headerTitle.textContent = groupData ? groupData.name : 'Groupe';
-                headerImg.style.display = 'none'; // Pas d'image de groupe pour l'instant
+                headerImg.style.display = 'none';
                 infoBtn.style.display = 'block';
                 placeholderRight.style.display = 'none';
                 
-                // Ouvrir infos groupe
                 infoBtn.onclick = () => openGroupInfo(id, groupData);
-
-                // RESET UNREAD COUNT pour ce groupe (update metadata)
                 const gRef = doc(groupsCollectionRef, id);
                 await updateDoc(gRef, { [`unreadCount_${currentUserId}`]: 0 });
 
             } else {
-                // Chat 1-on-1
+                // FIX: Créer ou Merger le doc Chat pour éviter l'erreur de permission en lecture
                 const u = usersData[id];
                 headerTitle.textContent = u ? u.username : '...';
                 headerImg.src = generateAvatarUrl(u);
@@ -1523,35 +1489,32 @@
                 infoBtn.style.display = 'none';
                 placeholderRight.style.display = 'block';
 
-                // RESET UNREAD COUNT pour ce chat
                 const cid = getChatId(currentUserId, id);
-                currentChatId = cid; // Utiliser l'ID composite pour Firestore
+                currentChatId = cid; 
                 
-                // Mettre à jour le doc parent chat
                 const cRef = doc(chatsCollectionRef, cid);
-                // Vérifier s'il existe, sinon on le crée (cas ancien chat)
-                const snap = await getDoc(cRef);
-                if(snap.exists()) {
+                try {
+                    // Tente d'abord de mettre à jour (optimisation)
                     await updateDoc(cRef, { [`unreadCount_${currentUserId}`]: 0 });
-                } else {
-                     await setDoc(cRef, { 
+                } catch(e) {
+                    // Si erreur (doc n'existe pas), on le crée avec setDoc merge
+                    await setDoc(cRef, { 
                         participants: [currentUserId, id], 
                         [`unreadCount_${currentUserId}`]: 0,
                         lastMessageTime: serverTimestamp() 
-                    });
+                    }, { merge: true });
                 }
             }
 
             showSecondaryView(chatView);
             
-            // Listen Messages
             if(unsubscribeChatListener) unsubscribeChatListener();
             
             let collRef;
             if (type === 'group') collRef = collection(groupsCollectionRef, id, 'messages');
             else collRef = collection(chatsCollectionRef, currentChatId, 'messages');
 
-            const q = query(collRef); // Pas de limite pour l'instant
+            const q = query(collRef); 
             
             unsubscribeChatListener = onSnapshot(q, snap => {
                 document.getElementById('chat-body').innerHTML = '';
@@ -1566,20 +1529,16 @@
                     
                     div.className = `message-container ${isMe?'sent':'received'}`;
                     
-                    // Gestion "Lu" (Boolean pour user, Array pour groupe)
                     let readStatus = '';
                     if(isMe) {
                          if (type === 'user') {
                              readStatus = m.read ? '<i class="fas fa-check-double" style="color:#3897f0"></i>' : '<i class="fas fa-check"></i>';
                          } else {
-                             // Pour groupe, c'est compliqué de lister tout le monde, on simplifie
-                             // Si readBy contient quelqu'un d'autre que moi -> Lu
                              const readers = m.readBy || [];
                              const seenByOthers = readers.some(uid => uid !== currentUserId);
                              readStatus = seenByOthers ? '<i class="fas fa-eye" style="color:#3897f0"></i>' : '<i class="fas fa-check"></i>';
                          }
                     } else {
-                        // Si ce n'est pas moi et que je lis le message maintenant, je dois le marquer comme lu
                         if (type === 'user' && !m.read) {
                             updateDoc(doc(chatsCollectionRef, currentChatId, 'messages', m.id), { read: true });
                         } else if (type === 'group') {
@@ -1626,66 +1585,38 @@
                  text: text,
                  senderId: currentUserId,
                  createdAt: serverTimestamp(),
-                 // Champs pour la lecture
-                 read: false, // Pour user
-                 readBy: [currentUserId] // Pour groupe
+                 read: false, 
+                 readBy: [currentUserId] 
              };
 
              if (currentChatType === 'group') {
-                 // 1. Ajouter message dans sous-collection
                  await addDoc(collection(groupsCollectionRef, currentChatId, 'messages'), msgData);
-                 
-                 // 2. Mettre à jour métadonnées groupe (lastMessage + unread counts)
                  const gRef = doc(groupsCollectionRef, currentChatId);
                  const groupSnap = await getDoc(gRef);
                  const members = groupSnap.data().members || [];
-                 
-                 let updates = {
-                     lastMessageTime: serverTimestamp(),
-                     lastMessageText: text
-                 };
-                 // Incrémenter unread pour tous les autres membres
-                 members.forEach(m => {
-                     if(m !== currentUserId) {
-                         updates[`unreadCount_${m}`] = increment(1);
-                     }
-                 });
+                 let updates = { lastMessageTime: serverTimestamp(), lastMessageText: text };
+                 members.forEach(m => { if(m !== currentUserId) { updates[`unreadCount_${m}`] = increment(1); } });
                  await updateDoc(gRef, updates);
-
              } else {
-                 // Chat User
                  const receiverId = currentChatId.split('_').find(id => id !== currentUserId);
                  msgData.receiverId = receiverId;
-                 
                  await addDoc(collection(chatsCollectionRef, currentChatId, 'messages'), msgData);
-                 
-                 // Update Parent Doc pour tri et notif
                  const cRef = doc(chatsCollectionRef, currentChatId);
-                 const snap = await getDoc(cRef);
-                 if(!snap.exists()) {
-                     await setDoc(cRef, { 
-                         participants: [currentUserId, receiverId],
-                         lastMessageTime: serverTimestamp(),
-                         lastMessageText: text,
-                         [`unreadCount_${receiverId}`]: 1,
-                         [`unreadCount_${currentUserId}`]: 0
-                     });
-                 } else {
-                     await updateDoc(cRef, {
-                         lastMessageTime: serverTimestamp(),
-                         lastMessageText: text,
-                         participants: arrayUnion(currentUserId, receiverId), // Ensure logic
-                         [`unreadCount_${receiverId}`]: increment(1)
-                     });
-                 }
+                 // Merge update pour éviter erreur si doc n'existe pas encore
+                 await setDoc(cRef, {
+                     participants: arrayUnion(currentUserId, receiverId),
+                     lastMessageTime: serverTimestamp(),
+                     lastMessageText: text,
+                     [`unreadCount_${receiverId}`]: increment(1)
+                 }, { merge: true });
              }
         }
 
         document.getElementById('chat-back-btn').onclick = () => hideSecondaryView(document.getElementById('chat-view'));
 
-        // --- GROUP INFO MODAL ---
+        // --- GROUP INFO VIEW (MODIFIÉ: PLEIN ECRAN) ---
         function openGroupInfo(groupId, groupData) {
-            const modal = document.getElementById('group-info-modal');
+            const view = document.getElementById('group-info-view');
             const nameInp = document.getElementById('group-info-name');
             const descInp = document.getElementById('group-info-desc');
             const saveBtn = document.getElementById('group-save-info-btn');
@@ -1701,7 +1632,6 @@
             descInp.disabled = !isAdmin;
             saveBtn.style.display = isAdmin ? 'block' : 'none';
             
-            // Render Members
             memberList.innerHTML = '';
             (groupData.members || []).forEach(uid => {
                 const u = usersData[uid];
@@ -1712,9 +1642,9 @@
                     <div class="group-member-info">
                         <img src="${generateAvatarUrl(u || {username:'?'})}">
                         <span>${u ? u.username : 'Inconnu'}</span>
-                        ${isMemberAdmin ? '<span class="admin-badge">Admin</span>' : ''}
+                        ${isMemberAdmin ? '<span class="admin-badge">ADMIN</span>' : ''}
                     </div>
-                    ${(isAdmin && uid !== currentUserId) ? `<button class="remove-member-btn" data-uid="${uid}"><i class="fas fa-user-minus"></i></button>` : ''}
+                    ${(isAdmin && uid !== currentUserId) ? `<button class="remove-member-btn" data-uid="${uid}"><i class="fas fa-minus-circle"></i></button>` : ''}
                 `;
                 if(isAdmin && uid !== currentUserId) {
                     div.querySelector('.remove-member-btn').onclick = () => removeGroupMember(groupId, uid);
@@ -1737,14 +1667,16 @@
                         members: arrayRemove(currentUserId),
                         admins: arrayRemove(currentUserId)
                     });
-                    hideModal(modal);
+                    hideSecondaryView(view);
                     hideSecondaryView(document.getElementById('chat-view'));
                 }
             };
             
-            showModal(modal);
+            // Back button logic: fermer info revient au chat
+            document.getElementById('group-info-back-btn').onclick = () => hideSecondaryView(view);
+            
+            showSecondaryView(view);
         }
-        document.getElementById('cancel-group-info-btn').onclick = () => hideModal(document.getElementById('group-info-modal'));
 
         async function removeGroupMember(gid, uid) {
             if(confirm("Retirer ce membre ?")) {
@@ -1752,76 +1684,13 @@
                     members: arrayRemove(uid),
                     admins: arrayRemove(uid)
                 });
-                // Fermer et rouvrir pour refresh (ou écouteur temps réel gèrerait ça mieux mais bon)
-                hideModal(document.getElementById('group-info-modal'));
-                // Fetch fresh data handled by listener if implemented properly, but here we rely on manual refresh for modal
+                // Update local UI
                 const snap = await getDoc(doc(groupsCollectionRef, gid));
                 openGroupInfo(gid, snap.data());
             }
         }
 
-        // --- NOUVEAU PICKER DE STICKERS ---
-        document.getElementById('emoji-btn').onclick = () => {
-            const p = document.getElementById('emoji-picker');
-            if(p.style.display==='grid') { 
-                p.style.display='none'; 
-            } else {
-                p.innerHTML=''; 
-                STICKERS.forEach(s => {
-                    const img = document.createElement('img');
-                    img.src = s;
-                    img.className = 'picker-sticker';
-                    img.onclick = () => {
-                        sendSticker(s); // Envoi immédiat
-                        p.style.display = 'none';
-                    };
-                    p.appendChild(img);
-                }); 
-                p.style.display='grid';
-            }
-        };
-
-        // ... (Reste du code profil identique) ...
-        document.getElementById('edit-bio-btn').onclick = () => {
-             const u = usersData[currentUserId];
-             document.getElementById('edit-username-input').value = u.username;
-             document.getElementById('edit-bio-textarea').value = u.bio;
-             const cDiv = document.getElementById('edit-color-swatches'); cDiv.innerHTML='';
-             PROFILE_COLORS.forEach(c => {
-                 const d = document.createElement('div'); d.className='edit-color-swatch'; d.style.backgroundColor=c; d.dataset.color=c;
-                 if(u.profileColor===c) d.classList.add('selected');
-                 d.onclick=()=>{cDiv.querySelector('.selected')?.classList.remove('selected'); d.classList.add('selected');};
-                 cDiv.appendChild(d);
-             });
-             showModal(document.getElementById('edit-profile-modal'));
-        };
-        document.getElementById('cancel-edit-btn').onclick = () => hideModal(document.getElementById('edit-profile-modal'));
-        document.getElementById('save-profile-btn').onclick = async () => {
-            await updateDoc(doc(usersCollectionRef, currentUserId), {
-                username: document.getElementById('edit-username-input').value,
-                bio: document.getElementById('edit-bio-textarea').value,
-                profileColor: document.querySelector('#edit-color-swatches .selected')?.dataset.color
-            });
-            hideModal(document.getElementById('edit-profile-modal'));
-        };
-
-        async function shareProfileLink() {
-            const link = `${BASE_URL}?uid=${currentUserId}`;
-            try { await navigator.share({ title: 'Rejoins-moi sur Drop !', text: `Ajoute-moi sur Drop !`, url: link }); } catch (err) { if (err.name !== 'AbortError') navigator.clipboard.writeText(link).then(() => showMessage("Lien copié !", true)); }
-        }
-        function showMyQrCode() {
-            const canvas = document.getElementById('qr-code-canvas');
-            if (!currentUserId) return showMessage("Erreur ID.", false);
-            const link = `${BASE_URL}?uid=${currentUserId}`;
-            document.getElementById('qr-user-id').textContent = currentUserId; 
-            QRCode.toCanvas(canvas, link, { width: 200, margin: 2 }, function (error) {
-                if (error) return showMessage("Erreur QR.", false);
-                hideModal(document.getElementById('friend-options-modal'));
-                showModal(document.getElementById('qr-code-modal'));
-            });
-        }
-
-        // --- IMAGE & CROP LOGIC (Reste identique) ---
+        // --- IMAGE & CROP LOGIC (MODIFIÉ: FIT / BANDES NOIRES) ---
         document.addEventListener('DOMContentLoaded', () => {
             cropperCtx = cropperCanvas.getContext('2d');
             
@@ -1847,6 +1716,7 @@
             
             zoomSlider.oninput = () => drawCropper();
             
+            // TOUCH / MOUSE EVENTS
             const startDrag = (x, y) => { cropperState.isDragging=true; cropperState.startX=x; cropperState.startY=y; };
             const moveDrag = (x, y) => {
                 if(!cropperState.isDragging) return;
@@ -1866,21 +1736,20 @@
             window.addEventListener('touchend', endDrag);
             
             confirmCropBtn.onclick = () => {
-                const tempCvs = document.createElement('canvas');
-                tempCvs.width = CROP_SIZE; tempCvs.height = CROP_SIZE;
-                const ctx = tempCvs.getContext('2d');
+                const tCvs = document.createElement('canvas'); tCvs.width = CROP_SIZE; tCvs.height = CROP_SIZE;
+                const ctx = tCvs.getContext('2d');
+                ctx.fillStyle = "#000000"; ctx.fillRect(0,0,CROP_SIZE,CROP_SIZE);
                 
-                ctx.fillStyle = "#000000"; 
-                ctx.fillRect(0,0,CROP_SIZE,CROP_SIZE);
+                // Ratio calculation for output
+                const ratio = CROP_SIZE / 300; 
+                const w = cropperImage.width * cropperState.scale * ratio;
+                const h = cropperImage.height * cropperState.scale * ratio;
+                const dx = (CROP_SIZE - w) / 2 + (cropperState.x * ratio);
+                const dy = (CROP_SIZE - h) / 2 + (cropperState.y * ratio);
                 
-                const ratio = CROP_SIZE / 300;
-                const scale = parseFloat(zoomSlider.value) * ratio;
-                const dx = (CROP_SIZE/2) - (cropperImage.width*scale/2) + (cropperState.x*ratio);
-                const dy = (CROP_SIZE/2) - (cropperImage.height*scale/2) + (cropperState.y*ratio);
+                ctx.drawImage(cropperImage, dx, dy, w, h);
                 
-                ctx.drawImage(cropperImage, dx, dy, cropperImage.width*scale, cropperImage.height*scale);
-                
-                currentImageBase64 = tempCvs.toDataURL('image/jpeg', 0.92);
+                currentImageBase64 = tCvs.toDataURL('image/jpeg', 0.92);
                 
                 squareContent.style.backgroundImage = `url('${currentImageBase64}')`;
                 squareContent.style.backgroundColor = 'transparent';
@@ -1892,11 +1761,7 @@
             };
             
             cancelCropBtn.onclick = () => hideModal(cropperModal);
-            
-            removeImageButton.onclick = () => {
-                resetPostImage();
-            };
-            
+            removeImageButton.onclick = () => resetPostImage();
             publishButton.onclick = handlePublish;
             
             navItems.forEach(item => {
@@ -1906,13 +1771,10 @@
                 });
             });
             document.getElementById('my-profile-nav-item').addEventListener('click', () => navigateTo('contacts-view'));
-
             document.getElementById('feed-search-input').addEventListener('input', renderFeed);
             document.getElementById('search-input').addEventListener('input', renderFriendsList);
-
             document.getElementById('add-friend-fab').onclick = () => showModal(document.getElementById('friend-options-modal'));
             document.getElementById('cancel-friend-options-btn').onclick = () => hideModal(document.getElementById('friend-options-modal'));
-            
             document.getElementById('share-profile-link').onclick = () => shareProfileLink();
             document.getElementById('show-my-qr').onclick = () => showMyQrCode();
             document.getElementById('close-qr-modal-btn').onclick = () => hideModal(document.getElementById('qr-code-modal'));
@@ -1923,7 +1785,6 @@
                 renderFriendRequestsList();
             };
             document.getElementById('cancel-friend-requests-btn').onclick = () => hideModal(document.getElementById('friend-requests-modal'));
-
             document.getElementById('enter-id-manually').onclick = () => {
                 hideModal(document.getElementById('friend-options-modal'));
                 document.getElementById('paste-id-input').value = '';
@@ -1934,7 +1795,6 @@
                 await sendFriendRequest(document.getElementById('paste-id-input').value.trim());
                 hideModal(document.getElementById('paste-id-modal'));
             };
-
             postTextarea.addEventListener('input', () => {
                 charCountSpan.textContent = postTextarea.value.length;
                 publishButton.disabled = postTextarea.value.length === 0 || postTextarea.value.length > MAX_CHARS;
@@ -1944,7 +1804,6 @@
                 currentPostFontIndex = (currentPostFontIndex+1)%POST_FONT_FAMILIES.length;
                 squareContent.classList.add(POST_FONT_FAMILIES[currentPostFontIndex]);
             };
-
             document.getElementById('message-input').addEventListener('keypress', (e) => {
                 if(e.key === 'Enter') document.getElementById('send-button').click();
             });
@@ -1952,19 +1811,43 @@
 
         function initCropper() {
             cropperState = { scale: 1, x: 0, y: 0, isDragging: false, startX: 0, startY: 0 };
-            zoomSlider.value = 1;
+            
+            // LOGIQUE FIT (CONTAIN)
+            // On calcule l'échelle pour que l'image rentre entièrement
+            const scaleX = 300 / cropperImage.width;
+            const scaleY = 300 / cropperImage.height;
+            const scaleToFit = Math.min(scaleX, scaleY);
+            
+            // Slider part du scaleToFit (1x) jusqu'à 3x zoom
+            const s = document.getElementById('zoom-slider');
+            s.min = scaleToFit; 
+            s.max = scaleToFit * 3; 
+            s.step = scaleToFit / 20; 
+            s.value = scaleToFit;
+            
+            cropperState.scale = scaleToFit;
+            
             drawCropper();
         }
+
         function drawCropper() {
             if(!cropperCtx) return;
+            // Fond noir pour les bandes
             cropperCtx.fillStyle = "#000"; 
             cropperCtx.fillRect(0,0,300,300);
             
-            const scale = parseFloat(zoomSlider.value);
-            const dx = 150 - (cropperImage.width * scale / 2) + cropperState.x;
-            const dy = 150 - (cropperImage.height * scale / 2) + cropperState.y;
+            const scale = parseFloat(document.getElementById('zoom-slider').value);
+            // On stocke le scale actuel pour le drag
+            cropperState.scale = scale;
             
-            cropperCtx.drawImage(cropperImage, dx, dy, cropperImage.width*scale, cropperImage.height*scale);
+            const w = cropperImage.width * scale;
+            const h = cropperImage.height * scale;
+            
+            // Centrage
+            const dx = (300 - w) / 2 + cropperState.x;
+            const dy = (300 - h) / 2 + cropperState.y;
+            
+            cropperCtx.drawImage(cropperImage, dx, dy, w, h);
         }
 
         function resetPostCreator() {
