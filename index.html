@@ -274,7 +274,7 @@
         #logout-btn { width: 100%; margin-top: 20px; padding: 12px; background-color: var(--primary-bg); color: var(--dislike-color); border: 1px solid var(--button-border); border-radius: 6px; font-weight: 600; cursor: pointer; display: none; } 
 
         /* --- Toast --- */
-        #toast-message { position: absolute; bottom: 80px; left: 50%; transform: translate(-50%, 100%); background-color: rgba(0, 0, 0, 0.75); color: white; padding: 10px 20px; border-radius: 20px; font-size: 14px; z-index: 200; opacity: 0; transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out; pointer-events: none; }
+        #toast-message { position: absolute; bottom: 80px; left: 50%; transform: translate(-50%, 100%); background-color: rgba(0, 0, 0, 0.75); color: white; padding: 10px 20px; border-radius: 20px; font-size: 14px; z-index: 2000; opacity: 0; transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out; pointer-events: none; }
         #toast-message.show { transform: translate(-50%, 0); opacity: 1; }
         #toast-message.success { background-color: #28a745; }
         #toast-message.error { background-color: #dc3545; }
@@ -396,8 +396,11 @@
         }
         
         #input-highlighter {
-            z-index: 1; pointer-events: none; color: transparent; background: transparent;
+            z-index: 1; pointer-events: none; color: var(--text-color); background: transparent;
         }
+        #input-highlighter.has-image-overlay { color: white; text-shadow: 0 1px 4px rgba(0,0,0,0.8); }
+        #input-highlighter.has-image-overlay .hashtag-highlight { color: #81d4fa; text-shadow: none; }
+        
         .hashtag-highlight { color: var(--hashtag-color); }
         
         #post-textarea {
@@ -405,8 +408,6 @@
         }
         #post-textarea::placeholder { color: #aaa; }
         #post-textarea.has-image { color: transparent; text-shadow: none; caret-color: white; } 
-        #input-highlighter.has-image-overlay { text-shadow: 0 1px 4px rgba(0,0,0,0.8); }
-        #input-highlighter.has-image-overlay .hashtag-highlight { color: #81d4fa; text-shadow: none; }
         
         /* Pour que le texte soit visible normalement dans le highlighter */
         #input-highlighter span.normal-text { color: var(--text-color); }
@@ -771,7 +772,8 @@
             "mal_à_l'aise.gif", "amour.gif", "triste.gif", "colère.gif", "soulé.gif", "choqué.gif", "cligne.gif"
         ];
 
-        const POST_COLOR_PALETTE = ['#f1f1f1', '#D6E9F7', '#D1F7D1', '#FFF7D1', '#F7D1D1', '#A0D4FE', '#84E084', '#FEEA84', '#FE8484'];
+        // MODIFICATION: Ajout du blanc en premier
+        const POST_COLOR_PALETTE = ['#FFFFFF', '#f1f1f1', '#D6E9F7', '#D1F7D1', '#FFF7D1', '#F7D1D1', '#A0D4FE', '#84E084', '#FEEA84', '#FE8484'];
         const MAX_CHARS = 70; 
         const BASE_URL = 'https://drop-24.netlify.app/';
 
@@ -906,9 +908,8 @@
             } catch (error) { 
                 console.error("Auth Error:", error);
                 let msg = "Erreur d'authentification";
-                if(error.code === 'auth/invalid-credential') msg = "Email ou mot de passe incorrect.";
-                else if(error.code === 'auth/user-not-found') msg = "Aucun compte trouvé.";
-                else if(error.code === 'auth/email-already-in-use') msg = "Email déjà utilisé.";
+                if(error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') msg = "Email ou mot de passe incorrect.";
+                else if(error.code === 'auth/email-already-in-use') msg = "Cet email est déjà utilisé.";
                 else if(error.code === 'auth/weak-password') msg = "Mot de passe trop faible.";
                 else if(error.code === 'auth/invalid-email') msg = "Email invalide.";
                 showMessage(msg, false); 
@@ -1708,23 +1709,16 @@
             // HASHTAG SYNC
             const syncHighlighter = () => {
                 const text = postTextarea.value;
-                // Echap HTML simple pour sécurité
                 const safeText = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                
-                // Highlight logic
                 const highlighted = safeText.replace(/(#[\p{L}\p{N}_]+)/gu, '<span class="hashtag-highlight">$1</span>');
-                
-                // Update highlighter
                 inputHighlighter.innerHTML = highlighted.replace(/\n/g, '<br>') + '<br>'; // Extra br for sync
                 
-                // Count Logic
                 const hashtags = extractHashtags(text);
                 const textWithoutTags = text.replace(/#[\p{L}\p{N}_]+/gu, '').replace(/\s+/g, ' ');
                 const realCount = textWithoutTags.trim().length;
                 
                 charCountSpan.textContent = realCount;
                 
-                // Limite 70 chars (hors tags) ET max 5 tags
                 const isLenOk = realCount <= MAX_CHARS;
                 const isTagCountOk = hashtags.length <= 5;
                 const hasContent = text.trim().length > 0 || !!currentImageBase64;
@@ -1746,7 +1740,6 @@
         });
 
         function checkPublishButton() {
-            // Re-use logic in syncHighlighter or manually trigger event
             const event = new Event('input');
             postTextarea.dispatchEvent(event);
         }
