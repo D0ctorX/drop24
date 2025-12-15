@@ -33,6 +33,7 @@
             --google-btn: #4285F4;
             --chat-bubble-sent: #3897f0;
             --chat-bubble-received: #EFEFEF;
+            --hashtag-color: #64b5f6; /* Bleu clair */
         }
 
         .font-inter { font-family: 'Inter', sans-serif; }
@@ -159,6 +160,11 @@
             display: inline; background-color: rgba(0, 0, 0, 0.5); color: white; padding: 2px 6px;
             line-height: 1.6; -webkit-box-decoration-break: clone; border-radius: 4px; text-shadow: none;
         }
+        
+        .post-hashtag { color: var(--hashtag-color); font-weight: 600; cursor: pointer; z-index: 10; position: relative; }
+        /* Si sur fond image, on garde le blanc mais un peu plus brillant ou souligné */
+        .post-message.snap-text .post-hashtag { color: #81d4fa; text-decoration: underline; }
+
         .post-actions { display: flex; padding: 8px 15px; gap: 20px; }
         .action-button { display: flex; align-items: center; gap: 8px; font-size: 18px; color: var(--action-color); cursor: pointer; }
         .action-button span { font-size: 14px; font-weight: 600; }
@@ -227,7 +233,7 @@
         .message-container.received { align-items: flex-start; }
         .message-bubble.received { background-color: var(--chat-bubble-received); color: black; border-bottom-left-radius: 4px; }
         .message-read-status { font-size: 10px; margin-left: 5px; opacity: 0.8; }
-        .message-sender-pseudo { font-size: 10px; color: #888; margin-bottom: 2px; margin-left: 12px; font-weight: 600; }
+        .message-sender-pseudo { font-size: 12px; color: #666; margin-bottom: 4px; margin-left: 12px; font-weight: 700; }
 
         .chat-footer { 
             display: flex; align-items: center; padding: 10px; background-color: var(--secondary-bg); 
@@ -300,7 +306,7 @@
             flex-grow: 1; padding: 10px; border-radius: 6px; border: none; font-weight: 600; font-size: 16px; cursor: pointer;
         }
         #save-profile-btn { background-color: var(--highlight-color); color: white; }
-        #cancel-edit-btn, #cancel-friend-options-btn, #cancel-friend-requests-btn, #cancel-paste-id-btn, #cancel-add-group-member-btn, #cancel-member-options-btn { 
+        #cancel-edit-btn, #cancel-friend-options-btn, #cancel-friend-requests-btn, #cancel-paste-id-btn, #cancel-add-group-member-btn, #cancel-member-options-btn, #cancel-trending-btn { 
             background-color: #f0f0f0; color: var(--text-color); 
         }
 
@@ -325,7 +331,7 @@
         .request-accept-btn { background-color: var(--switch-on); color: white; }
         .request-reject-btn { background-color: var(--dislike-color); color: white; }
 
-        /* --- STYLES GROUPES (Ajoutés) --- */
+        /* --- STYLES GROUPES --- */
         #create-group-modal .modal-content, #add-group-member-modal .modal-content { max-height: 80vh; }
         #group-friends-list, #add-member-friends-list { max-height: 200px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 6px; }
         .group-friend-select-item { display: flex; align-items: center; padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; }
@@ -351,6 +357,7 @@
         .group-member-info { display: flex; align-items: center; gap: 10px; }
         .group-member-info img { width: 40px; height: 40px; border-radius: 50%; }
         .admin-badge { background: #e0f2f1; color: #00695c; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 5px; font-weight: bold; }
+        .founder-badge { background: #fff8e1; color: #f57f17; border: 1px solid #ffecb3; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 5px; font-weight: bold; }
         .group-danger-zone { padding: 30px 15px; text-align: center; }
         .btn-danger-outline {
             border: 1px solid var(--dislike-color); color: var(--dislike-color); background: transparent;
@@ -377,14 +384,34 @@
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); transition: background-color 0.3s ease-in-out;
             cursor: text; background-size: cover; background-position: center; overflow: hidden;
         }
-        #post-textarea {
+        
+        /* OVERLAY HASHTAGS */
+        #post-textarea, #input-highlighter {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            box-sizing: border-box; padding: 20px; background: transparent; border: none;
-            resize: none; outline: none; text-align: center; font-size: 20px; line-height: 1.4;
-            color: var(--text-color); display: flex; align-items: center; justify-content: center;
+            box-sizing: border-box; padding: 20px; border: none; 
+            text-align: center; font-size: 20px; line-height: 1.4;
             font-family: inherit; font-weight: inherit;
+            overflow: auto; white-space: pre-wrap; word-wrap: break-word;
+            margin: 0;
         }
-        #post-textarea.has-image { color: white; text-shadow: 0 1px 4px rgba(0,0,0,0.8); }
+        
+        #input-highlighter {
+            z-index: 1; pointer-events: none; color: transparent; background: transparent;
+        }
+        .hashtag-highlight { color: var(--hashtag-color); }
+        
+        #post-textarea {
+            z-index: 2; background: transparent; color: transparent; caret-color: var(--text-color); resize: none; outline: none;
+        }
+        #post-textarea::placeholder { color: #aaa; }
+        #post-textarea.has-image { color: transparent; text-shadow: none; caret-color: white; } 
+        #input-highlighter.has-image-overlay { text-shadow: 0 1px 4px rgba(0,0,0,0.8); }
+        #input-highlighter.has-image-overlay .hashtag-highlight { color: #81d4fa; text-shadow: none; }
+        
+        /* Pour que le texte soit visible normalement dans le highlighter */
+        #input-highlighter span.normal-text { color: var(--text-color); }
+        #input-highlighter.has-image-overlay span.normal-text { color: white; }
+
         .char-limit-indicator {
             margin-top: 10px; font-size: 12px; color: var(--last-seen-color); text-align: right; width: 100%;
         }
@@ -442,6 +469,32 @@
             max-width: 100%; border: 1px solid var(--border-color); background: #000; touch-action: none; 
         }
 
+        /* --- TRENDING SIDEBAR --- */
+        #trending-sidebar {
+            position: absolute; top: 0; left: 0; bottom: 0; width: 280px; max-width: 80%;
+            background-color: var(--secondary-bg); z-index: 1100;
+            transform: translateX(-100%); transition: transform 0.3s ease-in-out;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1); display: flex; flex-direction: column;
+        }
+        #trending-sidebar.open { transform: translateX(0); }
+        .trending-header {
+            padding: 20px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between;
+        }
+        .trending-header h2 { margin: 0; font-size: 18px; display: flex; align-items: center; gap: 10px; }
+        .trending-list { padding: 20px; flex-grow: 1; overflow-y: auto; }
+        .trending-item {
+            padding: 12px 0; border-bottom: 1px solid #f0f0f0; cursor: pointer;
+        }
+        .trending-item:last-child { border-bottom: none; }
+        .trending-rank { font-weight: bold; margin-right: 10px; color: var(--highlight-color); }
+        .trending-tag { font-weight: 600; font-size: 16px; }
+        .trending-count { display: block; font-size: 12px; color: var(--last-seen-color); margin-top: 4px; margin-left: 20px; }
+        .sidebar-overlay {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.5);
+            z-index: 1050; display: none;
+        }
+        .sidebar-overlay.show { display: block; }
+
     </style>
 </head>
 <body>
@@ -463,11 +516,24 @@
 
     <!-- APPLICATION PRINCIPALE -->
     <div id="app-container" class="container">
+        
+        <!-- SIDEBAR TENDANCES -->
+        <div id="sidebar-overlay" class="sidebar-overlay"></div>
+        <div id="trending-sidebar">
+            <div class="trending-header">
+                <h2><i class="fas fa-fire" style="color:var(--dislike-color)"></i> Tendances</h2>
+                <i id="close-trending-btn" class="fas fa-times" style="cursor:pointer; font-size:20px;"></i>
+            </div>
+            <div id="trending-list" class="trending-list">
+                <!-- Rempli par JS -->
+            </div>
+        </div>
+
         <div id="view-wrapper">
             <!-- VUE FEED -->
             <div id="feed-view" class="view feed-view">
                 <div class="view-header">
-                    <div class="header-placeholder"></div> 
+                    <i id="trending-btn" class="fas fa-chart-line header-icon" style="text-align:left; width:40px;"></i>
                     <h1 class="header-title">Flux</h1>
                     <i id="create-post-header-btn" class="fas fa-feather-alt header-icon"></i>
                     <div id="feed-search-bar"><i id="feed-search-icon" class="fas fa-search"></i><input type="text" id="feed-search-input" placeholder="Rechercher..."></div>
@@ -527,7 +593,7 @@
             </div>
         </div>
         
-        <!-- VUE INFOS GROUPE PLEIN ECRAN (MODIFIÉE) -->
+        <!-- VUE INFOS GROUPE PLEIN ECRAN -->
         <div id="group-info-view" class="view secondary">
             <div class="view-header">
                 <i id="group-info-back-btn" class="fas fa-arrow-left back-button"></i>
@@ -562,7 +628,11 @@
         <div id="post-creation-view" class="view post-creation-view secondary">
             <div class="view-header"><i id="post-creation-back-btn" class="fas fa-arrow-left back-button"></i><h1 class="header-title">Nouveau Post</h1><button id="publish-button" disabled>Publier</button></div>
             <div class="post-input-area">
-                <div id="square-content" class="font-inter"><textarea id="post-textarea" placeholder="Exprimez-vous..." maxlength="70"></textarea></div>
+                <div id="square-content" class="font-inter">
+                    <div id="input-highlighter"></div>
+                    <textarea id="post-textarea" placeholder="Exprimez-vous..." maxlength="200"></textarea> 
+                    <!-- Maxlength augmenté pour permettre la saisie, géré par JS pour la limite réelle -->
+                </div>
                 <div class="char-limit-indicator"><span id="char-count">0</span> / 70</div>
             </div>
             <div class="post-controls">
@@ -614,7 +684,7 @@
         </div>
     </div>
     
-    <!-- Modale Ajouter Membre Groupe (Nouvelle) -->
+    <!-- Modale Ajouter Membre Groupe -->
     <div id="add-group-member-modal" class="modal-backdrop">
         <div class="modal-content">
             <h3>Ajouter au groupe</h3>
@@ -639,12 +709,13 @@
         </div>
     </div>
 
-    <!-- Modale Options Membre Groupe (Nouvelle) -->
+    <!-- Modale Options Membre Groupe -->
     <div id="group-member-options-modal" class="modal-backdrop">
         <div class="modal-content">
             <h3 id="member-options-title">Options</h3>
             <button id="promote-admin-btn" class="friend-option-button"><div class="friend-option-button-text"><i class="fas fa-user-shield"></i><span>Promouvoir Admin</span></div></button>
             <button id="revoke-admin-btn" class="friend-option-button"><div class="friend-option-button-text"><i class="fas fa-user"></i><span>Révoquer Admin</span></div></button>
+            <button id="kick-member-btn" class="friend-option-button" style="border-color:var(--dislike-color); color:var(--dislike-color);"><div class="friend-option-button-text"><i class="fas fa-ban"></i><span>Retirer du groupe</span></div></button>
             <div class="modal-actions">
                 <button id="cancel-member-options-btn">Annuler</button>
             </div>
@@ -669,7 +740,7 @@
 <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, doc, getDoc, setDoc, updateDoc, onSnapshot, query, arrayUnion, arrayRemove, writeBatch, serverTimestamp, addDoc, deleteDoc, where, increment } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, getDoc, setDoc, updateDoc, onSnapshot, query, arrayUnion, arrayRemove, writeBatch, serverTimestamp, addDoc, deleteDoc, where, increment, orderBy, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         // --- APP ID ---
         const appId = '1:541715107757:web:0141b71ee3cd1ce5ec5b24'; 
@@ -714,6 +785,9 @@
         let currentChatId = null; 
         let currentChatType = 'user'; 
         let conversationsData = {}; 
+        
+        // Hashtag / Trending
+        let trendingTags = []; 
 
         let unsubscribeChatListener = null;
         let unsubscribeUsersListener = null;
@@ -741,6 +815,7 @@
         
         const postCreationView = document.getElementById('post-creation-view');
         const postTextarea = document.getElementById('post-textarea');
+        const inputHighlighter = document.getElementById('input-highlighter');
         const charCountSpan = document.getElementById('char-count');
         const publishButton = document.getElementById('publish-button');
         const squareContent = document.getElementById('square-content');
@@ -787,13 +862,11 @@
                 listenToConversations();
                 navigateTo('feed-view');
                 
-                // GESTION URL PARAMS (INVITATION GROUPE OU AMI)
                 const urlParams = new URLSearchParams(window.location.search);
                 const inviterId = urlParams.get('uid');
                 const inviteGroupId = urlParams.get('group_invite');
 
                 if(inviteGroupId) {
-                    // Logique pour rejoindre un groupe via lien
                     try {
                         const gRef = doc(groupsCollectionRef, inviteGroupId);
                         await updateDoc(gRef, { members: arrayUnion(currentUserId) });
@@ -833,10 +906,11 @@
             } catch (error) { 
                 console.error("Auth Error:", error);
                 let msg = "Erreur d'authentification";
-                if(error.code === 'auth/wrong-password') msg = "Mot de passe incorrect.";
-                if(error.code === 'auth/user-not-found') msg = "Compte introuvable.";
-                if(error.code === 'auth/invalid-email') msg = "Email invalide.";
-                if(error.code === 'auth/weak-password') msg = "Mot de passe trop faible.";
+                if(error.code === 'auth/invalid-credential') msg = "Email ou mot de passe incorrect.";
+                else if(error.code === 'auth/user-not-found') msg = "Aucun compte trouvé.";
+                else if(error.code === 'auth/email-already-in-use') msg = "Email déjà utilisé.";
+                else if(error.code === 'auth/weak-password') msg = "Mot de passe trop faible.";
+                else if(error.code === 'auth/invalid-email') msg = "Email invalide.";
                 showMessage(msg, false); 
             }
         });
@@ -880,7 +954,6 @@
         
         function listenToConversations() {
             if (!currentUserId) return;
-            // 1. Ecoute Groupes
             const qGroups = query(groupsCollectionRef, where('members', 'array-contains', currentUserId));
             unsubscribeGroupsListener = onSnapshot(qGroups, (snap) => {
                 snap.forEach(d => {
@@ -891,7 +964,6 @@
                 updateGlobalUnreadBadge();
                 renderFriendsList();
             });
-            // 2. Ecoute Chats Privés
             const qChats = query(chatsCollectionRef, where('participants', 'array-contains', currentUserId));
             unsubscribeChatsMetaListener = onSnapshot(qChats, (snap) => {
                 snap.forEach(d => {
@@ -966,19 +1038,16 @@
             const term = document.getElementById('search-input').value.toLowerCase();
             
             let allItems = [];
-            // 1. Amis 
             const friends = (usersData[currentUserId]?.friends || []).map(id => usersData[id]).filter(Boolean);
             friends.forEach(f => {
                 const cid = getChatId(currentUserId, f.id);
                 const meta = conversationsData[cid] || { timestamp: 0, unreadCount: 0 };
                 allItems.push({ type: 'user', data: f, id: f.id, sortTime: meta.timestamp, unread: meta.unreadCount, name: f.username });
             });
-            // 2. Groupes
             Object.values(conversationsData).filter(c => c.type === 'group').forEach(g => {
                 allItems.push({ type: 'group', data: g.data, id: g.id, sortTime: g.timestamp, unread: g.unreadCount, name: g.name });
             });
 
-            // TRI PAR DATE
             allItems.sort((a, b) => b.sortTime - a.sortTime);
 
             allItems.filter(item => item.name.toLowerCase().includes(term)).forEach(item => {
@@ -1041,21 +1110,78 @@
                     const p = { id: d.id, ...d.data() };
                     const date = p.createdAt?.toDate ? p.createdAt.toDate() : new Date();
                     
-                    // SUPPRESSION AUTOMATIQUE SI > 24H (nécessite règle allow delete modifiée)
                     if (now.getTime() - date.getTime() > 86400000) {
-                        deleteDoc(doc(postsCollectionRef, p.id)).catch(err => {
-                            // Silencieux si permission denied (pas encore proprio)
-                            // console.log("Cleanup not permitted yet", err);
-                        });
+                        deleteDoc(doc(postsCollectionRef, p.id)).catch(err => {});
                     } else {
                         p.expiresAt = new Date(date.getTime() + 86400000);
                         postsData.push(p);
                     }
                 });
                 postsData.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+                updateTrendingStats();
                 renderFeed();
             });
         }
+
+        // --- TRENDING LOGIC ---
+        function updateTrendingStats() {
+            const tagCounts = {};
+            postsData.forEach(p => {
+                const tags = extractHashtags(p.message);
+                tags.forEach(tag => {
+                    const t = tag.toLowerCase();
+                    tagCounts[t] = (tagCounts[t] || 0) + 1;
+                });
+            });
+
+            trendingTags = Object.entries(tagCounts)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5)
+                .map(e => ({ tag: e[0], count: e[1] }));
+            
+            renderTrendingSidebar();
+        }
+
+        function extractHashtags(text) {
+             const regex = /#[\p{L}\p{N}_]+/gu;
+             return text.match(regex) || [];
+        }
+
+        function renderTrendingSidebar() {
+            const list = document.getElementById('trending-list');
+            list.innerHTML = '';
+            if (trendingTags.length === 0) {
+                list.innerHTML = '<div style="text-align:center; padding:20px; color:gray;">Aucune tendance pour le moment.</div>';
+                return;
+            }
+            trendingTags.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'trending-item';
+                div.innerHTML = `<span class="trending-rank">#${index+1}</span><span class="trending-tag">${item.tag}</span><span class="trending-count">${item.count} posts</span>`;
+                div.onclick = () => {
+                    toggleTrendingSidebar();
+                    document.getElementById('feed-search-input').value = item.tag;
+                    renderFeed();
+                };
+                list.appendChild(div);
+            });
+        }
+
+        const sidebar = document.getElementById('trending-sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
+        function toggleTrendingSidebar() {
+            const isOpen = sidebar.classList.contains('open');
+            if (isOpen) {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('show');
+            } else {
+                sidebar.classList.add('open');
+                overlay.classList.add('show');
+            }
+        }
+        document.getElementById('trending-btn').onclick = toggleTrendingSidebar;
+        document.getElementById('close-trending-btn').onclick = toggleTrendingSidebar;
+        overlay.onclick = toggleTrendingSidebar;
 
         function renderFeed() {
             const term = document.getElementById('feed-search-input').value.toLowerCase();
@@ -1078,9 +1204,14 @@
                 const likes = (p.likedBy||[]).length;
                 const dislikes = (p.dislikedBy||[]).length;
 
+                // Hashtag formatting
+                const formattedMessage = p.message.replace(/#[\p{L}\p{N}_]+/gu, (match) => {
+                    return `<span class="post-hashtag" onclick="window.searchTag('${match}')">${match}</span>`;
+                });
+
                 return `<div class="post-card" data-post-id="${p.id}">
                     <div class="post-header"><span class="post-publisher" onclick="showProfile('${p.publisherId}')">${p.isAnon?'Anonyme':author.username}</span><span class="post-countdown" data-exp="${p.expiresAt.getTime()}">${formatCountdown(rem)}</span></div>
-                    <div class="post-image-wrapper" style="${bgStyle}"><div class="post-content-inner"><p class="post-message ${txtClass}">${p.message}</p></div></div>
+                    <div class="post-image-wrapper" style="${bgStyle}"><div class="post-content-inner"><p class="post-message ${txtClass}">${formattedMessage}</p></div></div>
                     <div class="post-actions">
                         <div class="action-button ${hasLiked?'liked':''}" onclick="likePost('${p.id}')"><i class="fas fa-thumbs-up"></i><span>${likes}</span></div>
                         <div class="action-button ${hasDisliked?'disliked':''}" onclick="dislikePost('${p.id}')"><i class="fas fa-thumbs-down"></i><span>${dislikes}</span></div>
@@ -1102,6 +1233,13 @@
             return `${Math.floor(s/3600).toString().padStart(2,'0')}:${Math.floor((s%3600)/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`;
         }
         
+        window.searchTag = (tag) => {
+             // stopPropagation hack via window call
+             event.stopPropagation();
+             document.getElementById('feed-search-input').value = tag.toLowerCase();
+             renderFeed();
+        };
+
         window.likePost = async (pid) => {
             const p = postsData.find(x => x.id === pid); if(!p) return;
             const ref = doc(postsCollectionRef, pid);
@@ -1183,6 +1321,10 @@
             const infoBtn = document.getElementById('group-info-btn');
             const placeholderRight = document.getElementById('chat-placeholder-right');
 
+            showSecondaryView(chatView);
+
+            let collRef;
+            
             if (type === 'group') {
                 let groupData = conversationsData[id]?.data; 
                 if(!groupData) {
@@ -1192,8 +1334,11 @@
                 headerTitle.textContent = groupData ? groupData.name : 'Groupe';
                 headerImg.style.display = 'none'; infoBtn.style.display = 'block'; placeholderRight.style.display = 'none';
                 infoBtn.onclick = () => openGroupInfo(id, groupData);
+                
                 const gRef = doc(groupsCollectionRef, id);
-                await updateDoc(gRef, { [`unreadCount_${currentUserId}`]: 0 });
+                updateDoc(gRef, { [`unreadCount_${currentUserId}`]: 0 }).catch(e=>console.log(e));
+                
+                collRef = collection(groupsCollectionRef, id, 'messages');
             } else {
                 const u = usersData[id];
                 headerTitle.textContent = u ? u.username : '...';
@@ -1202,21 +1347,32 @@
 
                 const cid = getChatId(currentUserId, id); currentChatId = cid; 
                 const cRef = doc(chatsCollectionRef, cid);
-                try { await updateDoc(cRef, { [`unreadCount_${currentUserId}`]: 0 }); } 
-                catch(e) { await setDoc(cRef, { participants: [currentUserId, id], [`unreadCount_${currentUserId}`]: 0, lastMessageTime: serverTimestamp() }, { merge: true }); }
+                
+                updateDoc(cRef, { [`unreadCount_${currentUserId}`]: 0 }).catch(async (e) => {
+                     await setDoc(cRef, { participants: [currentUserId, id], [`unreadCount_${currentUserId}`]: 0, lastMessageTime: serverTimestamp() }, { merge: true });
+                });
+                
+                collRef = collection(chatsCollectionRef, currentChatId, 'messages');
             }
 
-            showSecondaryView(chatView);
-            
             if(unsubscribeChatListener) unsubscribeChatListener();
-            let collRef = (type === 'group') ? collection(groupsCollectionRef, id, 'messages') : collection(chatsCollectionRef, currentChatId, 'messages');
-            const q = query(collRef); 
+            
+            let q;
+            try {
+                q = query(collRef, orderBy('createdAt', 'desc'), limit(50));
+            } catch(e) {
+                console.warn("Index manquant pour orderBy, fallback sur query simple", e);
+                q = query(collRef);
+            }
             
             unsubscribeChatListener = onSnapshot(q, snap => {
-                document.getElementById('chat-body').innerHTML = '';
-                const msgs = []; snap.forEach(d => msgs.push({id: d.id, ...d.data()}));
+                const msgs = []; 
+                snap.forEach(d => msgs.push({id: d.id, ...d.data()}));
                 msgs.sort((a,b)=>(a.createdAt?.seconds||0)-(b.createdAt?.seconds||0));
                 
+                const chatBody = document.getElementById('chat-body');
+                chatBody.innerHTML = '';
+
                 msgs.forEach(m => {
                     const div = document.createElement('div');
                     const isMe = m.senderId === currentUserId;
@@ -1229,7 +1385,6 @@
                         if (!m.read) updateDoc(doc(chatsCollectionRef, currentChatId, 'messages', m.id), { read: true });
                     }
 
-                    // AFFICHER PSEUDO SI GROUPE ET PAS MOI
                     let senderNameHtml = '';
                     if(type === 'group' && !isMe) {
                          const senderUser = usersData[m.senderId];
@@ -1245,9 +1400,12 @@
                         contentHtml = `${senderNameHtml}<div class="message-bubble ${isMe?'sent':'received'}">${m.text}<span class="message-time">${time}${isMe ? `<span class="message-read-status">${readStatus}</span>` : ''}</span></div>`;
                     }
                     div.innerHTML = contentHtml;
-                    document.getElementById('chat-body').appendChild(div);
+                    chatBody.appendChild(div);
                 });
                 document.getElementById('chat-content-container').scrollTop = document.getElementById('chat-content-container').scrollHeight;
+            }, (error) => {
+                 console.log("Erreur snapshot ou index manquant, chargement standard...", error);
+                 unsubscribeChatListener = onSnapshot(query(collRef), snap => { });
             });
         }
 
@@ -1284,7 +1442,7 @@
 
         document.getElementById('chat-back-btn').onclick = () => hideSecondaryView(document.getElementById('chat-view'));
 
-        // --- GROUP INFO VIEW (MODIFIÉ: PLEIN ECRAN + AUTO SAVE) ---
+        // --- GROUP INFO VIEW ---
         function openGroupInfo(groupId, groupData) {
             const view = document.getElementById('group-info-view');
             const nameInp = document.getElementById('group-info-name');
@@ -1294,11 +1452,12 @@
             const addMemberBtn = document.getElementById('open-add-member-modal-btn');
             
             const isAdmin = (groupData.admins || []).includes(currentUserId);
+            const isFounder = (groupData.createdBy === currentUserId);
+            
             nameInp.value = groupData.name; descInp.value = groupData.description;
             nameInp.disabled = !isAdmin; descInp.disabled = !isAdmin;
-            addMemberBtn.style.display = 'block'; // Tout le monde peut ajouter ou seulement admin? Disons tout le monde pour l'instant comme un vrai "Add Member"
+            addMemberBtn.style.display = 'block'; 
             
-            // AUTO SAVE LOGIC
             const handleAutoSave = () => {
                 clearTimeout(saveGroupInfoTimeout);
                 saveGroupInfoTimeout = setTimeout(async () => {
@@ -1312,12 +1471,19 @@
             (groupData.members || []).forEach(uid => {
                 const u = usersData[uid];
                 const isMemberAdmin = (groupData.admins || []).includes(uid);
-                const div = document.createElement('div'); div.className = 'group-member-item';
-                div.innerHTML = `<div class="group-member-info"><img src="${generateAvatarUrl(u || {username:'?'})}"><span>${u ? u.username : 'Inconnu'}</span>${isMemberAdmin ? '<span class="admin-badge">ADMIN</span>' : ''}</div>`;
+                const isMemberFounder = (groupData.createdBy === uid);
                 
-                // CLICK MEMBRE -> OPTIONS
+                const div = document.createElement('div'); div.className = 'group-member-item';
+                
+                let badges = '';
+                if(isMemberFounder) badges += '<span class="founder-badge">FONDATEUR</span>';
+                else if(isMemberAdmin) badges += '<span class="admin-badge">ADMIN</span>';
+
+                div.innerHTML = `<div class="group-member-info"><img src="${generateAvatarUrl(u || {username:'?'})}"><span>${u ? u.username : 'Inconnu'}</span>${badges}</div>`;
+                
                 div.onclick = () => {
-                    if(!isAdmin) return; // Seulement les admins peuvent gérer
+                    if(!isAdmin) return; 
+                    if(isMemberFounder) return;
                     openMemberOptions(groupId, uid, isMemberAdmin);
                 };
                 memberList.appendChild(div);
@@ -1330,7 +1496,6 @@
                 }
             };
 
-            // ADD MEMBER LOGIC
             addMemberBtn.onclick = () => openAddMemberModal(groupId);
 
             document.getElementById('group-info-back-btn').onclick = () => hideSecondaryView(view);
@@ -1339,21 +1504,29 @@
 
         // --- GESTION MEMBRES MODALE ---
         function openMemberOptions(groupId, memberId, isTargetAdmin) {
-            if(memberId === currentUserId) return; // Pas d'options sur soi-même ici
+            if(memberId === currentUserId) return; 
             const modal = document.getElementById('group-member-options-modal');
             const pBtn = document.getElementById('promote-admin-btn');
             const rBtn = document.getElementById('revoke-admin-btn');
+            const kBtn = document.getElementById('kick-member-btn');
             
             pBtn.style.display = isTargetAdmin ? 'none' : 'flex';
             rBtn.style.display = isTargetAdmin ? 'flex' : 'none';
+            kBtn.style.display = 'flex'; 
             
             pBtn.onclick = async () => {
                 await updateDoc(doc(groupsCollectionRef, groupId), { admins: arrayUnion(memberId) });
-                hideModal(modal); showChat(groupId, 'group'); // Refresh
+                hideModal(modal); showChat(groupId, 'group'); 
             };
             rBtn.onclick = async () => {
                 await updateDoc(doc(groupsCollectionRef, groupId), { admins: arrayRemove(memberId) });
                 hideModal(modal); showChat(groupId, 'group');
+            };
+            kBtn.onclick = async () => {
+                if(confirm("Voulez-vous vraiment retirer ce membre du groupe ?")) {
+                    await updateDoc(doc(groupsCollectionRef, groupId), { members: arrayRemove(memberId), admins: arrayRemove(memberId) });
+                    hideModal(modal); showChat(groupId, 'group');
+                }
             };
             document.getElementById('cancel-member-options-btn').onclick = () => hideModal(modal);
             showModal(modal);
@@ -1365,7 +1538,6 @@
             const list = document.getElementById('add-member-friends-list');
             list.innerHTML = '';
             
-            // Lister amis non membres
             const gMembers = conversationsData[groupId]?.data.members || [];
             const friends = (usersData[currentUserId]?.friends || []).map(id => usersData[id]).filter(f => f && !gMembers.includes(f.id));
             
@@ -1401,7 +1573,6 @@
             showModal(modal);
         }
 
-        // --- NOUVEAU PICKER DE STICKERS ---
         document.getElementById('emoji-btn').onclick = () => {
             const p = document.getElementById('emoji-picker');
             if(p.style.display==='grid') { p.style.display='none'; } else {
@@ -1504,9 +1675,10 @@
                 squareContent.style.backgroundImage = `url('${currentImageBase64}')`;
                 squareContent.style.backgroundColor = 'transparent';
                 postTextarea.classList.add('has-image');
+                inputHighlighter.classList.add('has-image-overlay');
                 document.getElementById('bg-color-control-row').style.display = 'none';
                 addImageButton.style.display = 'none'; removeImageButton.style.display = 'block';
-                checkPublishButton(); // Vérif bouton
+                checkPublishButton(); 
                 hideModal(cropperModal);
             };
             cancelCropBtn.onclick = () => hideModal(cropperModal);
@@ -1532,21 +1704,51 @@
             document.getElementById('enter-id-manually').onclick = () => { hideModal(document.getElementById('friend-options-modal')); document.getElementById('paste-id-input').value = ''; showModal(document.getElementById('paste-id-modal')); };
             document.getElementById('cancel-paste-id-btn').onclick = () => hideModal(document.getElementById('paste-id-modal'));
             document.getElementById('send-friend-request-btn').onclick = async () => { await sendFriendRequest(document.getElementById('paste-id-input').value.trim()); hideModal(document.getElementById('paste-id-modal')); };
-            postTextarea.addEventListener('input', () => { charCountSpan.textContent = postTextarea.value.length; checkPublishButton(); });
+            
+            // HASHTAG SYNC
+            const syncHighlighter = () => {
+                const text = postTextarea.value;
+                // Echap HTML simple pour sécurité
+                const safeText = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                
+                // Highlight logic
+                const highlighted = safeText.replace(/(#[\p{L}\p{N}_]+)/gu, '<span class="hashtag-highlight">$1</span>');
+                
+                // Update highlighter
+                inputHighlighter.innerHTML = highlighted.replace(/\n/g, '<br>') + '<br>'; // Extra br for sync
+                
+                // Count Logic
+                const hashtags = extractHashtags(text);
+                const textWithoutTags = text.replace(/#[\p{L}\p{N}_]+/gu, '').replace(/\s+/g, ' ');
+                const realCount = textWithoutTags.trim().length;
+                
+                charCountSpan.textContent = realCount;
+                
+                // Limite 70 chars (hors tags) ET max 5 tags
+                const isLenOk = realCount <= MAX_CHARS;
+                const isTagCountOk = hashtags.length <= 5;
+                const hasContent = text.trim().length > 0 || !!currentImageBase64;
+
+                charCountSpan.className = isLenOk ? '' : 'error';
+                
+                if (hasContent && isLenOk && isTagCountOk) {
+                    publishButton.disabled = false;
+                } else {
+                    publishButton.disabled = true;
+                }
+            };
+
+            postTextarea.addEventListener('input', syncHighlighter);
+            postTextarea.addEventListener('scroll', () => { inputHighlighter.scrollTop = postTextarea.scrollTop; });
+            
             document.getElementById('font-style-button').onclick = () => { squareContent.classList.remove(POST_FONT_FAMILIES[currentPostFontIndex]); currentPostFontIndex = (currentPostFontIndex+1)%POST_FONT_FAMILIES.length; squareContent.classList.add(POST_FONT_FAMILIES[currentPostFontIndex]); };
             document.getElementById('message-input').addEventListener('keypress', (e) => { if(e.key === 'Enter') document.getElementById('send-button').click(); });
         });
 
-        // Fonction pour vérifier l'état du bouton Publier
         function checkPublishButton() {
-            const hasText = postTextarea.value.length > 0 && postTextarea.value.length <= MAX_CHARS;
-            const hasImage = !!currentImageBase64;
-            // Autoriser si (Texte OU Image) et pas de texte trop long
-            if ((hasText || hasImage) && postTextarea.value.length <= MAX_CHARS) {
-                publishButton.disabled = false;
-            } else {
-                publishButton.disabled = true;
-            }
+            // Re-use logic in syncHighlighter or manually trigger event
+            const event = new Event('input');
+            postTextarea.dispatchEvent(event);
         }
 
         function initCropper() {
@@ -1568,8 +1770,8 @@
             const dx = (300 - w) / 2 + cropperState.x; const dy = (300 - h) / 2 + cropperState.y;
             cropperCtx.drawImage(cropperImage, dx, dy, w, h);
         }
-        function resetPostCreator() { resetPostImage(); postTextarea.value = ''; charCountSpan.textContent = '0'; squareContent.className = 'font-inter'; checkPublishButton(); }
-        function resetPostImage() { currentImageBase64 = null; squareContent.style.backgroundImage = ''; squareContent.style.backgroundColor = currentPostColor; postTextarea.classList.remove('has-image'); document.getElementById('bg-color-control-row').style.display = 'flex'; addImageButton.style.display = 'block'; removeImageButton.style.display = 'none'; }
+        function resetPostCreator() { resetPostImage(); postTextarea.value = ''; inputHighlighter.innerHTML=''; charCountSpan.textContent = '0'; squareContent.className = 'font-inter'; checkPublishButton(); }
+        function resetPostImage() { currentImageBase64 = null; squareContent.style.backgroundImage = ''; squareContent.style.backgroundColor = currentPostColor; postTextarea.classList.remove('has-image'); inputHighlighter.classList.remove('has-image-overlay'); document.getElementById('bg-color-control-row').style.display = 'flex'; addImageButton.style.display = 'block'; removeImageButton.style.display = 'none'; }
         function generatePostColorSwatches() {
             const div = document.getElementById('post-color-swatches'); div.innerHTML='';
             POST_COLOR_PALETTE.forEach(c => { const s = document.createElement('div'); s.className='color-swatch'; s.style.backgroundColor=c; if(c===currentPostColor) s.classList.add('selected'); s.onclick = () => { currentPostColor=c; if(!currentImageBase64) squareContent.style.backgroundColor=c; div.querySelector('.selected')?.classList.remove('selected'); s.classList.add('selected'); }; div.appendChild(s); });
