@@ -122,7 +122,7 @@
         .back-button { font-size: 20px; cursor: pointer; width: 40px; text-align: left; }
 
         /* Scroll Fix */
-        .feed-content, .contacts-content, .chat-content, .profile-content, #friend-requests-list, .group-info-content {
+        .feed-content, .contacts-content, .chat-content, .profile-content, #friend-requests-list, .group-info-content, .post-info-content {
             flex: 1 1 0; overflow-y: auto; padding-bottom: 140px;
             -webkit-overflow-scrolling: touch; -ms-overflow-style: none; scrollbar-width: none;  
         }
@@ -165,12 +165,13 @@
         /* Si sur fond image, on garde le blanc mais un peu plus brillant ou souligné */
         .post-message.snap-text .post-hashtag { color: #81d4fa; text-decoration: underline; }
 
-        .post-actions { display: flex; padding: 8px 15px; gap: 20px; }
+        .post-actions { display: flex; padding: 8px 15px; gap: 20px; align-items: center; }
         .action-button { display: flex; align-items: center; gap: 8px; font-size: 18px; color: var(--action-color); cursor: pointer; }
         .action-button span { font-size: 14px; font-weight: 600; }
         .action-button.liked i, .action-button.liked span { color: var(--like-color); }
         .action-button.disliked i, .action-button.disliked span { color: var(--dislike-color); }
         .action-button.share-btn { margin-left: auto; } 
+        .action-button.view-count { cursor: default; margin-left: 10px; }
 
         /* --- Amis & Groupes --- */
         .contacts-view { position: relative; } 
@@ -257,9 +258,9 @@
 
         /* --- Profil --- */
         .profile-header { display: flex; align-items: center; padding: 15px; gap: 15px; background-color: var(--secondary-bg); border-bottom: 1px solid var(--border-color); }
-        #profile-pic { width: 80px; height: 80px; border-radius: 50%; }
+        .profile-pic { width: 80px; height: 80px; border-radius: 50%; }
         .profile-info-main { flex-grow: 1; }
-        #profile-username { font-size: 22px; font-weight: 600; margin: 0; }
+        .profile-username { font-size: 22px; font-weight: 600; margin: 0; }
         #edit-bio-btn { background: none; border: 1px solid var(--button-border); border-radius: 6px; padding: 6px 12px; margin-top: 10px; cursor: pointer; font-weight: 600; width: 100%; }
         #profile-actions { display: flex; gap: 10px; margin-top: 10px; }
         .profile-action-btn { flex-grow: 1; padding: 8px 12px; border: 1px solid var(--button-border); border-radius: 6px; font-weight: 600; cursor: pointer; background: none; }
@@ -272,6 +273,16 @@
         .profile-details h4 { margin: 0 0 5px 0; font-size: 16px; }
         .profile-details p { margin: 0 0 15px 0; line-height: 1.5; }
         #logout-btn { width: 100%; margin-top: 20px; padding: 12px; background-color: var(--primary-bg); color: var(--dislike-color); border: 1px solid var(--button-border); border-radius: 6px; font-weight: 600; cursor: pointer; display: none; } 
+        
+        /* Profile Post Grid */
+        .profile-posts-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; padding-top: 2px; }
+        .post-thumbnail {
+            position: relative; width: 100%; padding-top: 100%; background-color: #eee; background-size: cover; background-position: center; cursor: pointer;
+        }
+        .post-thumbnail-views {
+            position: absolute; bottom: 5px; right: 5px; background: rgba(0,0,0,0.6); color: white;
+            padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; display: flex; align-items: center; gap: 4px;
+        }
 
         /* --- Toast --- */
         #toast-message { position: absolute; bottom: 80px; left: 50%; transform: translate(-50%, 100%); background-color: rgba(0, 0, 0, 0.75); color: white; padding: 10px 20px; border-radius: 20px; font-size: 14px; z-index: 2000; opacity: 0; transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out; pointer-events: none; }
@@ -306,7 +317,7 @@
             flex-grow: 1; padding: 10px; border-radius: 6px; border: none; font-weight: 600; font-size: 16px; cursor: pointer;
         }
         #save-profile-btn { background-color: var(--highlight-color); color: white; }
-        #cancel-edit-btn, #cancel-friend-options-btn, #cancel-friend-requests-btn, #cancel-paste-id-btn, #cancel-add-group-member-btn, #cancel-member-options-btn, #cancel-trending-btn { 
+        #cancel-edit-btn, #cancel-friend-options-btn, #cancel-friend-requests-btn, #cancel-paste-id-btn, #cancel-add-group-member-btn, #cancel-member-options-btn, #cancel-trending-btn, #cancel-post-options-btn, #close-post-info-btn { 
             background-color: #f0f0f0; color: var(--text-color); 
         }
 
@@ -343,13 +354,16 @@
             width: 80px; height: 80px; background: #eee; border-radius: 50%; margin: 20px auto;
             display: flex; align-items: center; justify-content: center; font-size: 30px; color: #888;
         }
-        .group-field-container { padding: 15px; border-bottom: 1px solid #f0f0f0; background: white; }
+        .group-field-container { padding: 15px; border-bottom: 1px solid #f0f0f0; background: white; display: flex; flex-direction: column; }
+        .group-input-wrapper { display: flex; align-items: center; gap: 10px; }
         .group-input-clean {
-            width: 100%; border: none; border-bottom: 1px solid var(--border-color);
+            flex-grow: 1; border: none; border-bottom: 1px solid var(--border-color);
             padding: 10px 0; font-size: 16px; outline: none; background: transparent; transition: border-color 0.3s;
         }
         .group-input-clean:focus { border-bottom-color: var(--highlight-color); }
         .group-input-clean:disabled { color: var(--text-color); border-bottom: none; background: transparent; }
+        .group-save-btn { background: var(--highlight-color); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; display: none; }
+        
         .section-label { font-size: 12px; font-weight: bold; color: var(--highlight-color); margin-bottom: 5px; text-transform: uppercase; }
         .group-members-list { margin-top: 0; background: white; }
         .group-member-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 15px; background: #fff; border-bottom: 1px solid #f0f0f0; cursor: pointer; }
@@ -495,6 +509,13 @@
             z-index: 1050; display: none;
         }
         .sidebar-overlay.show { display: block; }
+        
+        /* INFO POST VIEW */
+        .info-stat-row { display: flex; justify-content: space-between; padding: 15px; border-bottom: 1px solid #eee; background: white; }
+        .info-stat-box { text-align: center; flex: 1; }
+        .info-stat-val { font-size: 20px; font-weight: bold; display: block; }
+        .info-stat-label { font-size: 12px; color: var(--last-seen-color); }
+        .not-seen-list { background: white; margin-top: 10px; }
 
     </style>
 </head>
@@ -554,31 +575,55 @@
                 <button id="add-friend-fab"><i class="fas fa-user-plus"></i></button>
             </div>
 
-            <!-- VUE PROFIL -->
+            <!-- VUE PROFIL (MON PROFIL) -->
             <div id="profile-view" class="view profile-view">
                 <div class="view-header"><i id="my-profile-nav-item" class="fas fa-users header-icon"></i><h1 id="profile-username-header" class="header-title">Profil</h1><div class="header-placeholder"></div></div>
                 <div class="profile-content">
                     <div class="profile-header">
-                        <img id="profile-pic" src="" alt="Avatar">
+                        <img id="profile-pic" class="profile-pic" src="" alt="Avatar">
                         <div class="profile-info-main">
-                            <h2 id="profile-username">Nom d'utilisateur</h2>
+                            <h2 id="profile-username" class="profile-username">Nom d'utilisateur</h2>
                             <div id="profile-actions-container">
                                 <button id="edit-bio-btn">Modifier le profil</button>
-                                <div id="profile-actions" style="display: none;">
-                                    <button id="action-add-friend" class="profile-action-btn">Ajouter</button>
-                                    <button id="action-block-user" class="profile-action-btn danger">Bloquer</button>
-                                    <button id="action-message-user" class="profile-action-btn primary">Message</button>
-                                </div>
                             </div>
                         </div>
                     </div>
                     <div class="profile-stats"><div class="stat-item"><h3 id="posts-count">0</h3><p>Posts</p></div><div class="stat-item"><h3 id="followers-count">0</h3><p>Amis</p></div></div>
                     <div class="profile-details"><h4>Bio</h4><p id="profile-bio">Ceci est ma bio.</p><h4>Membre depuis</h4><p id="creation-date">...</p><button id="logout-btn"><i class="fas fa-sign-out-alt"></i> Se déconnecter</button></div>
+                    <div class="profile-details"><h4>Publications en ligne</h4></div>
+                    <div id="my-posts-grid" class="profile-posts-grid"></div>
                 </div>
             </div>
         </div>
 
         <!-- VUES SECONDAIRES -->
+        
+        <!-- VUE PROFIL AUTRE UTILISATEUR (Secondaire) -->
+        <div id="user-profile-view" class="view secondary">
+            <div class="view-header">
+                <i id="user-profile-back-btn" class="fas fa-arrow-left back-button"></i>
+                <h1 class="header-title">Profil</h1>
+                <div class="header-placeholder"></div>
+            </div>
+            <div class="profile-content">
+                <div class="profile-header">
+                    <img id="other-profile-pic" class="profile-pic" src="" alt="Avatar">
+                    <div class="profile-info-main">
+                        <h2 id="other-profile-username" class="profile-username">Nom</h2>
+                        <div id="other-profile-actions" style="display: flex; gap: 10px; margin-top: 10px;">
+                            <button id="action-add-friend" class="profile-action-btn">Ajouter</button>
+                            <button id="action-block-user" class="profile-action-btn danger">Bloquer</button>
+                            <button id="action-message-user" class="profile-action-btn primary">Message</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="profile-stats"><div class="stat-item"><h3 id="other-posts-count">0</h3><p>Posts</p></div><div class="stat-item"><h3 id="other-followers-count">0</h3><p>Amis</p></div></div>
+                <div class="profile-details"><h4>Bio</h4><p id="other-profile-bio">Bio...</p></div>
+                 <div class="profile-details"><h4>Publications en ligne</h4></div>
+                 <div id="other-posts-grid" class="profile-posts-grid"></div>
+            </div>
+        </div>
+
         <div id="chat-view" class="view chat-view secondary">
             <div class="view-header chat-header">
                 <i id="chat-back-btn" class="fas fa-arrow-left back-button"></i>
@@ -606,11 +651,17 @@
                     <div class="group-info-header-icon"><i class="fas fa-users"></i></div>
                     <div class="group-field-container">
                         <div class="section-label">Nom du groupe</div>
-                        <input type="text" id="group-info-name" class="group-input-clean" disabled>
+                        <div class="group-input-wrapper">
+                            <input type="text" id="group-info-name" class="group-input-clean" disabled>
+                            <button id="save-group-name-btn" class="group-save-btn">OK</button>
+                        </div>
                     </div>
                     <div class="group-field-container" style="border:none;">
                         <div class="section-label">Description</div>
-                        <input type="text" id="group-info-desc" class="group-input-clean" disabled>
+                        <div class="group-input-wrapper">
+                            <input type="text" id="group-info-desc" class="group-input-clean" disabled>
+                            <button id="save-group-desc-btn" class="group-save-btn">OK</button>
+                        </div>
                     </div>
                 </div>
                 <div style="background:#fff; border-top:1px solid #DBDBDB; border-bottom:1px solid #DBDBDB; margin-bottom:20px; padding-bottom: 10px;">
@@ -648,6 +699,24 @@
                 <div class="control-row" id="bg-color-control-row"><label>Couleur de fond</label><div class="color-swatches-container" id="post-color-swatches"></div></div>
                 <div class="control-row"><label>Style de police</label><button class="control-button" id="font-style-button"><i class="fas fa-font"></i></button></div>
                 <div class="control-row"><label>Publier en anonyme</label><label class="switch"><input type="checkbox" id="anonymous-switch-input"><span class="slider"></span></label></div>
+            </div>
+        </div>
+        
+        <!-- VUE INFO POST (Nouvelle page) -->
+        <div id="post-info-view" class="view secondary">
+             <div class="view-header">
+                <i id="close-post-info-btn" class="fas fa-arrow-left back-button"></i>
+                <h1 class="header-title">Infos publication</h1>
+                <div class="header-placeholder"></div>
+            </div>
+            <div class="post-info-content" style="background:var(--page-bg);">
+                <div class="info-stat-row">
+                    <div class="info-stat-box"><span id="info-views-count" class="info-stat-val">0</span><span class="info-stat-label">Vues</span></div>
+                    <div class="info-stat-box"><span id="info-likes-count" class="info-stat-val" style="color:var(--like-color)">0</span><span class="info-stat-label">Likes</span></div>
+                    <div class="info-stat-box"><span id="info-dislikes-count" class="info-stat-val" style="color:var(--dislike-color)">0</span><span class="info-stat-label">Dislikes</span></div>
+                </div>
+                <div style="padding:15px;"><h4 style="margin:0;font-size:14px;color:#666;">Amis qui n'ont pas vu le post :</h4></div>
+                <div id="not-seen-list" class="not-seen-list"></div>
             </div>
         </div>
 
@@ -723,6 +792,19 @@
         </div>
     </div>
 
+    <!-- Modale Options Post Perso -->
+    <div id="post-options-modal" class="modal-backdrop">
+        <div class="modal-content">
+            <h3>Options publication</h3>
+            <button id="view-post-btn" class="friend-option-button"><div class="friend-option-button-text"><i class="fas fa-eye"></i><span>Voir la publication</span></div></button>
+            <button id="info-post-btn" class="friend-option-button"><div class="friend-option-button-text"><i class="fas fa-chart-bar"></i><span>Infos de la publication</span></div></button>
+            <button id="delete-post-btn" class="friend-option-button" style="border-color:var(--dislike-color); color:var(--dislike-color);"><div class="friend-option-button-text"><i class="fas fa-trash"></i><span>Supprimer</span></div></button>
+            <div class="modal-actions">
+                <button id="cancel-post-options-btn">Annuler</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modale Recadrage Image -->
     <div id="cropper-modal" class="modal-backdrop">
         <div class="modal-content" style="background: #222; color: white;">
@@ -790,6 +872,8 @@
         
         // Hashtag / Trending
         let trendingTags = []; 
+        let blockedUsers = [];
+        let selectedPostId = null; // Pour les options
 
         let unsubscribeChatListener = null;
         let unsubscribeUsersListener = null;
@@ -798,7 +882,6 @@
         let unsubscribeGroupsListener = null;
         let unsubscribeChatsMetaListener = null;
         let countdownInterval = null;
-        let saveGroupInfoTimeout = null;
         
         let isLoginMode = true;
 
@@ -927,8 +1010,11 @@
                 await setDoc(userRef, {
                     username: user.displayName || `user_${user.uid.substring(0, 4)}`, 
                     profileColor: PROFILE_COLORS[Math.floor(Math.random() * PROFILE_COLORS.length)],
-                    accountCreatedAt: serverTimestamp(), friends: [], postsCount: 0
+                    accountCreatedAt: serverTimestamp(), friends: [], postsCount: 0, blockedUsers: []
                 });
+            } else {
+                // Ensure blockedUsers field exists
+                if(!userDoc.data().blockedUsers) await updateDoc(userRef, { blockedUsers: [] });
             }
         }
 
@@ -937,7 +1023,8 @@
             if (viewIndex === -1) return;
             viewWrapper.style.transform = `translateX(-${viewIndex * 100}%)`;
             navItems.forEach(item => { item.classList.toggle('active', item.dataset.view === viewId); });
-            if (viewId === 'profile-view' && !activeProfileUserId) showProfile(currentUserId);
+            // Profile view is strictly for ME
+            if (viewId === 'profile-view') showProfile(currentUserId);
         }
 
         function generateAvatarUrl(user) {
@@ -947,9 +1034,11 @@
 
         function listenToAllUsers() {
             unsubscribeUsersListener = onSnapshot(usersCollectionRef, (snapshot) => {
-                usersData = {}; snapshot.forEach((doc) => { usersData[doc.id] = { id: doc.id, ...doc.data() }; });
+                usersData = {}; 
+                snapshot.forEach((doc) => { usersData[doc.id] = { id: doc.id, ...doc.data() }; });
+                blockedUsers = usersData[currentUserId]?.blockedUsers || [];
                 renderFriendsList(); 
-                if (document.getElementById('profile-view').getBoundingClientRect().x === 0 && activeProfileUserId) showProfile(activeProfileUserId); 
+                if (activeProfileUserId) showProfile(activeProfileUserId);
             });
         }
         
@@ -1012,6 +1101,7 @@
             const list = document.getElementById('friend-requests-list'); list.innerHTML = '';
             pendingRequests.forEach(req => {
                 const u = usersData[req.senderId];
+                if(blockedUsers.includes(req.senderId)) return;
                 const div = document.createElement('div'); div.className='friend-request-item';
                 div.innerHTML = `<div class="friend-request-info"><img src="${generateAvatarUrl(u)}"><span>${u?u.username:'...'}</span></div><div class="friend-request-actions"><button class="request-accept-btn"><i class="fas fa-check"></i></button><button class="request-reject-btn"><i class="fas fa-times"></i></button></div>`;
                 div.querySelector('.request-accept-btn').onclick = () => acceptFriendRequest(req.senderId);
@@ -1039,7 +1129,7 @@
             const term = document.getElementById('search-input').value.toLowerCase();
             
             let allItems = [];
-            const friends = (usersData[currentUserId]?.friends || []).map(id => usersData[id]).filter(Boolean);
+            const friends = (usersData[currentUserId]?.friends || []).map(id => usersData[id]).filter(u => u && !blockedUsers.includes(u.id));
             friends.forEach(f => {
                 const cid = getChatId(currentUserId, f.id);
                 const meta = conversationsData[cid] || { timestamp: 0, unreadCount: 0 };
@@ -1079,28 +1169,153 @@
         function showProfile(uid) {
             const u = usersData[uid]; if(!u) return;
             activeProfileUserId = uid;
-            document.getElementById('profile-username').textContent = u.username;
-            document.getElementById('profile-pic').src = generateAvatarUrl(u);
-            document.getElementById('profile-bio').textContent = u.bio || "";
-            document.getElementById('posts-count').textContent = u.postsCount || 0;
-            document.getElementById('followers-count').textContent = (u.friends||[]).length;
-            
-            const date = u.accountCreatedAt?.toDate ? u.accountCreatedAt.toDate().toLocaleDateString('fr-FR') : 'Date inconnue';
-            document.getElementById('creation-date').textContent = date;
-
             const isMe = uid === currentUserId;
-            document.getElementById('edit-bio-btn').style.display = isMe ? 'block' : 'none';
-            document.getElementById('logout-btn').style.display = isMe ? 'block' : 'none'; 
-            document.getElementById('profile-actions').style.display = isMe ? 'none' : 'flex';
-            
-            if(!isMe) {
+
+            if (isMe) {
+                // Main Profile View (My Profile)
+                const view = document.getElementById('profile-view');
+                document.getElementById('profile-username').textContent = u.username;
+                document.getElementById('profile-pic').src = generateAvatarUrl(u);
+                document.getElementById('profile-bio').textContent = u.bio || "";
+                document.getElementById('posts-count').textContent = u.postsCount || 0;
+                document.getElementById('followers-count').textContent = (u.friends||[]).length;
+                const date = u.accountCreatedAt?.toDate ? u.accountCreatedAt.toDate().toLocaleDateString('fr-FR') : 'Date inconnue';
+                document.getElementById('creation-date').textContent = date;
+                document.getElementById('edit-bio-btn').style.display = 'block';
+                document.getElementById('logout-btn').style.display = 'block'; 
+                renderProfilePosts(uid, 'my-posts-grid');
+                navigateTo('profile-view');
+            } else {
+                // Secondary Profile View (Other User)
+                const view = document.getElementById('user-profile-view');
+                document.getElementById('other-profile-username').textContent = u.username;
+                document.getElementById('other-profile-pic').src = generateAvatarUrl(u);
+                document.getElementById('other-profile-bio').textContent = u.bio || "";
+                document.getElementById('other-posts-count').textContent = u.postsCount || 0;
+                document.getElementById('other-followers-count').textContent = (u.friends||[]).length;
+                
                 const isFriend = usersData[currentUserId]?.friends?.includes(uid);
-                document.getElementById('action-add-friend').style.display = isFriend ? 'none' : 'block';
-                document.getElementById('action-message-user').style.display = isFriend ? 'block' : 'none';
-                document.getElementById('action-add-friend').onclick = () => sendFriendRequest(uid);
-                document.getElementById('action-message-user').onclick = () => showChat(uid, 'user');
+                const isBlocked = blockedUsers.includes(uid);
+                
+                const addBtn = document.getElementById('action-add-friend');
+                const msgBtn = document.getElementById('action-message-user');
+                const blockBtn = document.getElementById('action-block-user');
+
+                addBtn.style.display = isFriend || isBlocked ? 'none' : 'block';
+                msgBtn.style.display = isFriend && !isBlocked ? 'block' : 'none';
+                blockBtn.style.display = 'block';
+                blockBtn.textContent = isBlocked ? "Débloquer" : "Bloquer";
+
+                addBtn.onclick = () => sendFriendRequest(uid);
+                msgBtn.onclick = () => showChat(uid, 'user');
+                blockBtn.onclick = () => toggleBlockUser(uid);
+                
+                document.getElementById('user-profile-back-btn').onclick = () => hideSecondaryView(view);
+                renderProfilePosts(uid, 'other-posts-grid');
+                showSecondaryView(view);
             }
-            navigateTo('profile-view');
+        }
+
+        async function toggleBlockUser(uid) {
+             const isBlocked = blockedUsers.includes(uid);
+             if(isBlocked) {
+                 await updateDoc(doc(usersCollectionRef, currentUserId), { blockedUsers: arrayRemove(uid) });
+                 showMessage("Utilisateur débloqué", true);
+             } else {
+                 await updateDoc(doc(usersCollectionRef, currentUserId), { blockedUsers: arrayUnion(uid) });
+                 showMessage("Utilisateur bloqué", true);
+             }
+        }
+
+        function renderProfilePosts(uid, gridId) {
+            const grid = document.getElementById(gridId);
+            grid.innerHTML = '';
+            const userPosts = postsData.filter(p => p.publisherId === uid && !p.isAnon);
+            
+            userPosts.forEach(p => {
+                const div = document.createElement('div'); div.className = 'post-thumbnail';
+                if (p.imageBase64) div.style.backgroundImage = `url('${p.imageBase64}')`;
+                else div.style.backgroundColor = p.backgroundColor;
+                
+                // Overlay View Count
+                div.innerHTML = `<div class="post-thumbnail-views"><i class="fas fa-eye"></i> ${p.views || 0}</div>`;
+                
+                div.onclick = () => {
+                    if (uid === currentUserId) {
+                        openPostOptions(p);
+                    } else {
+                        // Open in feed
+                        navigateTo('feed-view');
+                        // Optional: Scroll to post
+                        setTimeout(() => {
+                             const el = document.querySelector(`.post-card[data-post-id="${p.id}"]`);
+                             if(el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                             hideSecondaryView(document.getElementById('user-profile-view'));
+                        }, 300);
+                    }
+                };
+                grid.appendChild(div);
+            });
+        }
+        
+        // --- POST OPTIONS & INFO ---
+        function openPostOptions(post) {
+            selectedPostId = post.id;
+            const modal = document.getElementById('post-options-modal');
+            
+            document.getElementById('view-post-btn').onclick = () => {
+                hideModal(modal);
+                navigateTo('feed-view');
+                setTimeout(() => {
+                    const el = document.querySelector(`.post-card[data-post-id="${post.id}"]`);
+                    if(el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 300);
+            };
+            
+            document.getElementById('info-post-btn').onclick = () => {
+                hideModal(modal);
+                showPostInfo(post);
+            };
+            
+            document.getElementById('delete-post-btn').onclick = async () => {
+                if(confirm("Supprimer définitivement cette publication ?")) {
+                    await deleteDoc(doc(postsCollectionRef, post.id));
+                    await updateDoc(doc(usersCollectionRef, currentUserId), { postsCount: increment(-1) });
+                    hideModal(modal);
+                    showMessage("Post supprimé", true);
+                    renderProfilePosts(currentUserId, 'my-posts-grid');
+                }
+            };
+            
+            document.getElementById('cancel-post-options-btn').onclick = () => hideModal(modal);
+            showModal(modal);
+        }
+
+        function showPostInfo(post) {
+            const view = document.getElementById('post-info-view');
+            document.getElementById('info-views-count').textContent = post.views || 0;
+            document.getElementById('info-likes-count').textContent = (post.likedBy || []).length;
+            document.getElementById('info-dislikes-count').textContent = (post.dislikedBy || []).length;
+            
+            const list = document.getElementById('not-seen-list'); list.innerHTML = '';
+            const myFriends = usersData[currentUserId]?.friends || [];
+            const viewedBy = post.viewedBy || [];
+            
+            const notSeenFriends = myFriends.filter(fid => !viewedBy.includes(fid));
+            
+            if (notSeenFriends.length === 0) list.innerHTML = '<p style="text-align:center;padding:10px;color:gray;">Tout le monde a vu ça !</p>';
+            
+            notSeenFriends.forEach(fid => {
+                 const u = usersData[fid];
+                 if(u) {
+                     const d = document.createElement('div'); d.className = 'friend-item';
+                     d.innerHTML = `<img class="friend-pp" src="${generateAvatarUrl(u)}"><div class="friend-info"><h4>${u.username}</h4></div>`;
+                     list.appendChild(d);
+                 }
+            });
+            
+            document.getElementById('close-post-info-btn').onclick = () => hideSecondaryView(view);
+            showSecondaryView(view);
         }
 
         function listenToFeed() {
@@ -1110,7 +1325,6 @@
                 snap.forEach(d => {
                     const p = { id: d.id, ...d.data() };
                     const date = p.createdAt?.toDate ? p.createdAt.toDate() : new Date();
-                    
                     if (now.getTime() - date.getTime() > 86400000) {
                         deleteDoc(doc(postsCollectionRef, p.id)).catch(err => {});
                     } else {
@@ -1121,6 +1335,9 @@
                 postsData.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
                 updateTrendingStats();
                 renderFeed();
+                // Refresh profile posts if active
+                if(activeProfileUserId === currentUserId) renderProfilePosts(currentUserId, 'my-posts-grid');
+                else if(activeProfileUserId) renderProfilePosts(activeProfileUserId, 'other-posts-grid');
             });
         }
 
@@ -1128,6 +1345,7 @@
         function updateTrendingStats() {
             const tagCounts = {};
             postsData.forEach(p => {
+                if(blockedUsers.includes(p.publisherId)) return;
                 const tags = extractHashtags(p.message);
                 tags.forEach(tag => {
                     const t = tag.toLowerCase();
@@ -1186,13 +1404,20 @@
 
         function renderFeed() {
             const term = document.getElementById('feed-search-input').value.toLowerCase();
-            filteredPostsData = term ? postsData.filter(p => {
-                const authorName = (usersData[p.publisherId]?.username || '').toLowerCase();
-                return p.message.toLowerCase().includes(term) || authorName.includes(term);
-            }) : postsData;
+            filteredPostsData = postsData.filter(p => !blockedUsers.includes(p.publisherId));
+            
+            if (term) {
+                filteredPostsData = filteredPostsData.filter(p => {
+                    const authorName = (usersData[p.publisherId]?.username || '').toLowerCase();
+                    return p.message.toLowerCase().includes(term) || authorName.includes(term);
+                });
+            }
             
             if (!filteredPostsData.length) { feedContent.innerHTML = "<p style='text-align:center;color:gray;padding:20px;'>Rien à afficher.</p>"; return; }
             
+            // View Increment Batching Logic
+            const postsToIncrement = [];
+
             feedContent.innerHTML = filteredPostsData.map(p => {
                 const author = usersData[p.publisherId] || {username: 'Inconnu'};
                 const rem = p.expiresAt - new Date();
@@ -1204,6 +1429,12 @@
                 const hasDisliked = (p.dislikedBy||[]).includes(currentUserId);
                 const likes = (p.likedBy||[]).length;
                 const dislikes = (p.dislikedBy||[]).length;
+                const views = p.views || 0;
+                
+                // Track if seen
+                if (!p.viewedBy || !p.viewedBy.includes(currentUserId)) {
+                    postsToIncrement.push(p.id);
+                }
 
                 // Hashtag formatting
                 const formattedMessage = p.message.replace(/#[\p{L}\p{N}_]+/gu, (match) => {
@@ -1216,10 +1447,21 @@
                     <div class="post-actions">
                         <div class="action-button ${hasLiked?'liked':''}" onclick="likePost('${p.id}')"><i class="fas fa-thumbs-up"></i><span>${likes}</span></div>
                         <div class="action-button ${hasDisliked?'disliked':''}" onclick="dislikePost('${p.id}')"><i class="fas fa-thumbs-down"></i><span>${dislikes}</span></div>
+                        <div class="action-button view-count"><i class="fas fa-eye"></i><span>${views}</span></div>
                         <div class="action-button share-btn" onclick="sharePost('${p.id}')"><i class="fas fa-share-square"></i></div>
                     </div>
                 </div>`;
             }).join('');
+            
+            // Execute View Increments (Debounced or immediate)
+            if (postsToIncrement.length > 0) {
+                 postsToIncrement.forEach(pid => {
+                     updateDoc(doc(postsCollectionRef, pid), {
+                         views: increment(1),
+                         viewedBy: arrayUnion(currentUserId)
+                     }).catch(e => console.log("View update err", e));
+                 });
+            }
             
             if(countdownInterval) clearInterval(countdownInterval);
             countdownInterval = setInterval(() => {
@@ -1235,7 +1477,6 @@
         }
         
         window.searchTag = (tag) => {
-             // stopPropagation hack via window call
              event.stopPropagation();
              document.getElementById('feed-search-input').value = tag.toLowerCase();
              renderFeed();
@@ -1281,7 +1522,7 @@
             document.getElementById('group-name-input').value = '';
             document.getElementById('group-desc-input').value = '';
             const list = document.getElementById('group-friends-list'); list.innerHTML = '';
-            const friends = (usersData[currentUserId]?.friends || []).map(id => usersData[id]).filter(Boolean);
+            const friends = (usersData[currentUserId]?.friends || []).map(id => usersData[id]).filter(u => u && !blockedUsers.includes(u.id));
             friends.forEach(f => {
                 const d = document.createElement('div'); d.className = 'group-friend-select-item';
                 d.innerHTML = `<input type="checkbox" value="${f.id}" id="gf-${f.id}"><label for="gf-${f.id}">${f.username}</label>`;
@@ -1375,6 +1616,7 @@
                 chatBody.innerHTML = '';
 
                 msgs.forEach(m => {
+                    if(blockedUsers.includes(m.senderId)) return;
                     const div = document.createElement('div');
                     const isMe = m.senderId === currentUserId;
                     const time = m.createdAt ? new Date(m.createdAt.seconds * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
@@ -1451,6 +1693,8 @@
             const leaveBtn = document.getElementById('group-leave-btn');
             const memberList = document.getElementById('group-members-list-info');
             const addMemberBtn = document.getElementById('open-add-member-modal-btn');
+            const saveNameBtn = document.getElementById('save-group-name-btn');
+            const saveDescBtn = document.getElementById('save-group-desc-btn');
             
             const isAdmin = (groupData.admins || []).includes(currentUserId);
             const isFounder = (groupData.createdBy === currentUserId);
@@ -1459,14 +1703,24 @@
             nameInp.disabled = !isAdmin; descInp.disabled = !isAdmin;
             addMemberBtn.style.display = 'block'; 
             
-            const handleAutoSave = () => {
-                clearTimeout(saveGroupInfoTimeout);
-                saveGroupInfoTimeout = setTimeout(async () => {
-                    await updateDoc(doc(groupsCollectionRef, groupId), { name: nameInp.value, description: descInp.value });
-                    document.getElementById('chat-username').textContent = nameInp.value;
-                }, 1000);
-            };
-            nameInp.oninput = handleAutoSave; descInp.oninput = handleAutoSave;
+            // Manual Save Buttons Logic
+            if(isAdmin) {
+                saveNameBtn.style.display = 'block';
+                saveDescBtn.style.display = 'block';
+                
+                saveNameBtn.onclick = async () => {
+                     await updateDoc(doc(groupsCollectionRef, groupId), { name: nameInp.value });
+                     document.getElementById('chat-username').textContent = nameInp.value;
+                     showMessage("Nom enregistré", true);
+                };
+                saveDescBtn.onclick = async () => {
+                     await updateDoc(doc(groupsCollectionRef, groupId), { description: descInp.value });
+                     showMessage("Description enregistrée", true);
+                };
+            } else {
+                saveNameBtn.style.display = 'none';
+                saveDescBtn.style.display = 'none';
+            }
             
             memberList.innerHTML = '';
             (groupData.members || []).forEach(uid => {
@@ -1540,7 +1794,7 @@
             list.innerHTML = '';
             
             const gMembers = conversationsData[groupId]?.data.members || [];
-            const friends = (usersData[currentUserId]?.friends || []).map(id => usersData[id]).filter(f => f && !gMembers.includes(f.id));
+            const friends = (usersData[currentUserId]?.friends || []).map(id => usersData[id]).filter(f => f && !gMembers.includes(f.id) && !blockedUsers.includes(f.id));
             
             friends.forEach(f => {
                 const d = document.createElement('div'); d.className = 'group-friend-select-item';
@@ -1688,7 +1942,7 @@
             
             navItems.forEach(item => {
                 item.addEventListener('click', () => {
-                     if(item.dataset.view === 'profile-view') { activeProfileUserId = null; showProfile(currentUserId); }
+                     if(item.dataset.view === 'profile-view') { activeProfileUserId = currentUserId; showProfile(currentUserId); }
                      else navigateTo(item.dataset.view);
                 });
             });
@@ -1775,7 +2029,12 @@
             if(!txt && !currentImageBase64) return;
             publishButton.disabled = true;
             try {
-                await addDoc(postsCollectionRef, { message: txt, publisherId: anonymousSwitch.checked ? null : currentUserId, isAnon: anonymousSwitch.checked, createdAt: serverTimestamp(), backgroundColor: currentImageBase64 ? 'transparent' : currentPostColor, fontClass: POST_FONT_FAMILIES[currentPostFontIndex], likedBy: [], dislikedBy: [], imageBase64: currentImageBase64 });
+                await addDoc(postsCollectionRef, { 
+                    message: txt, publisherId: anonymousSwitch.checked ? null : currentUserId, isAnon: anonymousSwitch.checked, 
+                    createdAt: serverTimestamp(), backgroundColor: currentImageBase64 ? 'transparent' : currentPostColor, 
+                    fontClass: POST_FONT_FAMILIES[currentPostFontIndex], likedBy: [], dislikedBy: [], imageBase64: currentImageBase64,
+                    views: 0, viewedBy: [] // Ajout compteur de vues
+                });
                 const uRef = doc(usersCollectionRef, currentUserId);
                 const uDoc = await getDoc(uRef);
                 updateDoc(uRef, { postsCount: (uDoc.data().postsCount||0)+1 });
