@@ -33,7 +33,7 @@
             --google-btn: #4285F4;
             --chat-bubble-sent: #3897f0;
             --chat-bubble-received: #EFEFEF;
-            --hashtag-color: #64b5f6; /* Bleu clair */
+            --hashtag-color: #64b5f6;
         }
 
         .font-inter { font-family: 'Inter', sans-serif; }
@@ -53,6 +53,8 @@
             background-color: var(--page-bg); 
             color: var(--text-color);
             overflow: hidden;
+            /* Optimisation mobile */
+            overscroll-behavior-y: none;
         }
 
         /* --- VUE AUTHENTIFICATION --- */
@@ -91,7 +93,11 @@
             background-color: var(--primary-bg); flex-direction: column; position: relative;
             box-shadow: 0 4px 12px rgba(0,0,0,0.1); overflow: hidden;
         }
-        #view-wrapper { display: flex; flex: 1; width: 100%; height: 100%; transition: transform 0.3s ease-in-out; will-change: transform; }
+        #view-wrapper { 
+            display: flex; flex: 1; width: 100%; height: 100%; 
+            transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94); 
+            will-change: transform; 
+        }
         .view {
             display: flex; flex-direction: column; background-color: var(--primary-bg);
             width: 100%; height: 100%; flex-shrink: 0; overflow: hidden;
@@ -134,7 +140,6 @@
             -webkit-overflow-scrolling: touch; -ms-overflow-style: none; scrollbar-width: none;  
         }
         
-        /* Padding spécifique pour le profil "Autre" afin de ne pas être caché par la navbar */
         #user-profile-view .profile-content { padding-bottom: 80px; }
 
         ::-webkit-scrollbar { display: none; }
@@ -144,13 +149,12 @@
         .nav-bar {
             position: absolute; bottom: 0; left: 0; right: 0; display: flex; justify-content: space-around;
             background-color: var(--secondary-bg); border-top: 1px solid var(--border-color);
-            z-index: 30; /* Augmenté pour être au dessus des profils secondaires */
+            z-index: 30; 
             padding-bottom: env(safe-area-inset-bottom); height: 60px;
         }
         .nav-item { position: relative; padding: 10px 15px; font-size: 24px; color: var(--action-color); cursor: pointer; text-align: center; transition: color 0.2s, transform 0.2s; }
         .nav-item.active { color: var(--highlight-color); transform: scale(1.1); }
         .nav-item span { display: block; font-size: 10px; margin-top: 2px; }
-        /* BADGE NOTIF */
         .notification-badge {
             position: absolute; top: 2px; right: 8px; background-color: var(--dislike-color); color: white;
             border-radius: 50%; padding: 2px 5px; font-size: 10px; font-weight: bold;
@@ -158,7 +162,7 @@
         }
 
         /* --- Feed --- */
-        .post-card { background-color: var(--secondary-bg); border-bottom: 1px solid var(--border-color); margin-bottom: 8px; }
+        .post-card { background-color: var(--secondary-bg); border-bottom: 1px solid var(--border-color); margin-bottom: 8px; contain: content; }
         .post-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; font-size: 14px; }
         .post-publisher { font-weight: 600; cursor: pointer; }
         .post-countdown { 
@@ -174,7 +178,6 @@
         }
         
         .post-hashtag { color: var(--hashtag-color); font-weight: 600; cursor: pointer; z-index: 10; position: relative; }
-        /* Si sur fond image, on garde le blanc mais un peu plus brillant ou souligné */
         .post-message.snap-text .post-hashtag { color: #81d4fa; text-decoration: underline; }
 
         .post-actions { display: flex; padding: 8px 15px; gap: 20px; align-items: center; }
@@ -187,7 +190,6 @@
 
         /* --- Amis & Groupes --- */
         .contacts-view { position: relative; } 
-        /* Barre de recherche modifiée */
         .search-bar-container { 
             display: flex; gap: 10px; padding: 10px; background-color: var(--primary-bg); flex-shrink: 0; align-items: center;
         }
@@ -197,7 +199,7 @@
             display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer;
         }
 
-        .friend-item { display: flex; align-items: center; padding: 10px 15px; border-bottom: 1px solid var(--border-color); cursor: pointer; transition: background-color 0.2s; }
+        .friend-item { display: flex; align-items: center; padding: 10px 15px; border-bottom: 1px solid var(--border-color); cursor: pointer; transition: background-color 0.2s; contain: content; }
         .friend-item:hover { background-color: #f9f9f9; }
         .friend-pp { width: 50px; height: 50px; border-radius: 50%; margin-right: 15px; object-fit: cover; }
         .friend-info { flex-grow: 1; min-width: 0; }
@@ -290,6 +292,7 @@
         .profile-posts-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; padding-top: 2px; }
         .post-thumbnail {
             position: relative; width: 100%; padding-top: 100%; background-color: #eee; background-size: cover; background-position: center; cursor: pointer;
+            contain: strict;
         }
         .post-thumbnail-views {
             position: absolute; bottom: 5px; right: 5px; background: rgba(0,0,0,0.6); color: white;
@@ -866,7 +869,6 @@
             "mal_à_l'aise.gif", "amour.gif", "triste.gif", "colère.gif", "soulé.gif", "choqué.gif", "cligne.gif"
         ];
 
-        // MODIFICATION: Ajout du blanc en premier
         const POST_COLOR_PALETTE = ['#FFFFFF', '#f1f1f1', '#D6E9F7', '#D1F7D1', '#FFF7D1', '#F7D1D1', '#A0D4FE', '#84E084', '#FEEA84', '#FE8484'];
         const MAX_CHARS = 70; 
         const BASE_URL = 'https://drop-24.netlify.app/';
@@ -875,6 +877,7 @@
         let activeProfileUserId = null;
         let usersData = {};
         let postsData = [];
+        let profilePostsCache = {}; // Cache séparé pour les posts de profil
         let filteredPostsData = []; 
         let pendingRequests = []; 
         
@@ -893,6 +896,7 @@
         let unsubscribeFriendRequestsListener = null;
         let unsubscribeGroupsListener = null;
         let unsubscribeChatsMetaListener = null;
+        let unsubscribeProfilePostsListener = null; // Listener spécifique profil
         let countdownInterval = null;
         
         let isLoginMode = true;
@@ -963,7 +967,8 @@
                 authView.style.display = 'none';
                 appContainer.style.display = 'flex'; 
                 await upsertUserDocument(user);
-                listenToAllUsers();
+                // On limite la liste des users pour éviter le crash mobile
+                listenToAllUsers(); 
                 listenToFeed();
                 listenToFriendRequests();
                 listenToConversations();
@@ -993,6 +998,7 @@
                 if(unsubscribeFeedListener) unsubscribeFeedListener();
                 if(unsubscribeGroupsListener) unsubscribeGroupsListener();
                 if(unsubscribeChatsMetaListener) unsubscribeChatsMetaListener();
+                if(unsubscribeProfilePostsListener) unsubscribeProfilePostsListener();
             }
         });
 
@@ -1035,7 +1041,6 @@
                     accountCreatedAt: serverTimestamp(), friends: [], postsCount: 0, blockedUsers: []
                 });
             } else {
-                // Ensure blockedUsers field exists
                 if(!userDoc.data().blockedUsers) await updateDoc(userRef, { blockedUsers: [] });
             }
         }
@@ -1054,9 +1059,10 @@
             return `https://ui-avatars.com/api/?name=${user.username}&background=${(user.profileColor||'888').replace('#','')}&color=fff&size=128&bold=true`;
         }
 
+        // OPTIMISATION MOBILE: Limite à 50 utilisateurs pour éviter la saturation mémoire
         function listenToAllUsers() {
-            unsubscribeUsersListener = onSnapshot(usersCollectionRef, (snapshot) => {
-                usersData = {}; 
+            unsubscribeUsersListener = onSnapshot(query(usersCollectionRef, limit(50)), (snapshot) => {
+                // Pas de usersData = {} ici pour ne pas perdre les amis hors liste
                 snapshot.forEach((doc) => { usersData[doc.id] = { id: doc.id, ...doc.data() }; });
                 blockedUsers = usersData[currentUserId]?.blockedUsers || [];
                 renderFriendsList(); 
@@ -1188,10 +1194,40 @@
             });
         }
 
-        function showProfile(uid) {
-            const u = usersData[uid]; if(!u) return;
+        async function showProfile(uid) {
+            // Optimisation: Annuler l'ancien listener de profil si on change d'user
+            if(unsubscribeProfilePostsListener) {
+                unsubscribeProfilePostsListener();
+                unsubscribeProfilePostsListener = null;
+            }
+            
+            // Si l'utilisateur n'est pas dans le cache, on le fetch manuellement
+            let u = usersData[uid];
+            if(!u) {
+                try {
+                    const snap = await getDoc(doc(usersCollectionRef, uid));
+                    if(snap.exists()) {
+                         u = { id: snap.id, ...snap.data() };
+                         usersData[uid] = u; // Cache le
+                    } else return;
+                } catch(e) { return; }
+            }
+
             activeProfileUserId = uid;
             const isMe = uid === currentUserId;
+
+            // --- CHARGEMENT DES POSTS DU PROFIL ---
+            // Comme le feed global est limité à 40 posts, on risque de ne pas voir les anciens posts du profil.
+            // On lance donc une requête spécifique pour ce profil.
+            const qProfilePosts = query(postsCollectionRef, where('publisherId', '==', uid), orderBy('createdAt', 'desc'), limit(20));
+            unsubscribeProfilePostsListener = onSnapshot(qProfilePosts, (snap) => {
+                profilePostsCache[uid] = [];
+                snap.forEach(d => profilePostsCache[uid].push({ id: d.id, ...d.data() }));
+                // On fusionne avec ce qu'on a déjà dans postsData pour éviter les doublons lors du rendu, 
+                // mais pour le rendu profil on utilisera profilePostsCache[uid]
+                renderProfilePosts(uid, isMe ? 'my-posts-grid' : 'other-posts-grid');
+            });
+
 
             if (isMe) {
                 // Main Profile View (My Profile)
@@ -1205,7 +1241,6 @@
                 document.getElementById('creation-date').textContent = date;
                 document.getElementById('edit-bio-btn').style.display = 'block';
                 document.getElementById('logout-btn').style.display = 'block'; 
-                renderProfilePosts(uid, 'my-posts-grid');
                 navigateTo('profile-view');
             } else {
                 // Secondary Profile View (Other User)
@@ -1233,9 +1268,7 @@
                 blockBtn.onclick = () => toggleBlockUser(uid);
                 
                 document.getElementById('user-profile-back-btn').onclick = () => hideSecondaryView(view);
-                renderProfilePosts(uid, 'other-posts-grid');
                 
-                // --- MODIFICATION: Menu Actif & Affichage ---
                 navItems.forEach(item => item.classList.toggle('active', item.dataset.view === 'contacts-view'));
                 showSecondaryView(view);
             }
@@ -1254,9 +1287,10 @@
 
         function renderProfilePosts(uid, gridId) {
             const grid = document.getElementById(gridId);
-            const userPosts = postsData.filter(p => p.publisherId === uid && !p.isAnon);
+            // On utilise le cache spécifique profil s'il existe, sinon fallback sur global
+            const userPosts = (profilePostsCache[uid] || postsData.filter(p => p.publisherId === uid)).filter(p => !p.isAnon);
             
-            // OPTIMISATION: DocumentFragment
+            // OPTIMISATION: DocumentFragment pour réduire le reflow
             const fragment = document.createDocumentFragment();
             
             userPosts.forEach(p => {
@@ -1270,20 +1304,30 @@
                     if (uid === currentUserId) {
                         openPostOptions(p);
                     } else {
+                        // Pour voir le post, on doit s'assurer qu'il est dans la vue.
+                        // Si le post vient du cache profil et pas du feed global, on ne peut pas scroller vers lui dans le feed.
+                        // On va donc montrer le modal d'info "partiel" ou juste l'image.
+                        // Simplification: On tente d'aller au feed, sinon alert
                         navigateTo('feed-view');
                         setTimeout(() => {
                              const el = document.querySelector(`.post-card[data-post-id="${p.id}"]`);
-                             if(el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                             hideSecondaryView(document.getElementById('user-profile-view'));
+                             if(el) {
+                                 el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                 hideSecondaryView(document.getElementById('user-profile-view'));
+                             } else {
+                                 // Le post n'est pas dans le top 40 global
+                                 showMessage("Ce post est trop ancien pour le flux global.", false);
+                             }
                         }, 300);
                     }
                 };
                 fragment.appendChild(div);
             });
             
-            // On vide et on remplace en une seule fois
-            grid.innerHTML = '';
-            grid.appendChild(fragment);
+            requestAnimationFrame(() => {
+                grid.innerHTML = '';
+                grid.appendChild(fragment);
+            });
         }
         
         // --- POST OPTIONS & INFO ---
@@ -1346,8 +1390,9 @@
             showSecondaryView(view);
         }
 
+        // OPTIMISATION MOBILE: Limit à 40 posts pour le flux
         function listenToFeed() {
-            unsubscribeFeedListener = onSnapshot(query(postsCollectionRef), (snap) => {
+            unsubscribeFeedListener = onSnapshot(query(postsCollectionRef, limit(40)), (snap) => {
                 const now = new Date();
                 postsData = [];
                 snap.forEach(d => {
@@ -1362,16 +1407,14 @@
                 });
                 postsData.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
                 
-                // APPEL DEBOUNCED
                 debouncedRenderFeed();
             });
         }
         
-        // --- DEBOUNCED RENDER FUNCTIONS ---
-        // Permet d'éviter de redessiner l'interface 10x si 10 likes arrivent en même temps
         const debouncedRenderFeed = debounce(() => {
             updateTrendingStats();
             renderFeed();
+            // On ne met à jour les grilles profil que si c'est nécessaire
             if(activeProfileUserId === currentUserId) renderProfilePosts(currentUserId, 'my-posts-grid');
             else if(activeProfileUserId) renderProfilePosts(activeProfileUserId, 'other-posts-grid');
         }, 200);
@@ -1452,12 +1495,12 @@
             
             const postsToIncrement = [];
             
-            // OPTIMISATION: Utilisation d'un gros string buffer au lieu d'appels DOM répétés
             const feedHTML = filteredPostsData.map(p => {
                 const author = usersData[p.publisherId] || {username: 'Inconnu'};
                 const rem = p.expiresAt - new Date();
                 let bgStyle = `background-color:${p.backgroundColor}`;
                 let txtClass = p.fontClass;
+                // Optimisation: si base64, on l'utilise
                 if(p.imageBase64) { bgStyle = `background-image: url('${p.imageBase64}')`; txtClass += " snap-text"; }
 
                 const hasLiked = (p.likedBy||[]).includes(currentUserId);
@@ -1466,7 +1509,6 @@
                 const dislikes = (p.dislikedBy||[]).length;
                 const views = p.views || 0;
                 
-                // Track if seen
                 if (!p.viewedBy || !p.viewedBy.includes(currentUserId)) {
                     postsToIncrement.push(p.id);
                 }
@@ -1487,9 +1529,11 @@
                 </div>`;
             }).join('');
             
-            feedContent.innerHTML = feedHTML;
+            // Utilisation de requestAnimationFrame pour fluidifier le rendu
+            requestAnimationFrame(() => {
+                feedContent.innerHTML = feedHTML;
+            });
             
-            // Execute View Increments (Debounced or immediate)
             if (postsToIncrement.length > 0) {
                  postsToIncrement.forEach(pid => {
                      updateDoc(doc(postsCollectionRef, pid), {
@@ -1651,6 +1695,7 @@
                 const chatBody = document.getElementById('chat-body');
                 chatBody.innerHTML = '';
 
+                const fragment = document.createDocumentFragment();
                 msgs.forEach(m => {
                     if(blockedUsers.includes(m.senderId)) return;
                     const div = document.createElement('div');
@@ -1679,8 +1724,9 @@
                         contentHtml = `${senderNameHtml}<div class="message-bubble ${isMe?'sent':'received'}">${m.text}<span class="message-time">${time}${isMe ? `<span class="message-read-status">${readStatus}</span>` : ''}</span></div>`;
                     }
                     div.innerHTML = contentHtml;
-                    chatBody.appendChild(div);
+                    fragment.appendChild(div);
                 });
+                chatBody.appendChild(fragment);
                 document.getElementById('chat-content-container').scrollTop = document.getElementById('chat-content-container').scrollHeight;
             }, (error) => {
                  console.log("Erreur snapshot ou index manquant, chargement standard...", error);
@@ -1962,7 +2008,8 @@
                 const dy = (CROP_SIZE - h) / 2 + (cropperState.y * ratio);
                 
                 ctx.drawImage(cropperImage, dx, dy, w, h);
-                currentImageBase64 = tCvs.toDataURL('image/jpeg', 0.92);
+                // OPTIMISATION MOBILE: Réduction qualité 0.92 -> 0.7 pour perfs
+                currentImageBase64 = tCvs.toDataURL('image/jpeg', 0.7);
                 squareContent.style.backgroundImage = `url('${currentImageBase64}')`;
                 squareContent.style.backgroundColor = 'transparent';
                 postTextarea.classList.add('has-image');
