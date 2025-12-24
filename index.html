@@ -91,16 +91,23 @@
             background-color: var(--primary-bg); flex-direction: column; position: relative;
             box-shadow: 0 4px 12px rgba(0,0,0,0.1); overflow: hidden;
         }
-        #view-wrapper { display: flex; flex: 1; width: 100%; height: 100%; transition: transform 0.3s ease-in-out; }
+        #view-wrapper { display: flex; flex: 1; width: 100%; height: 100%; transition: transform 0.3s ease-in-out; will-change: transform; }
         .view {
             display: flex; flex-direction: column; background-color: var(--primary-bg);
             width: 100%; height: 100%; flex-shrink: 0; overflow: hidden;
         }
+        
+        /* OPTIMISATION Z-INDEX pour Navbar visible sur profil */
         .view.secondary {
             position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            transform: translateX(100%); transition: transform 0.3s ease-in-out;
-            z-index: 20; visibility: hidden; background-color: var(--secondary-bg);
+            transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+            z-index: 20; visibility: hidden; background-color: var(--secondary-bg); will-change: transform;
         }
+        /* Les vues qui doivent couvrir la navbar */
+        .view.chat-view, .view.group-info-view, .view.post-creation-view, .view.post-info-view {
+            z-index: 40; 
+        }
+        
         .view.secondary.visible { transform: translateX(0); visibility: visible; }
 
         .view-header {
@@ -126,6 +133,10 @@
             flex: 1 1 0; overflow-y: auto; padding-bottom: 140px;
             -webkit-overflow-scrolling: touch; -ms-overflow-style: none; scrollbar-width: none;  
         }
+        
+        /* Padding spécifique pour le profil "Autre" afin de ne pas être caché par la navbar */
+        #user-profile-view .profile-content { padding-bottom: 80px; }
+
         ::-webkit-scrollbar { display: none; }
         #friend-requests-list { max-height: 300px; flex: initial; }
 
@@ -133,7 +144,8 @@
         .nav-bar {
             position: absolute; bottom: 0; left: 0; right: 0; display: flex; justify-content: space-around;
             background-color: var(--secondary-bg); border-top: 1px solid var(--border-color);
-            z-index: 15; padding-bottom: env(safe-area-inset-bottom); height: 60px;
+            z-index: 30; /* Augmenté pour être au dessus des profils secondaires */
+            padding-bottom: env(safe-area-inset-bottom); height: 60px;
         }
         .nav-item { position: relative; padding: 10px 15px; font-size: 24px; color: var(--action-color); cursor: pointer; text-align: center; transition: color 0.2s, transform 0.2s; }
         .nav-item.active { color: var(--highlight-color); transform: scale(1.1); }
@@ -640,7 +652,7 @@
         </div>
         
         <!-- VUE INFOS GROUPE PLEIN ECRAN -->
-        <div id="group-info-view" class="view secondary">
+        <div id="group-info-view" class="view group-info-view secondary">
             <div class="view-header">
                 <i id="group-info-back-btn" class="fas fa-arrow-left back-button"></i>
                 <h1 class="header-title">Infos du groupe</h1>
@@ -703,7 +715,7 @@
         </div>
         
         <!-- VUE INFO POST (Nouvelle page) -->
-        <div id="post-info-view" class="view secondary">
+        <div id="post-info-view" class="view post-info-view secondary">
              <div class="view-header">
                 <i id="close-post-info-btn" class="fas fa-arrow-left back-button"></i>
                 <h1 class="header-title">Infos publication</h1>
@@ -931,6 +943,16 @@
         function hideModal(el) { el.style.display = 'none'; }
         function showSecondaryView(el) { el.classList.add('visible'); }
         function hideSecondaryView(el) { el.classList.remove('visible'); }
+        
+        // UTILS
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) {
+                const context = this;
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(context, args), wait);
+            };
+        }
 
         const initAuth = async () => { if (initialAuthToken) await signInWithCustomToken(auth, initialAuthToken); };
         initAuth();
@@ -1212,6 +1234,9 @@
                 
                 document.getElementById('user-profile-back-btn').onclick = () => hideSecondaryView(view);
                 renderProfilePosts(uid, 'other-posts-grid');
+                
+                // --- MODIFICATION: Menu Actif & Affichage ---
+                navItems.forEach(item => item.classList.toggle('active', item.dataset.view === 'contacts-view'));
                 showSecondaryView(view);
             }
         }
@@ -1229,24 +1254,23 @@
 
         function renderProfilePosts(uid, gridId) {
             const grid = document.getElementById(gridId);
-            grid.innerHTML = '';
             const userPosts = postsData.filter(p => p.publisherId === uid && !p.isAnon);
+            
+            // OPTIMISATION: DocumentFragment
+            const fragment = document.createDocumentFragment();
             
             userPosts.forEach(p => {
                 const div = document.createElement('div'); div.className = 'post-thumbnail';
                 if (p.imageBase64) div.style.backgroundImage = `url('${p.imageBase64}')`;
                 else div.style.backgroundColor = p.backgroundColor;
                 
-                // Overlay View Count
                 div.innerHTML = `<div class="post-thumbnail-views"><i class="fas fa-eye"></i> ${p.views || 0}</div>`;
                 
                 div.onclick = () => {
                     if (uid === currentUserId) {
                         openPostOptions(p);
                     } else {
-                        // Open in feed
                         navigateTo('feed-view');
-                        // Optional: Scroll to post
                         setTimeout(() => {
                              const el = document.querySelector(`.post-card[data-post-id="${p.id}"]`);
                              if(el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -1254,8 +1278,12 @@
                         }, 300);
                     }
                 };
-                grid.appendChild(div);
+                fragment.appendChild(div);
             });
+            
+            // On vide et on remplace en une seule fois
+            grid.innerHTML = '';
+            grid.appendChild(fragment);
         }
         
         // --- POST OPTIONS & INFO ---
@@ -1333,13 +1361,20 @@
                     }
                 });
                 postsData.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-                updateTrendingStats();
-                renderFeed();
-                // Refresh profile posts if active
-                if(activeProfileUserId === currentUserId) renderProfilePosts(currentUserId, 'my-posts-grid');
-                else if(activeProfileUserId) renderProfilePosts(activeProfileUserId, 'other-posts-grid');
+                
+                // APPEL DEBOUNCED
+                debouncedRenderFeed();
             });
         }
+        
+        // --- DEBOUNCED RENDER FUNCTIONS ---
+        // Permet d'éviter de redessiner l'interface 10x si 10 likes arrivent en même temps
+        const debouncedRenderFeed = debounce(() => {
+            updateTrendingStats();
+            renderFeed();
+            if(activeProfileUserId === currentUserId) renderProfilePosts(currentUserId, 'my-posts-grid');
+            else if(activeProfileUserId) renderProfilePosts(activeProfileUserId, 'other-posts-grid');
+        }, 200);
 
         // --- TRENDING LOGIC ---
         function updateTrendingStats() {
@@ -1415,10 +1450,10 @@
             
             if (!filteredPostsData.length) { feedContent.innerHTML = "<p style='text-align:center;color:gray;padding:20px;'>Rien à afficher.</p>"; return; }
             
-            // View Increment Batching Logic
             const postsToIncrement = [];
-
-            feedContent.innerHTML = filteredPostsData.map(p => {
+            
+            // OPTIMISATION: Utilisation d'un gros string buffer au lieu d'appels DOM répétés
+            const feedHTML = filteredPostsData.map(p => {
                 const author = usersData[p.publisherId] || {username: 'Inconnu'};
                 const rem = p.expiresAt - new Date();
                 let bgStyle = `background-color:${p.backgroundColor}`;
@@ -1436,7 +1471,6 @@
                     postsToIncrement.push(p.id);
                 }
 
-                // Hashtag formatting
                 const formattedMessage = p.message.replace(/#[\p{L}\p{N}_]+/gu, (match) => {
                     return `<span class="post-hashtag" onclick="window.searchTag('${match}')">${match}</span>`;
                 });
@@ -1452,6 +1486,8 @@
                     </div>
                 </div>`;
             }).join('');
+            
+            feedContent.innerHTML = feedHTML;
             
             // Execute View Increments (Debounced or immediate)
             if (postsToIncrement.length > 0) {
