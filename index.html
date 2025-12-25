@@ -53,7 +53,6 @@
             background-color: var(--page-bg); 
             color: var(--text-color);
             overflow: hidden;
-            /* Optimisation mobile */
             overscroll-behavior-y: none;
         }
 
@@ -103,17 +102,12 @@
             width: 100%; height: 100%; flex-shrink: 0; overflow: hidden;
         }
         
-        /* OPTIMISATION Z-INDEX pour Navbar visible sur profil */
         .view.secondary {
             position: absolute; top: 0; left: 0; right: 0; bottom: 0;
             transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
             z-index: 20; visibility: hidden; background-color: var(--secondary-bg); will-change: transform;
         }
-        /* Les vues qui doivent couvrir la navbar */
-        .view.chat-view, .view.group-info-view, .view.post-creation-view, .view.post-info-view {
-            z-index: 40; 
-        }
-        
+        .view.chat-view, .view.group-info-view, .view.post-creation-view, .view.post-info-view { z-index: 40; }
         .view.secondary.visible { transform: translateX(0); visibility: visible; }
 
         .view-header {
@@ -134,23 +128,18 @@
         .header-placeholder { width: 40px; } 
         .back-button { font-size: 20px; cursor: pointer; width: 40px; text-align: left; }
 
-        /* Scroll Fix */
         .feed-content, .contacts-content, .chat-content, .profile-content, #friend-requests-list, .group-info-content, .post-info-content {
             flex: 1 1 0; overflow-y: auto; padding-bottom: 140px;
             -webkit-overflow-scrolling: touch; -ms-overflow-style: none; scrollbar-width: none;  
         }
-        
         #user-profile-view .profile-content { padding-bottom: 80px; }
-
         ::-webkit-scrollbar { display: none; }
         #friend-requests-list { max-height: 300px; flex: initial; }
 
-        /* --- Barre de Navigation --- */
         .nav-bar {
             position: absolute; bottom: 0; left: 0; right: 0; display: flex; justify-content: space-around;
             background-color: var(--secondary-bg); border-top: 1px solid var(--border-color);
-            z-index: 30; 
-            padding-bottom: env(safe-area-inset-bottom); height: 60px;
+            z-index: 30; padding-bottom: env(safe-area-inset-bottom); height: 60px;
         }
         .nav-item { position: relative; padding: 10px 15px; font-size: 24px; color: var(--action-color); cursor: pointer; text-align: center; transition: color 0.2s, transform 0.2s; }
         .nav-item.active { color: var(--highlight-color); transform: scale(1.1); }
@@ -161,25 +150,16 @@
             min-width: 16px; text-align: center; border: 1px solid white; z-index: 100;
         }
 
-        /* --- Feed --- */
         .post-card { background-color: var(--secondary-bg); border-bottom: 1px solid var(--border-color); margin-bottom: 8px; contain: content; }
         .post-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; font-size: 14px; }
         .post-publisher { font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; }
-        .post-countdown { 
-            font-size: 12px; color: var(--dislike-color); font-family: 'Roboto Mono', monospace;
-            font-weight: 700; background-color: #fcebeb; padding: 2px 6px; border-radius: 4px;
-        }
+        .post-countdown { font-size: 12px; color: var(--dislike-color); font-family: 'Roboto Mono', monospace; font-weight: 700; background-color: #fcebeb; padding: 2px 6px; border-radius: 4px; }
         .post-image-wrapper { width: 100%; padding-top: 100%; position: relative; background-size: cover; background-position: center; background-repeat: no-repeat; }
         .post-content-inner { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; padding: 20px; }
         .post-message { font-size: 22px; text-align: center; white-space: pre-wrap; word-wrap: break-word; }
-        .post-message.snap-text {
-            display: inline; background-color: rgba(0, 0, 0, 0.5); color: white; padding: 2px 6px;
-            line-height: 1.6; -webkit-box-decoration-break: clone; border-radius: 4px; text-shadow: none;
-        }
-        
+        .post-message.snap-text { display: inline; background-color: rgba(0, 0, 0, 0.5); color: white; padding: 2px 6px; line-height: 1.6; -webkit-box-decoration-break: clone; border-radius: 4px; text-shadow: none; }
         .post-hashtag { color: var(--hashtag-color); font-weight: 600; cursor: pointer; z-index: 10; position: relative; }
         .post-message.snap-text .post-hashtag { color: #81d4fa; text-decoration: underline; }
-
         .post-actions { display: flex; padding: 8px 15px; gap: 20px; align-items: center; }
         .action-button { display: flex; align-items: center; gap: 8px; font-size: 18px; color: var(--action-color); cursor: pointer; }
         .action-button span { font-size: 14px; font-weight: 600; }
@@ -188,59 +168,28 @@
         .action-button.share-btn { margin-left: auto; } 
         .action-button.view-count { cursor: default; margin-left: 10px; }
 
-        /* --- Amis & Groupes --- */
-        .contacts-view { position: relative; } 
-        .search-bar-container { 
-            display: flex; gap: 10px; padding: 10px; background-color: var(--primary-bg); flex-shrink: 0; align-items: center;
-        }
+        .search-bar-container { display: flex; gap: 10px; padding: 10px; background-color: var(--primary-bg); flex-shrink: 0; align-items: center; }
         #search-input { flex-grow: 1; padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--secondary-bg); font-size: 14px; }
-        #create-group-btn {
-            width: 40px; height: 40px; background-color: black; color: white; border: none; border-radius: 8px;
-            display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer;
-        }
-
+        #create-group-btn { width: 40px; height: 40px; background-color: black; color: white; border: none; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; }
         .friend-item { display: flex; align-items: center; padding: 10px 15px; border-bottom: 1px solid var(--border-color); cursor: pointer; transition: background-color 0.2s; contain: content; }
         .friend-item:hover { background-color: #f9f9f9; }
         .friend-pp { width: 50px; height: 50px; border-radius: 50%; margin-right: 15px; object-fit: cover; }
         .friend-info { flex-grow: 1; min-width: 0; }
         .friend-info h4 { margin: 0 0 4px 0; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display:flex; align-items:center; gap:5px;}
         .friend-info p { margin: 0; font-size: 12px; color: var(--last-seen-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        
         .dm-button-container { position: relative; }
         .dm-button { background-color: var(--highlight-color); color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: 600; }
-        .dm-unread-badge {
-            position: absolute; top: -5px; right: -5px; background-color: var(--dislike-color); color: white;
-            border-radius: 50%; padding: 2px 6px; font-size: 10px; font-weight: bold; border: 2px solid white;
-        }
+        .dm-unread-badge { position: absolute; top: -5px; right: -5px; background-color: var(--dislike-color); color: white; border-radius: 50%; padding: 2px 6px; font-size: 10px; font-weight: bold; border: 2px solid white; }
+        #add-friend-fab { position: absolute; bottom: calc(80px + env(safe-area-inset-bottom)); right: 20px; width: 56px; height: 56px; background-color: var(--highlight-color); color: white; border-radius: 50%; border: none; font-size: 24px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3); cursor: pointer; z-index: 100; }
+        .request-badge { position: absolute; top: -5px; right: -5px; background-color: var(--dislike-color); color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; border: 2px solid var(--secondary-bg); z-index: 101; }
+        .request-count-badge { background-color: var(--dislike-color); color: white; font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 12px; margin-left: 8px; }
         
-        /* FAB */
-        #add-friend-fab {
-            position: absolute; bottom: calc(80px + env(safe-area-inset-bottom)); right: 20px;
-            width: 56px; height: 56px; background-color: var(--highlight-color); color: white;
-            border-radius: 50%; border: none; font-size: 24px; display: flex; align-items: center;
-            justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3); cursor: pointer; z-index: 100;
-        }
-        .request-badge {
-            position: absolute; top: -5px; right: -5px; background-color: var(--dislike-color); color: white;
-            width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center;
-            justify-content: center; font-size: 12px; font-weight: 700; border: 2px solid var(--secondary-bg); z-index: 101;
-        }
-        .request-count-badge {
-            background-color: var(--dislike-color); color: white; font-size: 12px;
-            font-weight: 700; padding: 2px 8px; border-radius: 12px; margin-left: 8px;
-        }
-        
-        /* --- Chat --- */
         .chat-view .view-header { gap: 10px; }
         #chat-user-pp { width: 40px; height: 40px; border-radius: 50%; object-fit: cover;}
         .chat-view .header-title { flex-grow: 1; text-align: left; }
         .chat-content { background-color: #FFFFFF; padding: 15px; display: flex; flex-direction: column; gap: 8px; }
-        
         .message-container { display: flex; flex-direction: column; width: 100%; margin-bottom: 5px; }
-        .message-bubble { 
-            max-width: 75%; padding: 10px 14px; border-radius: 20px; font-size: 15px; 
-            line-height: 1.4; word-wrap: break-word; position: relative;
-        }
+        .message-bubble { max-width: 75%; padding: 10px 14px; border-radius: 20px; font-size: 15px; line-height: 1.4; word-wrap: break-word; position: relative; }
         .chat-sticker { width: 150px; height: 150px; object-fit: contain; display: block; margin: 5px 0; }
         .message-time { font-size: 10px; margin-top: 4px; display: block; opacity: 0.6; text-align: right; font-weight: 600; }
         .message-container.sent { align-items: flex-end; }
@@ -249,28 +198,17 @@
         .message-bubble.received { background-color: var(--chat-bubble-received); color: black; border-bottom-left-radius: 4px; }
         .message-read-status { font-size: 10px; margin-left: 5px; opacity: 0.8; }
         .message-sender-pseudo { font-size: 12px; color: #666; margin-bottom: 4px; margin-left: 12px; font-weight: 700; }
-
-        .chat-footer { 
-            display: flex; align-items: center; padding: 10px; background-color: var(--secondary-bg); 
-            border-top: 1px solid var(--border-color); gap: 10px; position: relative;
-        }
+        .chat-footer { display: flex; align-items: center; padding: 10px; background-color: var(--secondary-bg); border-top: 1px solid var(--border-color); gap: 10px; position: relative; }
         #emoji-btn { font-size: 24px; color: var(--text-color); cursor: pointer; background: none; border: none; padding: 5px; }
         #chat-input-wrapper { flex-grow: 1; background-color: var(--primary-bg); border-radius: 24px; padding: 0 15px; border: 1px solid var(--border-color); display: flex; align-items: center; }
         #message-input { flex-grow: 1; border: none; background: transparent; padding: 12px 0; font-size: 15px; outline: none; }
         #send-button { width: 40px; height: 40px; border-radius: 50%; background-color: var(--highlight-color); border: none; font-size: 16px; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         #send-button:disabled { opacity: 0.5; cursor: default; }
-
-        #emoji-picker {
-            position: absolute; bottom: 70px; left: 10px; background-color: var(--secondary-bg);
-            border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
-            padding: 15px; display: none; grid-template-columns: repeat(4, 1fr); gap: 10px;
-            width: 320px; max-width: 90vw; z-index: 50; max-height: 250px; overflow-y: auto;
-        }
+        #emoji-picker { position: absolute; bottom: 70px; left: 10px; background-color: var(--secondary-bg); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 -4px 12px rgba(0,0,0,0.1); padding: 15px; display: none; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 320px; max-width: 90vw; z-index: 50; max-height: 250px; overflow-y: auto; }
         #emoji-picker.show { display: grid; }
         .picker-sticker { width: 60px; height: 60px; cursor: pointer; object-fit: contain; transition: transform 0.2s; }
         .picker-sticker:hover { transform: scale(1.1); }
 
-        /* --- Profil --- */
         .profile-header { display: flex; align-items: center; padding: 15px; gap: 15px; background-color: var(--secondary-bg); border-bottom: 1px solid var(--border-color); }
         .profile-pic { width: 80px; height: 80px; border-radius: 50%; }
         .profile-info-main { flex-grow: 1; }
@@ -288,58 +226,31 @@
         .profile-details p { margin: 0 0 15px 0; line-height: 1.5; }
         #logout-btn { width: 100%; margin-top: 20px; padding: 12px; background-color: var(--primary-bg); color: var(--dislike-color); border: 1px solid var(--button-border); border-radius: 6px; font-weight: 600; cursor: pointer; display: none; } 
         
-        /* Profile Post Grid */
         .profile-posts-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; padding-top: 2px; }
-        .post-thumbnail {
-            position: relative; width: 100%; padding-top: 100%; background-color: #eee; background-size: cover; background-position: center; cursor: pointer;
-            contain: strict;
-        }
-        .post-thumbnail-views {
-            position: absolute; bottom: 5px; right: 5px; background: rgba(0,0,0,0.6); color: white;
-            padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; display: flex; align-items: center; gap: 4px;
-        }
+        .post-thumbnail { position: relative; width: 100%; padding-top: 100%; background-color: #eee; background-size: cover; background-position: center; cursor: pointer; contain: strict; }
+        .post-thumbnail-views { position: absolute; bottom: 5px; right: 5px; background: rgba(0,0,0,0.6); color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; display: flex; align-items: center; gap: 4px; }
 
-        /* --- Toast --- */
         #toast-message { position: absolute; bottom: 80px; left: 50%; transform: translate(-50%, 100%); background-color: rgba(0, 0, 0, 0.75); color: white; padding: 10px 20px; border-radius: 20px; font-size: 14px; z-index: 2000; opacity: 0; transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out; pointer-events: none; }
         #toast-message.show { transform: translate(-50%, 0); opacity: 1; }
         #toast-message.success { background-color: #28a745; }
         #toast-message.error { background-color: #dc3545; }
         
-        /* --- Modales --- */
-        .modal-backdrop {
-            position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.5);
-            z-index: 150; display: none; align-items: center; justify-content: center; padding: 15px;
-        }
-        .modal-content {
-            background: var(--secondary-bg); padding: 20px; border-radius: 12px; width: 100%; max-width: 350px;
-            display: flex; flex-direction: column; gap: 15px;
-        }
+        .modal-backdrop { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.5); z-index: 150; display: none; align-items: center; justify-content: center; padding: 15px; }
+        .modal-content { background: var(--secondary-bg); padding: 20px; border-radius: 12px; width: 100%; max-width: 350px; display: flex; flex-direction: column; gap: 15px; }
         .modal-content h3 { margin: 0 0 10px 0; text-align: center; }
         .modal-content label { font-size: 14px; font-weight: 600; }
-        .modal-content input, .modal-content textarea {
-            width: 100%; padding: 8px; border: 1px solid var(--border-color);
-            border-radius: 6px; font-size: 14px;
-        }
+        .modal-content input, .modal-content textarea { width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 14px; }
         .modal-content textarea { resize: vertical; min-height: 60px; }
         #edit-color-swatches { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
-        .edit-color-swatch {
-            width: 30px; height: 30px; border-radius: 50%; cursor: pointer;
-            border: 2px solid transparent; transition: border-color 0.2s;
-        }
+        .edit-color-swatch { width: 30px; height: 30px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: border-color 0.2s; }
         .edit-color-swatch.selected { border-color: var(--highlight-color); }
         .modal-actions { display: flex; gap: 10px; margin-top: 10px; }
-        .modal-actions button {
-            flex-grow: 1; padding: 10px; border-radius: 6px; border: none; font-weight: 600; font-size: 16px; cursor: pointer;
-        }
+        .modal-actions button { flex-grow: 1; padding: 10px; border-radius: 6px; border: none; font-weight: 600; font-size: 16px; cursor: pointer; }
         #save-profile-btn { background-color: var(--highlight-color); color: white; }
-        #cancel-edit-btn, #cancel-friend-options-btn, #cancel-friend-requests-btn, #cancel-paste-id-btn, #cancel-add-group-member-btn, #cancel-member-options-btn, #cancel-trending-btn, #cancel-post-options-btn, #close-post-info-btn { 
-            background-color: #f0f0f0; color: var(--text-color); 
-        }
+        #cancel-edit-btn, #cancel-friend-options-btn, #cancel-friend-requests-btn, #cancel-paste-id-btn, #cancel-add-group-member-btn, #cancel-member-options-btn, #cancel-trending-btn, #cancel-post-options-btn, #close-post-info-btn { background-color: #f0f0f0; color: var(--text-color); }
 
         #friend-options-modal .modal-content { gap: 10px; }
-        .friend-option-button {
-            display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background-color 0.2s;
-        }
+        .friend-option-button { display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background-color 0.2s; }
         .friend-option-button:hover { background-color: #f9f9f9; }
         .friend-option-button i { width: 20px; text-align: center; color: var(--action-color); }
         .friend-option-button-text { display: flex; align-items: center; gap: 15px; }
@@ -357,24 +268,16 @@
         .request-accept-btn { background-color: var(--switch-on); color: white; }
         .request-reject-btn { background-color: var(--dislike-color); color: white; }
 
-        /* --- STYLES GROUPES --- */
         #create-group-modal .modal-content, #add-group-member-modal .modal-content { max-height: 80vh; }
         #group-friends-list, #add-member-friends-list { max-height: 200px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 6px; }
         .group-friend-select-item { display: flex; align-items: center; padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; }
         .group-friend-select-item input { width: auto; margin-right: 10px; }
         #cancel-group-modal-btn { background-color: #f0f0f0; color: var(--text-color); }
 
-        /* VUE INFO GROUPE PLEIN ECRAN */
-        .group-info-header-icon {
-            width: 80px; height: 80px; background: #eee; border-radius: 50%; margin: 20px auto;
-            display: flex; align-items: center; justify-content: center; font-size: 30px; color: #888;
-        }
+        .group-info-header-icon { width: 80px; height: 80px; background: #eee; border-radius: 50%; margin: 20px auto; display: flex; align-items: center; justify-content: center; font-size: 30px; color: #888; }
         .group-field-container { padding: 15px; border-bottom: 1px solid #f0f0f0; background: white; display: flex; flex-direction: column; }
         .group-input-wrapper { display: flex; align-items: center; gap: 10px; }
-        .group-input-clean {
-            flex-grow: 1; border: none; border-bottom: 1px solid var(--border-color);
-            padding: 10px 0; font-size: 16px; outline: none; background: transparent; transition: border-color 0.3s;
-        }
+        .group-input-clean { flex-grow: 1; border: none; border-bottom: 1px solid var(--border-color); padding: 10px 0; font-size: 16px; outline: none; background: transparent; transition: border-color 0.3s; }
         .group-input-clean:focus { border-bottom-color: var(--highlight-color); }
         .group-input-clean:disabled { color: var(--text-color); border-bottom: none; background: transparent; }
         .group-save-btn { background: var(--highlight-color); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; display: none; }
@@ -388,156 +291,74 @@
         .admin-badge { background: #e0f2f1; color: #00695c; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 5px; font-weight: bold; }
         .founder-badge { background: #fff8e1; color: #f57f17; border: 1px solid #ffecb3; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 5px; font-weight: bold; }
         .group-danger-zone { padding: 30px 15px; text-align: center; }
-        .btn-danger-outline {
-            border: 1px solid var(--dislike-color); color: var(--dislike-color); background: transparent;
-            padding: 12px 20px; border-radius: 8px; font-weight: 600; width: 100%; cursor: pointer;
-        }
-        .btn-add-member {
-            width: 100%; padding: 12px; background: var(--secondary-bg); border: 1px dashed var(--highlight-color);
-            color: var(--highlight-color); border-radius: 8px; margin-top: 10px; cursor: pointer; font-weight: 600;
-        }
+        .btn-danger-outline { border: 1px solid var(--dislike-color); color: var(--dislike-color); background: transparent; padding: 12px 20px; border-radius: 8px; font-weight: 600; width: 100%; cursor: pointer; }
+        .btn-add-member { width: 100%; padding: 12px; background: var(--secondary-bg); border: 1px dashed var(--highlight-color); color: var(--highlight-color); border-radius: 8px; margin-top: 10px; cursor: pointer; font-weight: 600; }
 
-        /* --- Styles Création de post --- */
         #post-creation-view .view-header { justify-content: space-between; }
-        #publish-button {
-            font-size: 16px; font-weight: 600; color: var(--highlight-color);
-            background: none; border: none; cursor: pointer;
-        }
+        #publish-button { font-size: 16px; font-weight: 600; color: var(--highlight-color); background: none; border: none; cursor: pointer; }
         #publish-button:disabled { color: var(--last-seen-color); cursor: not-allowed; }
-        .post-input-area {
-            flex-grow: 1; display: flex; flex-direction: column; align-items: center;
-            justify-content: center; padding: 20px; overflow-y: hidden; background-color: var(--secondary-bg);
-        }
-        #square-content {
-            width: 100%; padding-top: 100%; position: relative; background-color: #f1f1f1; border-radius: 12px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); transition: background-color 0.3s ease-in-out;
-            cursor: text; background-size: cover; background-position: center; overflow: hidden;
-        }
+        .post-input-area { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; overflow-y: hidden; background-color: var(--secondary-bg); }
+        #square-content { width: 100%; padding-top: 100%; position: relative; background-color: #f1f1f1; border-radius: 12px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); transition: background-color 0.3s ease-in-out; cursor: text; background-size: cover; background-position: center; overflow: hidden; }
         
-        /* OVERLAY HASHTAGS */
-        #post-textarea, #input-highlighter {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            box-sizing: border-box; padding: 20px; border: none; 
-            text-align: center; font-size: 20px; line-height: 1.4;
-            font-family: inherit; font-weight: inherit;
-            overflow: auto; white-space: pre-wrap; word-wrap: break-word;
-            margin: 0;
-        }
-        
-        #input-highlighter {
-            z-index: 1; pointer-events: none; color: var(--text-color); background: transparent;
-        }
+        #post-textarea, #input-highlighter { position: absolute; top: 0; left: 0; width: 100%; height: 100%; box-sizing: border-box; padding: 20px; border: none; text-align: center; font-size: 20px; line-height: 1.4; font-family: inherit; font-weight: inherit; overflow: auto; white-space: pre-wrap; word-wrap: break-word; margin: 0; }
+        #input-highlighter { z-index: 1; pointer-events: none; color: var(--text-color); background: transparent; }
         #input-highlighter.has-image-overlay { color: white; text-shadow: 0 1px 4px rgba(0,0,0,0.8); }
         #input-highlighter.has-image-overlay .hashtag-highlight { color: #81d4fa; text-shadow: none; }
-        
         .hashtag-highlight { color: var(--hashtag-color); }
-        
-        #post-textarea {
-            z-index: 2; background: transparent; color: transparent; caret-color: var(--text-color); resize: none; outline: none;
-        }
+        #post-textarea { z-index: 2; background: transparent; color: transparent; caret-color: var(--text-color); resize: none; outline: none; }
         #post-textarea::placeholder { color: #aaa; }
         #post-textarea.has-image { color: transparent; text-shadow: none; caret-color: white; } 
-        
-        /* Pour que le texte soit visible normalement dans le highlighter */
         #input-highlighter span.normal-text { color: var(--text-color); }
         #input-highlighter.has-image-overlay span.normal-text { color: white; }
 
-        .char-limit-indicator {
-            margin-top: 10px; font-size: 12px; color: var(--last-seen-color); text-align: right; width: 100%;
-        }
+        .char-limit-indicator { margin-top: 10px; font-size: 12px; color: var(--last-seen-color); text-align: right; width: 100%; }
         .char-limit-indicator.error { color: var(--dislike-color); font-weight: 600; }
-        .post-controls {
-            padding: 15px 20px; background-color: var(--secondary-bg); border-top: 1px solid var(--border-color);
-            display: flex; flex-direction: column; gap: 15px;
-        }
+        .post-controls { padding: 15px 20px; background-color: var(--secondary-bg); border-top: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 15px; }
         .control-row { display: flex; align-items: center; justify-content: space-between; }
         .control-row label { font-size: 14px; font-weight: 600; }
         .color-swatches-container { display: flex; gap: 8px; }
-        .color-swatch {
-            width: 30px; height: 30px; border-radius: 50%; border: 2px solid transparent;
-            cursor: pointer; transition: border-color 0.2s;
-        }
+        .color-swatch { width: 30px; height: 30px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; transition: border-color 0.2s; }
         .color-swatch.selected { border-color: var(--highlight-color); box-shadow: 0 0 0 2px white; }
-        .control-button {
-            width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--button-border);
-            background-color: var(--primary-bg); display: flex; align-items: center; justify-content: center;
-            font-size: 18px; cursor: pointer; transition: background-color 0.2s;
-        }
+        .control-button { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--button-border); background-color: var(--primary-bg); display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; transition: background-color 0.2s; }
         .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
         .switch input { opacity: 0; width: 0; height: 0; }
-        .slider {
-            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
-            background-color: var(--switch-off); transition: .4s; border-radius: 24px;
-        }
-        .slider:before {
-            position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px;
-            background-color: white; transition: .4s; border-radius: 50%;
-        }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--switch-off); transition: .4s; border-radius: 24px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
         input:checked + .slider { background-color: var(--switch-on); }
         input:checked + .slider:before { transform: translateX(20px); }
 
-        /* Styles pour la capture d'image (caché) */
         #share-capture-container { position: fixed; top: -9999px; left: -9999px; width: 400px; height: 400px; z-index: -1; }
-        .capture-card {
-            width: 100%; height: 100%; position: relative; display: flex; align-items: center;
-            justify-content: center; padding: 20px; text-align: center; background-size: cover; background-position: center;
-        }
-        .capture-publisher {
-            position: absolute; top: 20px; left: 0; width: 100%; text-align: center; font-weight: 700;
-            font-size: 24px; color: rgba(0,0,0,0.5); z-index: 10;
-        }
-        .capture-watermark {
-            position: absolute; bottom: 10px; right: 15px; font-size: 12px; font-weight: 600;
-            color: rgba(0,0,0,0.3); font-family: 'Pacifico', cursive;
-        }
+        .capture-card { width: 100%; height: 100%; position: relative; display: flex; align-items: center; justify-content: center; padding: 20px; text-align: center; background-size: cover; background-position: center; }
+        .capture-publisher { position: absolute; top: 20px; left: 0; width: 100%; text-align: center; font-weight: 700; font-size: 24px; color: rgba(0,0,0,0.5); z-index: 10; }
+        .capture-watermark { position: absolute; bottom: 10px; right: 15px; font-size: 12px; font-weight: 600; color: rgba(0,0,0,0.3); font-family: 'Pacifico', cursive; }
 
-        /* --- Modale Cropper --- */
-        #cropper-modal .modal-content {
-            max-width: 90vw; width: 400px; align-items: center; background: #222; color: white;
-        }
-        #cropper-canvas {
-            max-width: 100%; border: 1px solid var(--border-color); background: #000; touch-action: none; 
-        }
+        #cropper-modal .modal-content { max-width: 90vw; width: 400px; align-items: center; background: #222; color: white; }
+        #cropper-canvas { max-width: 100%; border: 1px solid var(--border-color); background: #000; touch-action: none; }
 
-        /* --- TRENDING SIDEBAR --- */
-        #trending-sidebar {
-            position: absolute; top: 0; left: 0; bottom: 0; width: 280px; max-width: 80%;
-            background-color: var(--secondary-bg); z-index: 1100;
-            transform: translateX(-100%); transition: transform 0.3s ease-in-out;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.1); display: flex; flex-direction: column;
-        }
+        #trending-sidebar { position: absolute; top: 0; left: 0; bottom: 0; width: 280px; max-width: 80%; background-color: var(--secondary-bg); z-index: 1100; transform: translateX(-100%); transition: transform 0.3s ease-in-out; box-shadow: 2px 0 10px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
         #trending-sidebar.open { transform: translateX(0); }
-        .trending-header {
-            padding: 20px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between;
-        }
+        .trending-header { padding: 20px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; }
         .trending-header h2 { margin: 0; font-size: 18px; display: flex; align-items: center; gap: 10px; }
         .trending-list { padding: 20px; flex-grow: 1; overflow-y: auto; }
-        .trending-item {
-            padding: 12px 0; border-bottom: 1px solid #f0f0f0; cursor: pointer;
-        }
+        .trending-item { padding: 12px 0; border-bottom: 1px solid #f0f0f0; cursor: pointer; }
         .trending-item:last-child { border-bottom: none; }
         .trending-rank { font-weight: bold; margin-right: 10px; color: var(--highlight-color); }
         .trending-tag { font-weight: 600; font-size: 16px; }
         .trending-count { display: block; font-size: 12px; color: var(--last-seen-color); margin-top: 4px; margin-left: 20px; }
-        .sidebar-overlay {
-            position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.5);
-            z-index: 1050; display: none;
-        }
+        .sidebar-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.5); z-index: 1050; display: none; }
         .sidebar-overlay.show { display: block; }
         
-        /* INFO POST VIEW */
         .info-stat-row { display: flex; justify-content: space-between; padding: 15px; border-bottom: 1px solid #eee; background: white; }
         .info-stat-box { text-align: center; flex: 1; }
         .info-stat-val { font-size: 20px; font-weight: bold; display: block; }
         .info-stat-label { font-size: 12px; color: var(--last-seen-color); }
         .not-seen-list { background: white; margin-top: 10px; }
 
-        /* BADGES */
         .user-badge { margin-left: 4px; font-size: 12px; vertical-align: middle; }
-        .badge-staff { color: #3897f0; } /* Blue check */
-        .badge-vip { color: #F1C40F; } /* Gold Star */
-        .badge-certif { color: #2ECC71; } /* Green check */
-        .badge-patron { color: #8e44ad; } /* Purple briefcase */
+        .badge-staff { color: #3897f0; } 
+        .badge-vip { color: #F1C40F; } 
+        .badge-certif { color: #2ECC71; } 
+        .badge-patron { color: #8e44ad; } 
 
     </style>
 </head>
@@ -561,7 +382,6 @@
     <!-- APPLICATION PRINCIPALE -->
     <div id="app-container" class="container">
         
-        <!-- SIDEBAR TENDANCES -->
         <div id="sidebar-overlay" class="sidebar-overlay"></div>
         <div id="trending-sidebar">
             <div class="trending-header">
@@ -588,7 +408,6 @@
             <!-- VUE AMIS / GROUPES -->
             <div id="contacts-view" class="view contacts-view">
                 <div class="view-header"><div class="header-placeholder"></div><h1 class="header-title">Conversations</h1><div class="header-placeholder"></div></div>
-                <!-- BARRE RECHERCHE MODIFIEE -->
                 <div class="search-bar-container">
                     <input type="text" id="search-input" placeholder="Rechercher...">
                     <button id="create-group-btn"><i class="fas fa-users-cog"></i></button>
@@ -620,7 +439,6 @@
 
         <!-- VUES SECONDAIRES -->
         
-        <!-- VUE PROFIL AUTRE UTILISATEUR (Secondaire) -->
         <div id="user-profile-view" class="view secondary">
             <div class="view-header">
                 <i id="user-profile-back-btn" class="fas fa-arrow-left back-button"></i>
@@ -661,7 +479,6 @@
             </div>
         </div>
         
-        <!-- VUE INFOS GROUPE PLEIN ECRAN -->
         <div id="group-info-view" class="view group-info-view secondary">
             <div class="view-header">
                 <i id="group-info-back-btn" class="fas fa-arrow-left back-button"></i>
@@ -705,7 +522,6 @@
                 <div id="square-content" class="font-inter">
                     <div id="input-highlighter"></div>
                     <textarea id="post-textarea" placeholder="Exprimez-vous..." maxlength="200"></textarea> 
-                    <!-- Maxlength augmenté pour permettre la saisie, géré par JS pour la limite réelle -->
                 </div>
                 <div class="char-limit-indicator"><span id="char-count">0</span> / 70</div>
             </div>
@@ -724,7 +540,6 @@
             </div>
         </div>
         
-        <!-- VUE INFO POST (Nouvelle page) -->
         <div id="post-info-view" class="view post-info-view secondary">
              <div class="view-header">
                 <i id="close-post-info-btn" class="fas fa-arrow-left back-button"></i>
@@ -762,7 +577,6 @@
     <div id="paste-id-modal" class="modal-backdrop"><div class="modal-content"><h3>Ajouter un ami par ID</h3><p style="font-size: 14px; color: var(--last-seen-color); text-align: center;">Collez l'ID de l'utilisateur.</p><div><label>ID de l'utilisateur</label><input type="text" id="paste-id-input" placeholder="Coller l'ID ici..."></div><div class="modal-actions"><button id="cancel-paste-id-btn">Annuler</button><button id="send-friend-request-btn" style="background-color: var(--highlight-color); color: white;">Envoyer</button></div></div></div>
     <div id="friend-requests-modal" class="modal-backdrop"><div class="modal-content"><h3>Demandes d'amis</h3><div id="friend-requests-list"></div><div class="modal-actions"><button id="cancel-friend-requests-btn">Fermer</button></div></div></div>
 
-    <!-- Modale Création de Groupe -->
     <div id="create-group-modal" class="modal-backdrop">
         <div class="modal-content">
             <h3>Nouveau Groupe</h3>
@@ -776,7 +590,6 @@
         </div>
     </div>
     
-    <!-- Modale Ajouter Membre Groupe -->
     <div id="add-group-member-modal" class="modal-backdrop">
         <div class="modal-content">
             <h3>Ajouter au groupe</h3>
@@ -801,7 +614,6 @@
         </div>
     </div>
 
-    <!-- Modale Options Membre Groupe -->
     <div id="group-member-options-modal" class="modal-backdrop">
         <div class="modal-content">
             <h3 id="member-options-title">Options</h3>
@@ -814,7 +626,6 @@
         </div>
     </div>
 
-    <!-- Modale Options Post Perso -->
     <div id="post-options-modal" class="modal-backdrop">
         <div class="modal-content">
             <h3>Options publication</h3>
@@ -827,7 +638,6 @@
         </div>
     </div>
 
-    <!-- Modale Recadrage Image -->
     <div id="cropper-modal" class="modal-backdrop">
         <div class="modal-content" style="background: #222; color: white;">
             <h3>Recadrer l'image</h3>
@@ -847,7 +657,6 @@
         import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, getDoc, setDoc, updateDoc, onSnapshot, query, arrayUnion, arrayRemove, writeBatch, serverTimestamp, addDoc, deleteDoc, where, increment, orderBy, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
-        // --- APP ID ---
         const appId = '1:541715107757:web:0141b71ee3cd1ce5ec5b24'; 
         
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
@@ -908,7 +717,6 @@
         let isLoginMode = true;
         let referralId = null;
 
-        // --- VARS IMAGES & QUALITÉ ---
         let currentImageBase64 = null;
         let cropperImage = new Image();
         let cropperState = { scale: 1, x: 0, y: 0, isDragging: false, startX: 0, startY: 0 };
@@ -929,7 +737,6 @@
         const squareContent = document.getElementById('square-content');
         const anonymousSwitch = document.getElementById('anonymous-switch-input');
         
-        // Image controls
         const imageUploadInput = document.getElementById('image-upload-input');
         const addImageButton = document.getElementById('add-image-button');
         const removeImageButton = document.getElementById('remove-image-button');
@@ -967,7 +774,6 @@
         const initAuth = async () => { if (initialAuthToken) await signInWithCustomToken(auth, initialAuthToken); };
         initAuth();
 
-        // Récupération Referral
         const urlParams = new URLSearchParams(window.location.search);
         if(urlParams.get('ref')) {
             referralId = urlParams.get('ref');
@@ -1052,9 +858,8 @@
                     username: user.displayName || `user_${user.uid.substring(0, 4)}`, 
                     profileColor: PROFILE_COLORS[Math.floor(Math.random() * PROFILE_COLORS.length)],
                     accountCreatedAt: serverTimestamp(), friends: [], postsCount: 0, blockedUsers: [],
-                    badges: [] // Init badges
+                    badges: [] 
                 };
-                // Add referral if present
                 if(referralId && referralId !== user.uid) {
                     newData.referredBy = referralId;
                 }
@@ -1069,7 +874,7 @@
             if (viewIndex === -1) return;
             viewWrapper.style.transform = `translateX(-${viewIndex * 100}%)`;
             navItems.forEach(item => { item.classList.toggle('active', item.dataset.view === viewId); });
-            // Profile view is strictly for ME
+            // Le problème de boucle infinie était ici
             if (viewId === 'profile-view') showProfile(currentUserId);
         }
 
@@ -1088,13 +893,13 @@
             return html;
         }
 
-        // OPTIMISATION MOBILE: Limite à 50 utilisateurs pour éviter la saturation mémoire
         function listenToAllUsers() {
             unsubscribeUsersListener = onSnapshot(query(usersCollectionRef, limit(50)), (snapshot) => {
                 snapshot.forEach((doc) => { usersData[doc.id] = { id: doc.id, ...doc.data() }; });
                 blockedUsers = usersData[currentUserId]?.blockedUsers || [];
                 renderFriendsList(); 
-                if (activeProfileUserId) showProfile(activeProfileUserId);
+                // Only refresh profile if it's someone else's profile to avoid jitter
+                if (activeProfileUserId && activeProfileUserId !== currentUserId) showProfile(activeProfileUserId);
             });
         }
         
@@ -1223,7 +1028,7 @@
         }
 
         async function showProfile(uid) {
-            // Optimisation: Annuler l'ancien listener de profil si on change d'user
+            // FIX: Clear previous profile listener
             if(unsubscribeProfilePostsListener) {
                 unsubscribeProfilePostsListener();
                 unsubscribeProfilePostsListener = null;
@@ -1262,7 +1067,7 @@
                 document.getElementById('creation-date').textContent = date;
                 document.getElementById('edit-bio-btn').style.display = 'block';
                 document.getElementById('logout-btn').style.display = 'block'; 
-                navigateTo('profile-view');
+                // CORRECTION ICI: Suppression de l'appel récursif navigateTo
             } else {
                 const view = document.getElementById('user-profile-view');
                 document.getElementById('other-profile-username').innerHTML = `${u.username} ${getBadgesHTML(u)}`;
@@ -1289,7 +1094,6 @@
                 
                 document.getElementById('user-profile-back-btn').onclick = () => hideSecondaryView(view);
                 
-                navItems.forEach(item => item.classList.toggle('active', item.dataset.view === 'contacts-view'));
                 showSecondaryView(view);
             }
         }
@@ -1342,7 +1146,6 @@
             });
         }
         
-        // --- POST OPTIONS & INFO ---
         function openPostOptions(post) {
             selectedPostId = post.id;
             const modal = document.getElementById('post-options-modal');
@@ -1402,7 +1205,6 @@
             showSecondaryView(view);
         }
 
-        // OPTIMISATION MOBILE: Limit à 40 posts pour le flux
         function listenToFeed() {
             unsubscribeFeedListener = onSnapshot(query(postsCollectionRef, limit(40)), (snap) => {
                 const now = new Date();
@@ -1430,7 +1232,6 @@
             else if(activeProfileUserId) renderProfilePosts(activeProfileUserId, 'other-posts-grid');
         }, 200);
 
-        // --- TRENDING LOGIC ---
         function updateTrendingStats() {
             const tagCounts = {};
             postsData.forEach(p => {
@@ -1511,7 +1312,6 @@
                 const rem = p.expiresAt - new Date();
                 let bgStyle = `background-color:${p.backgroundColor}`;
                 let txtClass = p.fontClass;
-                // Optimisation: si base64, on l'utilise
                 if(p.imageBase64) { bgStyle = `background-image: url('${p.imageBase64}')`; txtClass += " snap-text"; }
 
                 const hasLiked = (p.likedBy||[]).includes(currentUserId);
@@ -1607,7 +1407,6 @@
         };
         window.showProfile = showProfile; 
 
-        // --- GESTION DES GROUPES ---
         document.getElementById('create-group-btn').onclick = () => {
             document.getElementById('group-name-input').value = '';
             document.getElementById('group-desc-input').value = '';
@@ -1641,7 +1440,6 @@
             } catch(e) { console.error(e); showMessage("Erreur.", false); }
         };
 
-        // --- CHAT LOGIC ---
         function getChatId(u1, u2) { return [u1, u2].sort().join('_'); }
         
         async function showChat(id, type = 'user') {
@@ -1777,7 +1575,6 @@
 
         document.getElementById('chat-back-btn').onclick = () => hideSecondaryView(document.getElementById('chat-view'));
 
-        // --- GROUP INFO VIEW ---
         function openGroupInfo(groupId, groupData) {
             const view = document.getElementById('group-info-view');
             const nameInp = document.getElementById('group-info-name');
@@ -1795,7 +1592,6 @@
             nameInp.disabled = !isAdmin; descInp.disabled = !isAdmin;
             addMemberBtn.style.display = 'block'; 
             
-            // Manual Save Buttons Logic
             if(isAdmin) {
                 saveNameBtn.style.display = 'block';
                 saveDescBtn.style.display = 'block';
@@ -1849,7 +1645,6 @@
             showSecondaryView(view);
         }
 
-        // --- GESTION MEMBRES MODALE ---
         function openMemberOptions(groupId, memberId, isTargetAdmin) {
             if(memberId === currentUserId) return; 
             const modal = document.getElementById('group-member-options-modal');
@@ -1879,7 +1674,6 @@
             showModal(modal);
         }
 
-        // --- AJOUTER MEMBRES MODALE ---
         function openAddMemberModal(groupId) {
             const modal = document.getElementById('add-group-member-modal');
             const list = document.getElementById('add-member-friends-list');
@@ -1933,7 +1727,6 @@
             }
         };
 
-        // --- UTILS PROFIL ---
         document.getElementById('edit-bio-btn').onclick = () => {
              const u = usersData[currentUserId];
              document.getElementById('edit-username-input').value = u.username;
@@ -1973,7 +1766,6 @@
             });
         }
 
-        // --- IMAGE & CROP LOGIC ---
         document.addEventListener('DOMContentLoaded', () => {
             cropperCtx = cropperCanvas.getContext('2d');
             
@@ -2018,7 +1810,6 @@
                 const dy = (CROP_SIZE - h) / 2 + (cropperState.y * ratio);
                 
                 ctx.drawImage(cropperImage, dx, dy, w, h);
-                // OPTIMISATION MOBILE: Réduction qualité 0.92 -> 0.7 pour perfs
                 currentImageBase64 = tCvs.toDataURL('image/jpeg', 0.7);
                 squareContent.style.backgroundImage = `url('${currentImageBase64}')`;
                 squareContent.style.backgroundColor = 'transparent';
@@ -2053,12 +1844,11 @@
             document.getElementById('cancel-paste-id-btn').onclick = () => hideModal(document.getElementById('paste-id-modal'));
             document.getElementById('send-friend-request-btn').onclick = async () => { await sendFriendRequest(document.getElementById('paste-id-input').value.trim()); hideModal(document.getElementById('paste-id-modal')); };
             
-            // HASHTAG SYNC
             const syncHighlighter = () => {
                 const text = postTextarea.value;
                 const safeText = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
                 const highlighted = safeText.replace(/(#[\p{L}\p{N}_]+)/gu, '<span class="hashtag-highlight">$1</span>');
-                inputHighlighter.innerHTML = highlighted.replace(/\n/g, '<br>') + '<br>'; // Extra br for sync
+                inputHighlighter.innerHTML = highlighted.replace(/\n/g, '<br>') + '<br>'; 
                 
                 const hashtags = extractHashtags(text);
                 const textWithoutTags = text.replace(/#[\p{L}\p{N}_]+/gu, '').replace(/\s+/g, ' ');
@@ -2126,7 +1916,7 @@
                     message: txt, publisherId: anonymousSwitch.checked ? null : currentUserId, isAnon: anonymousSwitch.checked, 
                     createdAt: serverTimestamp(), backgroundColor: currentImageBase64 ? 'transparent' : currentPostColor, 
                     fontClass: POST_FONT_FAMILIES[currentPostFontIndex], likedBy: [], dislikedBy: [], imageBase64: currentImageBase64,
-                    views: 0, viewedBy: [] // Ajout compteur de vues
+                    views: 0, viewedBy: [] 
                 });
                 const uRef = doc(usersCollectionRef, currentUserId);
                 const uDoc = await getDoc(uRef);
