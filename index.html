@@ -164,7 +164,7 @@
         /* --- Feed --- */
         .post-card { background-color: var(--secondary-bg); border-bottom: 1px solid var(--border-color); margin-bottom: 8px; contain: content; }
         .post-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; font-size: 14px; }
-        .post-publisher { font-weight: 600; cursor: pointer; }
+        .post-publisher { font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; }
         .post-countdown { 
             font-size: 12px; color: var(--dislike-color); font-family: 'Roboto Mono', monospace;
             font-weight: 700; background-color: #fcebeb; padding: 2px 6px; border-radius: 4px;
@@ -203,7 +203,7 @@
         .friend-item:hover { background-color: #f9f9f9; }
         .friend-pp { width: 50px; height: 50px; border-radius: 50%; margin-right: 15px; object-fit: cover; }
         .friend-info { flex-grow: 1; min-width: 0; }
-        .friend-info h4 { margin: 0 0 4px 0; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .friend-info h4 { margin: 0 0 4px 0; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display:flex; align-items:center; gap:5px;}
         .friend-info p { margin: 0; font-size: 12px; color: var(--last-seen-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         
         .dm-button-container { position: relative; }
@@ -274,7 +274,7 @@
         .profile-header { display: flex; align-items: center; padding: 15px; gap: 15px; background-color: var(--secondary-bg); border-bottom: 1px solid var(--border-color); }
         .profile-pic { width: 80px; height: 80px; border-radius: 50%; }
         .profile-info-main { flex-grow: 1; }
-        .profile-username { font-size: 22px; font-weight: 600; margin: 0; }
+        .profile-username { font-size: 22px; font-weight: 600; margin: 0; display:flex; align-items:center; gap:5px; }
         #edit-bio-btn { background: none; border: 1px solid var(--button-border); border-radius: 6px; padding: 6px 12px; margin-top: 10px; cursor: pointer; font-weight: 600; width: 100%; }
         #profile-actions { display: flex; gap: 10px; margin-top: 10px; }
         .profile-action-btn { flex-grow: 1; padding: 8px 12px; border: 1px solid var(--button-border); border-radius: 6px; font-weight: 600; cursor: pointer; background: none; }
@@ -531,6 +531,13 @@
         .info-stat-val { font-size: 20px; font-weight: bold; display: block; }
         .info-stat-label { font-size: 12px; color: var(--last-seen-color); }
         .not-seen-list { background: white; margin-top: 10px; }
+
+        /* BADGES */
+        .user-badge { margin-left: 4px; font-size: 12px; vertical-align: middle; }
+        .badge-staff { color: #3897f0; } /* Blue check */
+        .badge-vip { color: #F1C40F; } /* Gold Star */
+        .badge-certif { color: #2ECC71; } /* Green check */
+        .badge-patron { color: #8e44ad; } /* Purple briefcase */
 
     </style>
 </head>
@@ -877,7 +884,7 @@
         let activeProfileUserId = null;
         let usersData = {};
         let postsData = [];
-        let profilePostsCache = {}; // Cache séparé pour les posts de profil
+        let profilePostsCache = {}; 
         let filteredPostsData = []; 
         let pendingRequests = []; 
         
@@ -885,10 +892,9 @@
         let currentChatType = 'user'; 
         let conversationsData = {}; 
         
-        // Hashtag / Trending
         let trendingTags = []; 
         let blockedUsers = [];
-        let selectedPostId = null; // Pour les options
+        let selectedPostId = null; 
 
         let unsubscribeChatListener = null;
         let unsubscribeUsersListener = null;
@@ -896,10 +902,11 @@
         let unsubscribeFriendRequestsListener = null;
         let unsubscribeGroupsListener = null;
         let unsubscribeChatsMetaListener = null;
-        let unsubscribeProfilePostsListener = null; // Listener spécifique profil
+        let unsubscribeProfilePostsListener = null; 
         let countdownInterval = null;
         
         let isLoginMode = true;
+        let referralId = null;
 
         // --- VARS IMAGES & QUALITÉ ---
         let currentImageBase64 = null;
@@ -948,7 +955,6 @@
         function showSecondaryView(el) { el.classList.add('visible'); }
         function hideSecondaryView(el) { el.classList.remove('visible'); }
         
-        // UTILS
         function debounce(func, wait) {
             let timeout;
             return function(...args) {
@@ -961,20 +967,27 @@
         const initAuth = async () => { if (initialAuthToken) await signInWithCustomToken(auth, initialAuthToken); };
         initAuth();
 
+        // Récupération Referral
+        const urlParams = new URLSearchParams(window.location.search);
+        if(urlParams.get('ref')) {
+            referralId = urlParams.get('ref');
+            sessionStorage.setItem('drop_ref', referralId);
+        } else {
+            referralId = sessionStorage.getItem('drop_ref');
+        }
+
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUserId = user.uid;
                 authView.style.display = 'none';
                 appContainer.style.display = 'flex'; 
                 await upsertUserDocument(user);
-                // On limite la liste des users pour éviter le crash mobile
                 listenToAllUsers(); 
                 listenToFeed();
                 listenToFriendRequests();
                 listenToConversations();
                 navigateTo('feed-view');
                 
-                const urlParams = new URLSearchParams(window.location.search);
                 const inviterId = urlParams.get('uid');
                 const inviteGroupId = urlParams.get('group_invite');
 
@@ -1035,11 +1048,17 @@
             const userRef = doc(usersCollectionRef, user.uid);
             const userDoc = await getDoc(userRef);
             if (!userDoc.exists()) {
-                await setDoc(userRef, {
+                const newData = {
                     username: user.displayName || `user_${user.uid.substring(0, 4)}`, 
                     profileColor: PROFILE_COLORS[Math.floor(Math.random() * PROFILE_COLORS.length)],
-                    accountCreatedAt: serverTimestamp(), friends: [], postsCount: 0, blockedUsers: []
-                });
+                    accountCreatedAt: serverTimestamp(), friends: [], postsCount: 0, blockedUsers: [],
+                    badges: [] // Init badges
+                };
+                // Add referral if present
+                if(referralId && referralId !== user.uid) {
+                    newData.referredBy = referralId;
+                }
+                await setDoc(userRef, newData);
             } else {
                 if(!userDoc.data().blockedUsers) await updateDoc(userRef, { blockedUsers: [] });
             }
@@ -1058,11 +1077,20 @@
             if (!user) return '';
             return `https://ui-avatars.com/api/?name=${user.username}&background=${(user.profileColor||'888').replace('#','')}&color=fff&size=128&bold=true`;
         }
+        
+        function getBadgesHTML(user) {
+            if(!user || !user.badges) return '';
+            let html = '';
+            if(user.badges.includes('staff')) html += '<i class="fas fa-check-circle user-badge badge-staff" title="Staff"></i>';
+            if(user.badges.includes('certif')) html += '<i class="fas fa-check-circle user-badge badge-certif" title="Certifié"></i>';
+            if(user.badges.includes('vip')) html += '<i class="fas fa-star user-badge badge-vip" title="VIP"></i>';
+            if(user.badges.includes('patron')) html += '<i class="fas fa-briefcase user-badge badge-patron" title="Patron"></i>';
+            return html;
+        }
 
         // OPTIMISATION MOBILE: Limite à 50 utilisateurs pour éviter la saturation mémoire
         function listenToAllUsers() {
             unsubscribeUsersListener = onSnapshot(query(usersCollectionRef, limit(50)), (snapshot) => {
-                // Pas de usersData = {} ici pour ne pas perdre les amis hors liste
                 snapshot.forEach((doc) => { usersData[doc.id] = { id: doc.id, ...doc.data() }; });
                 blockedUsers = usersData[currentUserId]?.blockedUsers || [];
                 renderFriendsList(); 
@@ -1131,7 +1159,7 @@
                 const u = usersData[req.senderId];
                 if(blockedUsers.includes(req.senderId)) return;
                 const div = document.createElement('div'); div.className='friend-request-item';
-                div.innerHTML = `<div class="friend-request-info"><img src="${generateAvatarUrl(u)}"><span>${u?u.username:'...'}</span></div><div class="friend-request-actions"><button class="request-accept-btn"><i class="fas fa-check"></i></button><button class="request-reject-btn"><i class="fas fa-times"></i></button></div>`;
+                div.innerHTML = `<div class="friend-request-info"><img src="${generateAvatarUrl(u)}"><span>${u?u.username:'...'} ${getBadgesHTML(u)}</span></div><div class="friend-request-actions"><button class="request-accept-btn"><i class="fas fa-check"></i></button><button class="request-reject-btn"><i class="fas fa-times"></i></button></div>`;
                 div.querySelector('.request-accept-btn').onclick = () => acceptFriendRequest(req.senderId);
                 div.querySelector('.request-reject-btn').onclick = () => rejectFriendRequest(req.senderId);
                 list.appendChild(div);
@@ -1175,7 +1203,7 @@
 
                 if (item.type === 'user') {
                     avatarHTML = `<img class="friend-pp" src="${generateAvatarUrl(item.data)}">`;
-                    title = item.name; subtitle = "Ami";
+                    title = `${item.name} ${getBadgesHTML(item.data)}`; subtitle = "Ami";
                 } else {
                     avatarHTML = `<div class="friend-pp" style="background:#333;color:white;display:flex;align-items:center;justify-content:center;font-size:20px;"><i class="fas fa-users"></i></div>`;
                     title = item.name; subtitle = "Groupe";
@@ -1201,14 +1229,13 @@
                 unsubscribeProfilePostsListener = null;
             }
             
-            // Si l'utilisateur n'est pas dans le cache, on le fetch manuellement
             let u = usersData[uid];
             if(!u) {
                 try {
                     const snap = await getDoc(doc(usersCollectionRef, uid));
                     if(snap.exists()) {
                          u = { id: snap.id, ...snap.data() };
-                         usersData[uid] = u; // Cache le
+                         usersData[uid] = u; 
                     } else return;
                 } catch(e) { return; }
             }
@@ -1216,23 +1243,17 @@
             activeProfileUserId = uid;
             const isMe = uid === currentUserId;
 
-            // --- CHARGEMENT DES POSTS DU PROFIL ---
-            // Comme le feed global est limité à 40 posts, on risque de ne pas voir les anciens posts du profil.
-            // On lance donc une requête spécifique pour ce profil.
             const qProfilePosts = query(postsCollectionRef, where('publisherId', '==', uid), orderBy('createdAt', 'desc'), limit(20));
             unsubscribeProfilePostsListener = onSnapshot(qProfilePosts, (snap) => {
                 profilePostsCache[uid] = [];
                 snap.forEach(d => profilePostsCache[uid].push({ id: d.id, ...d.data() }));
-                // On fusionne avec ce qu'on a déjà dans postsData pour éviter les doublons lors du rendu, 
-                // mais pour le rendu profil on utilisera profilePostsCache[uid]
                 renderProfilePosts(uid, isMe ? 'my-posts-grid' : 'other-posts-grid');
             });
 
 
             if (isMe) {
-                // Main Profile View (My Profile)
                 const view = document.getElementById('profile-view');
-                document.getElementById('profile-username').textContent = u.username;
+                document.getElementById('profile-username').innerHTML = `${u.username} ${getBadgesHTML(u)}`;
                 document.getElementById('profile-pic').src = generateAvatarUrl(u);
                 document.getElementById('profile-bio').textContent = u.bio || "";
                 document.getElementById('posts-count').textContent = u.postsCount || 0;
@@ -1243,9 +1264,8 @@
                 document.getElementById('logout-btn').style.display = 'block'; 
                 navigateTo('profile-view');
             } else {
-                // Secondary Profile View (Other User)
                 const view = document.getElementById('user-profile-view');
-                document.getElementById('other-profile-username').textContent = u.username;
+                document.getElementById('other-profile-username').innerHTML = `${u.username} ${getBadgesHTML(u)}`;
                 document.getElementById('other-profile-pic').src = generateAvatarUrl(u);
                 document.getElementById('other-profile-bio').textContent = u.bio || "";
                 document.getElementById('other-posts-count').textContent = u.postsCount || 0;
@@ -1287,10 +1307,7 @@
 
         function renderProfilePosts(uid, gridId) {
             const grid = document.getElementById(gridId);
-            // On utilise le cache spécifique profil s'il existe, sinon fallback sur global
             const userPosts = (profilePostsCache[uid] || postsData.filter(p => p.publisherId === uid)).filter(p => !p.isAnon);
-            
-            // OPTIMISATION: DocumentFragment pour réduire le reflow
             const fragment = document.createDocumentFragment();
             
             userPosts.forEach(p => {
@@ -1304,10 +1321,6 @@
                     if (uid === currentUserId) {
                         openPostOptions(p);
                     } else {
-                        // Pour voir le post, on doit s'assurer qu'il est dans la vue.
-                        // Si le post vient du cache profil et pas du feed global, on ne peut pas scroller vers lui dans le feed.
-                        // On va donc montrer le modal d'info "partiel" ou juste l'image.
-                        // Simplification: On tente d'aller au feed, sinon alert
                         navigateTo('feed-view');
                         setTimeout(() => {
                              const el = document.querySelector(`.post-card[data-post-id="${p.id}"]`);
@@ -1315,7 +1328,6 @@
                                  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
                                  hideSecondaryView(document.getElementById('user-profile-view'));
                              } else {
-                                 // Le post n'est pas dans le top 40 global
                                  showMessage("Ce post est trop ancien pour le flux global.", false);
                              }
                         }, 300);
@@ -1381,7 +1393,7 @@
                  const u = usersData[fid];
                  if(u) {
                      const d = document.createElement('div'); d.className = 'friend-item';
-                     d.innerHTML = `<img class="friend-pp" src="${generateAvatarUrl(u)}"><div class="friend-info"><h4>${u.username}</h4></div>`;
+                     d.innerHTML = `<img class="friend-pp" src="${generateAvatarUrl(u)}"><div class="friend-info"><h4>${u.username} ${getBadgesHTML(u)}</h4></div>`;
                      list.appendChild(d);
                  }
             });
@@ -1414,7 +1426,6 @@
         const debouncedRenderFeed = debounce(() => {
             updateTrendingStats();
             renderFeed();
-            // On ne met à jour les grilles profil que si c'est nécessaire
             if(activeProfileUserId === currentUserId) renderProfilePosts(currentUserId, 'my-posts-grid');
             else if(activeProfileUserId) renderProfilePosts(activeProfileUserId, 'other-posts-grid');
         }, 200);
@@ -1518,7 +1529,7 @@
                 });
 
                 return `<div class="post-card" data-post-id="${p.id}">
-                    <div class="post-header"><span class="post-publisher" onclick="showProfile('${p.publisherId}')">${p.isAnon?'Anonyme':author.username}</span><span class="post-countdown" data-exp="${p.expiresAt.getTime()}">${formatCountdown(rem)}</span></div>
+                    <div class="post-header"><span class="post-publisher" onclick="showProfile('${p.publisherId}')">${p.isAnon?'Anonyme':author.username} ${!p.isAnon ? getBadgesHTML(author) : ''}</span><span class="post-countdown" data-exp="${p.expiresAt.getTime()}">${formatCountdown(rem)}</span></div>
                     <div class="post-image-wrapper" style="${bgStyle}"><div class="post-content-inner"><p class="post-message ${txtClass}">${formattedMessage}</p></div></div>
                     <div class="post-actions">
                         <div class="action-button ${hasLiked?'liked':''}" onclick="likePost('${p.id}')"><i class="fas fa-thumbs-up"></i><span>${likes}</span></div>
@@ -1529,7 +1540,6 @@
                 </div>`;
             }).join('');
             
-            // Utilisation de requestAnimationFrame pour fluidifier le rendu
             requestAnimationFrame(() => {
                 feedContent.innerHTML = feedHTML;
             });
@@ -1713,7 +1723,7 @@
                     if(type === 'group' && !isMe) {
                          const senderUser = usersData[m.senderId];
                          const senderPseudo = senderUser ? senderUser.username : 'Inconnu';
-                         senderNameHtml = `<div class="message-sender-pseudo">${senderPseudo}</div>`;
+                         senderNameHtml = `<div class="message-sender-pseudo">${senderPseudo} ${getBadgesHTML(senderUser)}</div>`;
                     }
 
                     let contentHtml = '';
@@ -1816,7 +1826,7 @@
                 if(isMemberFounder) badges += '<span class="founder-badge">FONDATEUR</span>';
                 else if(isMemberAdmin) badges += '<span class="admin-badge">ADMIN</span>';
 
-                div.innerHTML = `<div class="group-member-info"><img src="${generateAvatarUrl(u || {username:'?'})}"><span>${u ? u.username : 'Inconnu'}</span>${badges}</div>`;
+                div.innerHTML = `<div class="group-member-info"><img src="${generateAvatarUrl(u || {username:'?'})}"><span>${u ? u.username : 'Inconnu'} ${getBadgesHTML(u)}</span>${badges}</div>`;
                 
                 div.onclick = () => {
                     if(!isAdmin) return; 
@@ -1948,13 +1958,13 @@
         };
 
         async function shareProfileLink() {
-            const link = `${BASE_URL}?uid=${currentUserId}`;
+            const link = `${BASE_URL}?ref=${currentUserId}`;
             try { await navigator.share({ title: 'Rejoins-moi sur Drop !', text: `Ajoute-moi sur Drop !`, url: link }); } catch (err) { if (err.name !== 'AbortError') navigator.clipboard.writeText(link).then(() => showMessage("Lien copié !", true)); }
         }
         function showMyQrCode() {
             const canvas = document.getElementById('qr-code-canvas');
             if (!currentUserId) return showMessage("Erreur ID.", false);
-            const link = `${BASE_URL}?uid=${currentUserId}`;
+            const link = `${BASE_URL}?ref=${currentUserId}`;
             document.getElementById('qr-user-id').textContent = currentUserId; 
             QRCode.toCanvas(canvas, link, { width: 200, margin: 2 }, function (error) {
                 if (error) return showMessage("Erreur QR.", false);
