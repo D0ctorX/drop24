@@ -874,8 +874,8 @@
             if (viewIndex === -1) return;
             viewWrapper.style.transform = `translateX(-${viewIndex * 100}%)`;
             navItems.forEach(item => { item.classList.toggle('active', item.dataset.view === viewId); });
-            // Le problème de boucle infinie était ici
-            if (viewId === 'profile-view') showProfile(currentUserId);
+            // FIX: Removed recursive call showProfile(currentUserId) here.
+            // Profile is loaded by explicit calls or when switching tab (handled below).
         }
 
         function generateAvatarUrl(user) {
@@ -1049,10 +1049,17 @@
             const isMe = uid === currentUserId;
 
             const qProfilePosts = query(postsCollectionRef, where('publisherId', '==', uid), orderBy('createdAt', 'desc'), limit(20));
+            // Ajout du gestionnaire d'erreur pour l'Index Manquant
             unsubscribeProfilePostsListener = onSnapshot(qProfilePosts, (snap) => {
                 profilePostsCache[uid] = [];
                 snap.forEach(d => profilePostsCache[uid].push({ id: d.id, ...d.data() }));
                 renderProfilePosts(uid, isMe ? 'my-posts-grid' : 'other-posts-grid');
+            }, (error) => {
+                console.error("Erreur Posts Profil:", error);
+                if(error.code === 'failed-precondition') {
+                    // C'est l'erreur d'index manquant
+                    showMessage("Index manquant. Ouvrez la console (F12) et cliquez sur le lien Firebase.", false);
+                }
             });
 
 
@@ -1067,7 +1074,8 @@
                 document.getElementById('creation-date').textContent = date;
                 document.getElementById('edit-bio-btn').style.display = 'block';
                 document.getElementById('logout-btn').style.display = 'block'; 
-                // CORRECTION ICI: Suppression de l'appel récursif navigateTo
+                // CORRECTION RECURSION: Pas de navigateTo ici
+                showSecondaryView(view); // On affiche juste la vue si nécessaire, ou elle est déjà visible via navigateTo
             } else {
                 const view = document.getElementById('user-profile-view');
                 document.getElementById('other-profile-username').innerHTML = `${u.username} ${getBadgesHTML(u)}`;
