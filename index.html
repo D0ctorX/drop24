@@ -809,6 +809,8 @@
             clearTimeout(toastTimeout);
             toastTimeout = setTimeout(() => { toast.className = ''; }, 3000);
         }
+        window.showMessage = showMessage;
+        
         function showModal(el) { el.style.display = 'flex'; }
         function hideModal(el) { el.style.display = 'none'; }
         function showSecondaryView(el) { el.classList.add('visible'); }
@@ -1477,8 +1479,17 @@
                     }
                 }
 
+                // ONCLICK LOGIC UPDATE FOR ANONYMOUS
+                let publisherOnClick = '';
+                if (p.isAnon) {
+                    publisherOnClick = "window.showMessage('Cette personne est anonyme.', false)";
+                } else {
+                    // Check if it's me or someone else
+                    publisherOnClick = `if('${p.publisherId}'==='${currentUserId}') navigateTo('profile-view'); else showProfile('${p.publisherId}')`;
+                }
+
                 return `<div class="post-card" data-post-id="${p.id}">
-                    <div class="post-header"><span class="post-publisher" onclick="if('${p.publisherId}'==='${currentUserId}') navigateTo('profile-view'); else showProfile('${p.publisherId}')">${p.isAnon?'Anonyme':author.username} ${!p.isAnon ? getBadgesHTML(author) : ''}</span><span class="post-countdown" data-exp="${p.expiresAt.getTime()}">${formatCountdown(rem)}</span></div>
+                    <div class="post-header"><span class="post-publisher" onclick="${publisherOnClick}">${p.isAnon?'Anonyme':author.username} ${!p.isAnon ? getBadgesHTML(author) : ''}</span><span class="post-countdown" data-exp="${p.expiresAt.getTime()}">${formatCountdown(rem)}</span></div>
                     
                     ${p.isPoll ? pollHtml : `<div class="post-image-wrapper" style="${bgStyle}"><div class="post-content-inner"><p class="post-message ${txtClass}">${formattedMessage}</p></div></div>`}
                     
