@@ -168,6 +168,21 @@
         .action-button.share-btn { margin-left: auto; } 
         .action-button.view-count { cursor: default; margin-left: 10px; }
 
+        /* SONDAGES */
+        .poll-container { padding: 15px; background: #fff; }
+        .poll-option-btn {
+            display: block; width: 100%; padding: 12px; margin-bottom: 8px;
+            background: #f0f2f5; border: 1px solid var(--border-color); border-radius: 8px;
+            text-align: left; font-weight: 600; cursor: pointer; transition: background 0.2s;
+        }
+        .poll-option-btn:hover { background: #e4e6eb; }
+        .poll-result-row { margin-bottom: 10px; }
+        .poll-result-header { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 4px; }
+        .poll-bar-bg { background: #f0f2f5; border-radius: 8px; height: 30px; position: relative; overflow: hidden; }
+        .poll-bar-fill { height: 100%; background: var(--highlight-color); width: 0; transition: width 0.5s ease; opacity: 0.2; }
+        .poll-bar-text { position: absolute; top: 0; left: 10px; height: 100%; display: flex; align-items: center; font-weight: 600; font-size: 14px; }
+        .poll-check { float: right; color: var(--highlight-color); }
+
         /* FIX: Ajout de position relative !important pour forcer le contexte du FAB */
         .contacts-view { position: relative !important; } 
         
@@ -533,13 +548,22 @@
             </div>
             <div class="post-controls">
                 <div class="control-row">
-                    <label>Image</label>
+                    <label>Média</label>
                     <input type="file" id="image-upload-input" accept="image/*" style="display: none;">
                     <div style="display:flex; gap:10px;">
                         <button class="control-button" id="add-image-button"><i class="fas fa-camera"></i></button>
+                        <button class="control-button" id="add-poll-button"><i class="fas fa-list-ul"></i></button>
                         <button class="control-button" id="remove-image-button" style="display:none; color: var(--dislike-color);"><i class="fas fa-trash"></i></button>
+                        <button class="control-button" id="remove-poll-button" style="display:none; color: var(--dislike-color);"><i class="fas fa-trash"></i></button>
                     </div>
                 </div>
+                
+                <!-- SONDAGE INPUTS -->
+                <div id="poll-creator-container" style="display:none; flex-direction:column; gap:8px;">
+                    <input type="text" id="poll-opt1" placeholder="Option 1" class="auth-input" style="margin:0; padding:10px;">
+                    <input type="text" id="poll-opt2" placeholder="Option 2" class="auth-input" style="margin:0; padding:10px;">
+                </div>
+
                 <div class="control-row" id="bg-color-control-row"><label>Couleur de fond</label><div class="color-swatches-container" id="post-color-swatches"></div></div>
                 <div class="control-row"><label>Style de police</label><button class="control-button" id="font-style-button"><i class="fas fa-font"></i></button></div>
                 <div class="control-row"><label>Publier en anonyme</label><label class="switch"><input type="checkbox" id="anonymous-switch-input"><span class="slider"></span></label></div>
@@ -727,6 +751,9 @@
         let cropperImage = new Image();
         let cropperState = { scale: 1, x: 0, y: 0, isDragging: false, startX: 0, startY: 0 };
         const CROP_SIZE = 800; 
+        
+        // POLL STATE
+        let isPollMode = false;
 
         // DOM Elements
         const authView = document.getElementById('auth-view');
@@ -746,6 +773,10 @@
         const imageUploadInput = document.getElementById('image-upload-input');
         const addImageButton = document.getElementById('add-image-button');
         const removeImageButton = document.getElementById('remove-image-button');
+        const addPollButton = document.getElementById('add-poll-button');
+        const removePollButton = document.getElementById('remove-poll-button');
+        const pollCreatorContainer = document.getElementById('poll-creator-container');
+        
         const cropperModal = document.getElementById('cropper-modal');
         const cropperCanvas = document.getElementById('cropper-canvas');
         const zoomSlider = document.getElementById('zoom-slider');
@@ -1325,6 +1356,21 @@
         document.getElementById('close-trending-btn').onclick = toggleTrendingSidebar;
         overlay.onclick = toggleTrendingSidebar;
 
+        // VOTE POLL
+        window.votePoll = async (postId, optionIdx) => {
+            if(!currentUserId) return;
+            const updates = {};
+            if(optionIdx === 1) updates.pollVotes1 = arrayUnion(currentUserId);
+            else updates.pollVotes2 = arrayUnion(currentUserId);
+            
+            try {
+                await updateDoc(doc(postsCollectionRef, postId), updates);
+            } catch(e) {
+                console.error("Poll Vote Error:", e);
+                showMessage("Erreur de vote", false);
+            }
+        };
+
         function renderFeed() {
             const term = document.getElementById('feed-search-input').value.toLowerCase();
             filteredPostsData = postsData.filter(p => !blockedUsers.includes(p.publisherId));
@@ -1361,9 +1407,60 @@
                     return `<span class="post-hashtag" onclick="window.searchTag('${match}')">${match}</span>`;
                 });
 
+                // POLL RENDER LOGIC
+                let pollHtml = '';
+                if(p.isPoll && p.pollOptions && p.pollOptions.length === 2) {
+                    const v1 = (p.pollVotes1 || []).length;
+                    const v2 = (p.pollVotes2 || []).length;
+                    const total = v1 + v2;
+                    const hasVoted1 = (p.pollVotes1 || []).includes(currentUserId);
+                    const hasVoted2 = (p.pollVotes2 || []).includes(currentUserId);
+                    const hasVoted = hasVoted1 || hasVoted2;
+
+                    if (!hasVoted) {
+                        pollHtml = `
+                            <div class="poll-container">
+                                <button class="poll-option-btn" onclick="votePoll('${p.id}', 1)">${p.pollOptions[0]}</button>
+                                <button class="poll-option-btn" onclick="votePoll('${p.id}', 2)">${p.pollOptions[1]}</button>
+                            </div>
+                        `;
+                    } else {
+                        const p1 = total === 0 ? 0 : Math.round((v1 / total) * 100);
+                        const p2 = total === 0 ? 0 : Math.round((v2 / total) * 100);
+                        
+                        pollHtml = `
+                            <div class="poll-container">
+                                <div class="poll-result-row">
+                                    <div class="poll-result-header">
+                                        <span>${p.pollOptions[0]}</span>
+                                        <span>${p1}% (${v1})</span>
+                                    </div>
+                                    <div class="poll-bar-bg">
+                                        <div class="poll-bar-fill" style="width:${p1}%; opacity:0.5;"></div>
+                                        ${hasVoted1 ? '<div class="poll-bar-text"><i class="fas fa-check-circle poll-check"></i></div>' : ''}
+                                    </div>
+                                </div>
+                                <div class="poll-result-row">
+                                    <div class="poll-result-header">
+                                        <span>${p.pollOptions[1]}</span>
+                                        <span>${p2}% (${v2})</span>
+                                    </div>
+                                    <div class="poll-bar-bg">
+                                        <div class="poll-bar-fill" style="width:${p2}%; opacity:0.5;"></div>
+                                         ${hasVoted2 ? '<div class="poll-bar-text"><i class="fas fa-check-circle poll-check"></i></div>' : ''}
+                                    </div>
+                                </div>
+                                <div style="text-align:right; font-size:12px; color:gray; margin-top:5px;">${total} votes</div>
+                            </div>
+                        `;
+                    }
+                }
+
                 return `<div class="post-card" data-post-id="${p.id}">
                     <div class="post-header"><span class="post-publisher" onclick="if('${p.publisherId}'==='${currentUserId}') navigateTo('profile-view'); else showProfile('${p.publisherId}')">${p.isAnon?'Anonyme':author.username} ${!p.isAnon ? getBadgesHTML(author) : ''}</span><span class="post-countdown" data-exp="${p.expiresAt.getTime()}">${formatCountdown(rem)}</span></div>
-                    <div class="post-image-wrapper" style="${bgStyle}"><div class="post-content-inner"><p class="post-message ${txtClass}">${formattedMessage}</p></div></div>
+                    
+                    ${p.isPoll ? pollHtml : `<div class="post-image-wrapper" style="${bgStyle}"><div class="post-content-inner"><p class="post-message ${txtClass}">${formattedMessage}</p></div></div>`}
+                    
                     <div class="post-actions">
                         <div class="action-button ${hasLiked?'liked':''}" onclick="likePost('${p.id}')"><i class="fas fa-thumbs-up"></i><span>${likes}</span></div>
                         <div class="action-button ${hasDisliked?'disliked':''}" onclick="dislikePost('${p.id}')"><i class="fas fa-thumbs-down"></i><span>${dislikes}</span></div>
@@ -1425,7 +1522,12 @@
             const card = document.createElement('div'); card.className = 'capture-card';
             if(p.imageBase64) card.style.backgroundImage = `url('${p.imageBase64}')`;
             else card.style.backgroundColor = p.backgroundColor;
-            card.innerHTML = `<div class="capture-publisher" style="position:absolute;top:20px;width:100%;text-align:center;font-weight:700;font-size:24px;color:rgba(0,0,0,0.5);">${pub}</div><div style="display:flex;align-items:center;justify-content:center;height:100%;padding:40px;"><p class="post-message ${p.fontClass} ${p.imageBase64?'snap-text':''}" style="font-size:22px;text-align:center;color:${p.imageBase64?'white':'var(--text-color)'};">${p.message}</p></div><div class="capture-watermark" style="position:absolute;bottom:10px;right:15px;font-size:12px;font-weight:600;color:rgba(0,0,0,0.3);font-family:'Pacifico';">Drop</div>`;
+            
+            // Si c'est un sondage, on capture juste le texte de la question (message)
+            // Sinon on affiche tout
+            let contentHTML = `<p class="post-message ${p.fontClass} ${p.imageBase64?'snap-text':''}" style="font-size:22px;text-align:center;color:${p.imageBase64?'white':'var(--text-color)'};">${p.message} ${p.isPoll ? '(Sondage)' : ''}</p>`;
+            
+            card.innerHTML = `<div class="capture-publisher" style="position:absolute;top:20px;width:100%;text-align:center;font-weight:700;font-size:24px;color:rgba(0,0,0,0.5);">${pub}</div><div style="display:flex;align-items:center;justify-content:center;height:100%;padding:40px;">${contentHTML}</div><div class="capture-watermark" style="position:absolute;bottom:10px;right:15px;font-size:12px;font-weight:600;color:rgba(0,0,0,0.3);font-family:'Pacifico';">Drop</div>`;
             const cont = document.getElementById('share-capture-container'); cont.innerHTML = ''; cont.appendChild(card);
             try {
                 const canvas = await html2canvas(card, { useCORS: true, scale: 2 });
@@ -1607,6 +1709,41 @@
         }
 
         document.getElementById('chat-back-btn').onclick = () => hideSecondaryView(document.getElementById('chat-view'));
+
+        // CREATOR TOGGLE LOGIC
+        addPollButton.onclick = () => {
+            isPollMode = true;
+            pollCreatorContainer.style.display = 'flex';
+            
+            // Disable Image mode
+            addImageButton.style.display = 'none';
+            removeImageButton.style.display = 'none'; // Ensure reset
+            resetPostImage();
+            
+            // Show Remove Poll
+            addPollButton.style.display = 'none';
+            removePollButton.style.display = 'block';
+            
+            // Hide bg color
+            document.getElementById('bg-color-control-row').style.display = 'none';
+            squareContent.style.backgroundColor = 'transparent';
+        };
+
+        removePollButton.onclick = () => {
+            isPollMode = false;
+            pollCreatorContainer.style.display = 'none';
+            document.getElementById('poll-opt1').value = '';
+            document.getElementById('poll-opt2').value = '';
+            
+            // Re-enable Image mode
+            addImageButton.style.display = 'block';
+            addPollButton.style.display = 'block';
+            removePollButton.style.display = 'none';
+            
+            // Restore bg color
+            document.getElementById('bg-color-control-row').style.display = 'flex';
+            squareContent.style.backgroundColor = currentPostColor;
+        };
 
         function openGroupInfo(groupId, groupData) {
             const view = document.getElementById('group-info-view');
@@ -1933,7 +2070,12 @@
             const dx = (300 - w) / 2 + cropperState.x; const dy = (300 - h) / 2 + cropperState.y;
             cropperCtx.drawImage(cropperImage, dx, dy, w, h);
         }
-        function resetPostCreator() { resetPostImage(); postTextarea.value = ''; inputHighlighter.innerHTML=''; charCountSpan.textContent = '0'; squareContent.className = 'font-inter'; checkPublishButton(); }
+        function resetPostCreator() { 
+            resetPostImage(); 
+            // Reset Poll
+            removePollButton.click(); 
+            postTextarea.value = ''; inputHighlighter.innerHTML=''; charCountSpan.textContent = '0'; squareContent.className = 'font-inter'; checkPublishButton(); 
+        }
         function resetPostImage() { currentImageBase64 = null; squareContent.style.backgroundImage = ''; squareContent.style.backgroundColor = currentPostColor; postTextarea.classList.remove('has-image'); inputHighlighter.classList.remove('has-image-overlay'); document.getElementById('bg-color-control-row').style.display = 'flex'; addImageButton.style.display = 'block'; removeImageButton.style.display = 'none'; }
         function generatePostColorSwatches() {
             const div = document.getElementById('post-color-swatches'); div.innerHTML='';
@@ -1942,14 +2084,29 @@
         }
         async function handlePublish() {
             const txt = postTextarea.value.trim();
-            if(!txt && !currentImageBase64) return;
+            if(!txt && !currentImageBase64 && !isPollMode) return;
+            
+            let pollData = {};
+            if(isPollMode) {
+                 const o1 = document.getElementById('poll-opt1').value.trim();
+                 const o2 = document.getElementById('poll-opt2').value.trim();
+                 if(!o1 || !o2) { showMessage("Remplissez les 2 options", false); return; }
+                 pollData = {
+                     isPoll: true,
+                     pollOptions: [o1, o2],
+                     pollVotes1: [],
+                     pollVotes2: []
+                 };
+            }
+            
             publishButton.disabled = true;
             try {
                 await addDoc(postsCollectionRef, { 
                     message: txt, publisherId: anonymousSwitch.checked ? null : currentUserId, isAnon: anonymousSwitch.checked, 
-                    createdAt: serverTimestamp(), backgroundColor: currentImageBase64 ? 'transparent' : currentPostColor, 
+                    createdAt: serverTimestamp(), backgroundColor: (currentImageBase64 || isPollMode) ? 'transparent' : currentPostColor, 
                     fontClass: POST_FONT_FAMILIES[currentPostFontIndex], likedBy: [], dislikedBy: [], imageBase64: currentImageBase64,
-                    views: 0, viewedBy: [] 
+                    views: 0, viewedBy: [],
+                    ...pollData
                 });
                 const uRef = doc(usersCollectionRef, currentUserId);
                 const uDoc = await getDoc(uRef);
