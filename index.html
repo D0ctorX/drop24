@@ -1541,14 +1541,40 @@
             const p = postsData.find(x => x.id === pid); if(!p) return;
             const pub = p.isAnon ? "Anonyme" : (usersData[p.publisherId]?.username || "...");
             const card = document.createElement('div'); card.className = 'capture-card';
+            
+            // Set background
             if(p.imageBase64) card.style.backgroundImage = `url('${p.imageBase64}')`;
-            else card.style.backgroundColor = p.backgroundColor;
+            else card.style.backgroundColor = p.backgroundColor || '#ffffff'; // Fallback white if undefined
             
-            // Si c'est un sondage, on capture juste le texte de la question (message)
-            // Sinon on affiche tout
-            let contentHTML = `<p class="post-message ${p.fontClass} ${p.imageBase64?'snap-text':''}" style="font-size:22px;text-align:center;color:${p.imageBase64?'white':'var(--text-color)'};">${p.message} ${p.isPoll ? '(Sondage)' : ''}</p>`;
+            let contentHTML = '';
+
+            if (p.isPoll && p.pollOptions && p.pollOptions.length === 2) {
+                // Poll specific HTML for sharing
+                contentHTML = `
+                    <div style="width:100%; display:flex; flex-direction:column; align-items:center; gap:15px;">
+                        <p class="post-message ${p.fontClass}" style="font-size:24px;text-align:center;color:var(--text-color); margin:0 0 20px 0; font-weight:700;">${p.message}</p>
+                        <div style="width:100%; background:rgba(0,0,0,0.05); padding:10px; border-radius:8px; text-align:center; font-weight:600; color:#333;">${p.pollOptions[0]}</div>
+                        <div style="width:100%; background:rgba(0,0,0,0.05); padding:10px; border-radius:8px; text-align:center; font-weight:600; color:#333;">${p.pollOptions[1]}</div>
+                    </div>
+                `;
+                // Override card background for polls if it was transparent in feed (though create logic sets it to postColor)
+                // In handlePublish: backgroundColor: (currentImageBase64 || isPollMode) ? 'transparent' : currentPostColor
+                // If it is 'transparent', the share card will be transparent/white. Let's ensure it has a color or white.
+                if (p.backgroundColor === 'transparent' || !p.backgroundColor) {
+                    card.style.backgroundColor = '#ffffff';
+                }
+            } else {
+                 // Standard post
+                contentHTML = `<p class="post-message ${p.fontClass} ${p.imageBase64?'snap-text':''}" style="font-size:22px;text-align:center;color:${p.imageBase64?'white':'var(--text-color)'};">${p.message}</p>`;
+            }
             
-            card.innerHTML = `<div class="capture-publisher" style="position:absolute;top:20px;width:100%;text-align:center;font-weight:700;font-size:24px;color:rgba(0,0,0,0.5);">${pub}</div><div style="display:flex;align-items:center;justify-content:center;height:100%;padding:40px;">${contentHTML}</div><div class="capture-watermark" style="position:absolute;bottom:10px;right:15px;font-size:12px;font-weight:600;color:rgba(0,0,0,0.3);font-family:'Pacifico';">Drop</div>`;
+            card.innerHTML = `
+                <div class="capture-publisher" style="position:absolute;top:20px;width:100%;text-align:center;font-weight:700;font-size:24px;color:rgba(0,0,0,0.5);">${pub}</div>
+                <div style="display:flex;align-items:center;justify-content:center;height:100%;padding:40px;width:100%;">
+                    ${contentHTML}
+                </div>
+                <div class="capture-watermark" style="position:absolute;bottom:10px;right:15px;font-size:12px;font-weight:600;color:rgba(0,0,0,0.3);font-family:'Pacifico';">Drop</div>
+            `;
             const cont = document.getElementById('share-capture-container'); cont.innerHTML = ''; cont.appendChild(card);
             try {
                 const canvas = await html2canvas(card, { useCORS: true, scale: 2 });
