@@ -1040,79 +1040,95 @@
                 unsubscribeProfilePostsListener();
                 unsubscribeProfilePostsListener = null;
             }
-            
-            let u = usersData[uid];
-            if(!u) {
-                try {
-                    const snap = await getDoc(doc(usersCollectionRef, uid));
-                    if(snap.exists()) {
-                         u = { id: snap.id, ...snap.data() };
-                         usersData[uid] = u; 
-                    } else return;
-                } catch(e) { return; }
-            }
 
             activeProfileUserId = uid;
             const isMe = uid === currentUserId;
 
+            // NAVIGATION INSTANTANÉE
+            if (isMe) {
+                const activeNav = document.querySelector('.nav-item.active');
+                if (activeNav && activeNav.dataset.view !== 'profile-view') {
+                    navigateTo('profile-view');
+                    return; 
+                }
+                document.querySelectorAll('.view.secondary').forEach(el => el.classList.remove('visible'));
+            } else {
+                showSecondaryView(document.getElementById('user-profile-view'));
+            }
+
+            // CHARGEMENT DONNÉES UTILISATEUR (Optimisé: Ne bloque pas le thread)
+            let u = usersData[uid];
+            
+            // Fonction locale pour mettre à jour le DOM
+            const updateUI = (userData) => {
+                if(!userData) return;
+                const prefix = isMe ? 'profile' : 'other-profile';
+                const elName = document.getElementById(`${prefix}-username`);
+                const elPic = document.getElementById(`${prefix}-pic`);
+                const elBio = document.getElementById(`${prefix}-bio`);
+                const elPosts = document.getElementById(isMe ? 'posts-count' : 'other-posts-count');
+                const elFollowers = document.getElementById(isMe ? 'followers-count' : 'other-followers-count');
+                
+                if(elName) elName.innerHTML = `${userData.username} ${getBadgesHTML(userData)}`;
+                if(elPic) elPic.src = generateAvatarUrl(userData);
+                if(elBio) elBio.textContent = userData.bio || "";
+                if(elPosts) elPosts.textContent = userData.postsCount || 0;
+                if(elFollowers) elFollowers.textContent = (userData.friends||[]).length;
+                
+                if(isMe) {
+                    const elDate = document.getElementById('creation-date');
+                    const date = userData.accountCreatedAt?.toDate ? userData.accountCreatedAt.toDate().toLocaleDateString('fr-FR') : '...';
+                    if(elDate) elDate.textContent = date;
+                    document.getElementById('edit-bio-btn').style.display = 'block';
+                    document.getElementById('logout-btn').style.display = 'block'; 
+                } else {
+                    // Boutons actions ami...
+                    const isFriend = usersData[currentUserId]?.friends?.includes(uid);
+                    const isBlocked = blockedUsers.includes(uid);
+                    document.getElementById('action-add-friend').style.display = isFriend || isBlocked ? 'none' : 'block';
+                    document.getElementById('action-message-user').style.display = isFriend && !isBlocked ? 'block' : 'none';
+                    const blockBtn = document.getElementById('action-block-user');
+                    blockBtn.style.display = 'block';
+                    blockBtn.textContent = isBlocked ? "Débloquer" : "Bloquer";
+                    
+                    // Setup listeners
+                    document.getElementById('action-add-friend').onclick = () => sendFriendRequest(uid);
+                    document.getElementById('action-message-user').onclick = () => showChat(uid, 'user');
+                    blockBtn.onclick = () => toggleBlockUser(uid);
+                    
+                    document.getElementById('user-profile-back-btn').onclick = () => hideSecondaryView(document.getElementById('user-profile-view'));
+                }
+            };
+
+            // Si on a déjà les données, on affiche direct
+            if(u) {
+                updateUI(u);
+            } else {
+                // Sinon on met des placeholders et on fetch en arrière plan
+                if(isMe) {
+                    document.getElementById('profile-username').textContent = "Chargement...";
+                } else {
+                    document.getElementById('other-profile-username').textContent = "Chargement...";
+                }
+                
+                getDoc(doc(usersCollectionRef, uid)).then(snap => {
+                    if(snap.exists()) {
+                        usersData[uid] = { id: snap.id, ...snap.data() };
+                        updateUI(usersData[uid]);
+                    }
+                });
+            }
+
+            // CHARGEMENT DES POSTS (Listener)
             const qProfilePosts = query(postsCollectionRef, where('publisherId', '==', uid), orderBy('createdAt', 'desc'), limit(20));
-            // Ajout du gestionnaire d'erreur pour l'Index Manquant
+            
             unsubscribeProfilePostsListener = onSnapshot(qProfilePosts, (snap) => {
                 profilePostsCache[uid] = [];
                 snap.forEach(d => profilePostsCache[uid].push({ id: d.id, ...d.data() }));
                 renderProfilePosts(uid, isMe ? 'my-posts-grid' : 'other-posts-grid');
             }, (error) => {
-                console.error("Erreur Posts Profil:", error);
-                if(error.code === 'failed-precondition') {
-                    // C'est l'erreur d'index manquant
-                    showMessage("Index manquant. Ouvrez la console (F12) et cliquez sur le lien Firebase.", false);
-                }
+                console.error("Erreur Posts:", error);
             });
-
-
-            if (isMe) {
-                // FIXED NAVIGATION LOGIC: Use DOM check instead of recursive navigateTo
-                const view = document.getElementById('profile-view');
-                document.getElementById('profile-username').innerHTML = `${u.username} ${getBadgesHTML(u)}`;
-                document.getElementById('profile-pic').src = generateAvatarUrl(u);
-                document.getElementById('profile-bio').textContent = u.bio || "";
-                document.getElementById('posts-count').textContent = u.postsCount || 0;
-                document.getElementById('followers-count').textContent = (u.friends||[]).length;
-                const date = u.accountCreatedAt?.toDate ? u.accountCreatedAt.toDate().toLocaleDateString('fr-FR') : 'Date inconnue';
-                document.getElementById('creation-date').textContent = date;
-                document.getElementById('edit-bio-btn').style.display = 'block';
-                document.getElementById('logout-btn').style.display = 'block'; 
-                
-                // Ensure we are logically on the view (handled by nav items usually)
-                document.querySelectorAll('.view.secondary').forEach(el => el.classList.remove('visible'));
-            } else {
-                const view = document.getElementById('user-profile-view');
-                document.getElementById('other-profile-username').innerHTML = `${u.username} ${getBadgesHTML(u)}`;
-                document.getElementById('other-profile-pic').src = generateAvatarUrl(u);
-                document.getElementById('other-profile-bio').textContent = u.bio || "";
-                document.getElementById('other-posts-count').textContent = u.postsCount || 0;
-                document.getElementById('other-followers-count').textContent = (u.friends||[]).length;
-                
-                const isFriend = usersData[currentUserId]?.friends?.includes(uid);
-                const isBlocked = blockedUsers.includes(uid);
-                
-                const addBtn = document.getElementById('action-add-friend');
-                const msgBtn = document.getElementById('action-message-user');
-                const blockBtn = document.getElementById('action-block-user');
-
-                addBtn.style.display = isFriend || isBlocked ? 'none' : 'block';
-                msgBtn.style.display = isFriend && !isBlocked ? 'block' : 'none';
-                blockBtn.style.display = 'block';
-                blockBtn.textContent = isBlocked ? "Débloquer" : "Bloquer";
-
-                addBtn.onclick = () => sendFriendRequest(uid);
-                msgBtn.onclick = () => showChat(uid, 'user');
-                blockBtn.onclick = () => toggleBlockUser(uid);
-                
-                document.getElementById('user-profile-back-btn').onclick = () => hideSecondaryView(view);
-                
-                showSecondaryView(view);
-            }
         }
 
         async function toggleBlockUser(uid) {
