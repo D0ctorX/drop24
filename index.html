@@ -9,8 +9,12 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <!-- QR Code Generator -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.1/qrcode.min.js"></script>
-    <!-- HTML2Canvas pour la génération d'image -->
+    <!-- HTML2Canvas -->
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <!-- LEAFLET MAP CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <!-- LEAFLET MAP JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
@@ -34,6 +38,8 @@
             --chat-bubble-sent: #3897f0;
             --chat-bubble-received: #EFEFEF;
             --hashtag-color: #64b5f6;
+            --online-color: #2ecc71;
+            --offline-color: #e74c3c;
         }
 
         .font-inter { font-family: 'Inter', sans-serif; }
@@ -107,7 +113,7 @@
             transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
             z-index: 20; visibility: hidden; background-color: var(--secondary-bg); will-change: transform;
         }
-        .view.chat-view, .view.group-info-view, .view.post-creation-view, .view.post-info-view { z-index: 40; }
+        .view.chat-view, .view.group-info-view, .view.post-creation-view, .view.post-info-view, .view.map-view { z-index: 40; }
         .view.secondary.visible { transform: translateX(0); visibility: visible; }
 
         .view-header {
@@ -198,15 +204,25 @@
         .poll-bar-text { position: absolute; top: 0; left: 15px; height: 100%; display: flex; align-items: center; font-weight: 700; font-size: 14px; }
         .poll-check { float: right; color: var(--highlight-color); margin-left: 10px; }
 
-        /* FIX: Ajout de position relative !important pour forcer le contexte du FAB */
+        /* CONTACTS & MAP */
         .contacts-view { position: relative !important; } 
-        
         .search-bar-container { display: flex; gap: 10px; padding: 10px; background-color: var(--primary-bg); flex-shrink: 0; align-items: center; }
         #search-input { flex-grow: 1; padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--secondary-bg); font-size: 14px; }
         #create-group-btn { width: 40px; height: 40px; background-color: black; color: white; border: none; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; }
+        
         .friend-item { display: flex; align-items: center; padding: 10px 15px; border-bottom: 1px solid var(--border-color); cursor: pointer; transition: background-color 0.2s; contain: content; }
         .friend-item:hover { background-color: #f9f9f9; }
-        .friend-pp { width: 50px; height: 50px; border-radius: 50%; margin-right: 15px; object-fit: cover; }
+        
+        /* AVATAR AVEC STATUT */
+        .pp-container { position: relative; width: 50px; height: 50px; margin-right: 15px; }
+        .friend-pp { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+        .status-dot {
+            width: 12px; height: 12px; border-radius: 50%; border: 2px solid white;
+            position: absolute; bottom: 0; right: 0;
+        }
+        .status-online { background-color: var(--online-color); }
+        .status-offline { background-color: var(--offline-color); }
+
         .friend-info { flex-grow: 1; min-width: 0; }
         .friend-info h4 { margin: 0 0 4px 0; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display:flex; align-items:center; gap:5px;}
         .friend-info p { margin: 0; font-size: 12px; color: var(--last-seen-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -214,10 +230,24 @@
         .dm-button { background-color: var(--highlight-color); color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: 600; }
         .dm-unread-badge { position: absolute; top: -5px; right: -5px; background-color: var(--dislike-color); color: white; border-radius: 50%; padding: 2px 6px; font-size: 10px; font-weight: bold; border: 2px solid white; }
         
-        #add-friend-fab { position: absolute; bottom: calc(80px + env(safe-area-inset-bottom)); right: 20px; width: 56px; height: 56px; background-color: var(--highlight-color); color: white; border-radius: 50%; border: none; font-size: 24px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3); cursor: pointer; z-index: 100; }
+        /* FAB Buttons */
+        .fab-btn {
+            position: absolute; right: 20px; width: 56px; height: 56px;
+            border-radius: 50%; border: none; font-size: 24px; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3); cursor: pointer; z-index: 100;
+        }
+        #add-friend-fab { bottom: calc(80px + env(safe-area-inset-bottom)); background-color: var(--highlight-color); color: white; }
+        #open-map-btn { bottom: calc(150px + env(safe-area-inset-bottom)); background-color: black; color: white; }
         
         .request-badge { position: absolute; top: -5px; right: -5px; background-color: var(--dislike-color); color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; border: 2px solid var(--secondary-bg); z-index: 101; }
         .request-count-badge { background-color: var(--dislike-color); color: white; font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 12px; margin-left: 8px; }
+        
+        /* MAP VIEW */
+        #map-container { width: 100%; height: 100%; background: #f0f0f0; }
+        /* Map Marker Styles */
+        .map-avatar-icon { border: 2px solid white; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.3); transition: transform 0.2s; }
+        .map-avatar-icon.offline { filter: grayscale(100%) opacity(0.8); border-color: #ccc; }
+        .map-avatar-icon.online { border-color: var(--online-color); }
         
         .chat-view .view-header { gap: 10px; }
         #chat-user-pp { width: 40px; height: 40px; border-radius: 50%; object-fit: cover;}
@@ -245,7 +275,7 @@
         .picker-sticker:hover { transform: scale(1.1); }
 
         .profile-header { display: flex; align-items: center; padding: 15px; gap: 15px; background-color: var(--secondary-bg); border-bottom: 1px solid var(--border-color); }
-        .profile-pic { width: 80px; height: 80px; border-radius: 50%; }
+        .profile-pic { width: 80px; height: 80px; border-radius: 50%; position: relative; z-index: 1;}
         .profile-info-main { flex-grow: 1; }
         .profile-username { font-size: 22px; font-weight: 600; margin: 0; display:flex; align-items:center; gap:5px; }
         #edit-bio-btn { background: none; border: 1px solid var(--button-border); border-radius: 6px; padding: 6px 12px; margin-top: 10px; cursor: pointer; font-weight: 600; width: 100%; }
@@ -448,8 +478,10 @@
                     <button id="create-group-btn"><i class="fas fa-users-cog"></i></button>
                 </div>
                 <div id="friends-list" class="contacts-content"></div>
-                <!-- FAB INSIDE CONTAINER -->
-                <button id="add-friend-fab"><i class="fas fa-user-plus"></i></button>
+                <!-- BOUTON MAP (NOIR) -->
+                <button id="open-map-btn" class="fab-btn"><i class="fas fa-map-marked-alt"></i></button>
+                <!-- BOUTON AJOUT AMIS (BLEU) -->
+                <button id="add-friend-fab" class="fab-btn"><i class="fas fa-user-plus"></i></button>
             </div>
 
             <!-- VUE PROFIL (MON PROFIL) -->
@@ -457,7 +489,10 @@
                 <div class="view-header"><i id="my-profile-nav-item" class="fas fa-users header-icon"></i><h1 id="profile-username-header" class="header-title">Profil</h1><div class="header-placeholder"></div></div>
                 <div class="profile-content">
                     <div class="profile-header">
-                        <img id="profile-pic" class="profile-pic" src="" alt="Avatar">
+                        <div class="pp-container">
+                             <img id="profile-pic" class="friend-pp" src="" alt="Avatar">
+                             <div class="status-dot status-online"></div>
+                        </div>
                         <div class="profile-info-main">
                             <h2 id="profile-username" class="profile-username">Nom d'utilisateur</h2>
                             <div id="profile-actions-container">
@@ -475,6 +510,15 @@
 
         <!-- VUES SECONDAIRES -->
         
+        <div id="map-view" class="view map-view secondary">
+             <div class="view-header">
+                <i id="map-back-btn" class="fas fa-arrow-left back-button"></i>
+                <h1 class="header-title">Drop Map</h1>
+                <div class="header-placeholder"></div>
+            </div>
+            <div id="map-container"></div>
+        </div>
+
         <div id="user-profile-view" class="view secondary">
             <div class="view-header">
                 <i id="user-profile-back-btn" class="fas fa-arrow-left back-button"></i>
@@ -483,7 +527,10 @@
             </div>
             <div class="profile-content">
                 <div class="profile-header">
-                    <img id="other-profile-pic" class="profile-pic" src="" alt="Avatar">
+                    <div class="pp-container">
+                        <img id="other-profile-pic" class="friend-pp" src="" alt="Avatar">
+                        <div id="other-profile-status" class="status-dot status-offline"></div>
+                    </div>
                     <div class="profile-info-main">
                         <h2 id="other-profile-username" class="profile-username">Nom</h2>
                         <div id="other-profile-actions" style="display: flex; gap: 10px; margin-top: 10px;">
@@ -769,6 +816,10 @@
         
         // POLL STATE
         let isPollMode = false;
+        
+        // MAP STATE
+        let mapInstance = null;
+        let mapMarkers = [];
 
         // DOM Elements
         const authView = document.getElementById('auth-view');
@@ -824,6 +875,17 @@
                 timeout = setTimeout(() => func.apply(context, args), wait);
             };
         }
+        
+        // --- PRESENCE SYSTEM ---
+        function updatePresence() {
+            if(!currentUserId) return;
+            const userRef = doc(usersCollectionRef, currentUserId);
+            // On met à jour lastSeen régulièrement pour dire "je suis là"
+            updateDoc(userRef, {
+                lastSeen: serverTimestamp(),
+                isOnline: true
+            }).catch(e => console.log("Presence err", e));
+        }
 
         const initAuth = async () => { if (initialAuthToken) await signInWithCustomToken(auth, initialAuthToken); };
         initAuth();
@@ -842,6 +904,11 @@
                 authView.style.display = 'none';
                 appContainer.style.display = 'flex'; 
                 await upsertUserDocument(user);
+                
+                // Init Presence Loop
+                updatePresence();
+                setInterval(updatePresence, 60000); // Heartbeat every 1 min
+                
                 listenToAllUsers(); 
                 listenToFeed();
                 listenToFriendRequests();
@@ -875,6 +942,7 @@
             }
         });
 
+        // Auth Logic Handlers...
         document.getElementById('auth-toggle-link').addEventListener('click', () => {
             isLoginMode = !isLoginMode;
             document.getElementById('login-btn').textContent = isLoginMode ? "Se connecter" : "S'inscrire";
@@ -885,24 +953,24 @@
             const email = document.getElementById('auth-email').value.trim();
             const password = document.getElementById('auth-password').value;
             if(!email || !password) return showMessage("Veuillez remplir les champs.", false);
-            
             try {
                 if (isLoginMode) await signInWithEmailAndPassword(auth, email, password);
                 else { await createUserWithEmailAndPassword(auth, email, password); showMessage("Compte créé !", true); }
             } catch (error) { 
                 console.error("Auth Error:", error);
-                let msg = "Erreur d'authentification";
-                if(error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') msg = "Email ou mot de passe incorrect.";
-                else if(error.code === 'auth/email-already-in-use') msg = "Cet email est déjà utilisé.";
-                else if(error.code === 'auth/weak-password') msg = "Mot de passe trop faible.";
-                else if(error.code === 'auth/invalid-email') msg = "Email invalide.";
-                showMessage(msg, false); 
+                showMessage("Erreur d'authentification", false); 
             }
         });
         document.getElementById('google-btn').addEventListener('click', async () => {
             try { await signInWithPopup(auth, new GoogleAuthProvider()); } catch (error) { showMessage("Erreur Google", false); }
         });
-        document.getElementById('logout-btn').addEventListener('click', async () => { await signOut(auth); });
+        document.getElementById('logout-btn').addEventListener('click', async () => { 
+            if(currentUserId) {
+                // Set offline on logout
+                 updateDoc(doc(usersCollectionRef, currentUserId), { isOnline: false });
+            }
+            await signOut(auth); 
+        });
 
         async function upsertUserDocument(user) {
             const userRef = doc(usersCollectionRef, user.uid);
@@ -912,13 +980,14 @@
                     username: user.displayName || `user_${user.uid.substring(0, 4)}`, 
                     profileColor: PROFILE_COLORS[Math.floor(Math.random() * PROFILE_COLORS.length)],
                     accountCreatedAt: serverTimestamp(), friends: [], postsCount: 0, blockedUsers: [],
-                    badges: [] 
+                    badges: [], isOnline: true, lastSeen: serverTimestamp() 
                 };
                 if(referralId && referralId !== user.uid) {
                     newData.referredBy = referralId;
                 }
                 await setDoc(userRef, newData);
             } else {
+                await updateDoc(userRef, { isOnline: true, lastSeen: serverTimestamp() });
                 if(!userDoc.data().blockedUsers) await updateDoc(userRef, { blockedUsers: [] });
             }
         }
@@ -928,8 +997,6 @@
             if (viewIndex === -1) return;
             viewWrapper.style.transform = `translateX(-${viewIndex * 100}%)`;
             navItems.forEach(item => { item.classList.toggle('active', item.dataset.view === viewId); });
-            // FIX: Removed recursive call showProfile(currentUserId) here.
-            // Profile is loaded by explicit calls or when switching tab (handled below).
             if(viewId === 'profile-view') showProfile(currentUserId);
         }
 
@@ -948,16 +1015,29 @@
             return html;
         }
 
+        // HELPER: Check if online (based on field + timeout fallback 10min)
+        function isUserOnline(u) {
+            if(!u) return false;
+            if(!u.lastSeen) return false;
+            // Si explicitement offline
+            if(u.isOnline === false) return false;
+            // Fallback: si lastSeen > 10min, consider offline
+            const now = new Date();
+            const last = u.lastSeen.toDate ? u.lastSeen.toDate() : new Date(u.lastSeen);
+            const diffMins = (now - last) / 60000;
+            return diffMins < 10;
+        }
+
         function listenToAllUsers() {
             unsubscribeUsersListener = onSnapshot(query(usersCollectionRef, limit(50)), (snapshot) => {
                 snapshot.forEach((doc) => { usersData[doc.id] = { id: doc.id, ...doc.data() }; });
                 blockedUsers = usersData[currentUserId]?.blockedUsers || [];
                 renderFriendsList(); 
-                // Only refresh profile if it's someone else's profile to avoid jitter
                 if (activeProfileUserId && activeProfileUserId !== currentUserId) showProfile(activeProfileUserId);
             });
         }
         
+        // ... Listen to Conversations, FriendRequests (Standard) ... 
         function listenToConversations() {
             if (!currentUserId) return;
             const qGroups = query(groupsCollectionRef, where('members', 'array-contains', currentUserId));
@@ -1040,6 +1120,7 @@
             try { await deleteDoc(doc(db, dbPath, 'users', currentUserId, 'friendRequests', sid)); } catch(e){}
         }
         
+        // RENDER FRIENDS LIST (With Status)
         function renderFriendsList() {
             const list = document.getElementById('friends-list'); list.innerHTML='';
             const term = document.getElementById('search-input').value.toLowerCase();
@@ -1062,10 +1143,17 @@
                 let avatarHTML = '', title = '', subtitle = '';
 
                 if (item.type === 'user') {
-                    avatarHTML = `<img class="friend-pp" src="${generateAvatarUrl(item.data)}">`;
-                    title = `${item.name} ${getBadgesHTML(item.data)}`; subtitle = "Ami";
+                    const isOnline = isUserOnline(item.data);
+                    const statusClass = isOnline ? 'status-online' : 'status-offline';
+                    avatarHTML = `
+                    <div class="pp-container" style="width:50px;height:50px;margin-right:15px;">
+                        <img class="friend-pp" style="margin:0;" src="${generateAvatarUrl(item.data)}">
+                        <div class="status-dot ${statusClass}"></div>
+                    </div>`;
+                    title = `${item.name} ${getBadgesHTML(item.data)}`; 
+                    subtitle = isOnline ? "En ligne" : "Hors ligne";
                 } else {
-                    avatarHTML = `<div class="friend-pp" style="background:#333;color:white;display:flex;align-items:center;justify-content:center;font-size:20px;"><i class="fas fa-users"></i></div>`;
+                    avatarHTML = `<div class="friend-pp" style="background:#333;color:white;display:flex;align-items:center;justify-content:center;font-size:20px;margin-right:15px;"><i class="fas fa-users"></i></div>`;
                     title = item.name; subtitle = "Groupe";
                 }
 
@@ -1081,9 +1169,86 @@
                 list.appendChild(d);
             });
         }
+        
+        // --- MAP LOGIC ---
+        document.getElementById('open-map-btn').onclick = () => {
+            if(!navigator.geolocation) return showMessage("Géolocalisation non supportée", false);
+            
+            navigator.geolocation.getCurrentPosition(position => {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                
+                // Update my location in DB
+                if(currentUserId) {
+                    updateDoc(doc(usersCollectionRef, currentUserId), {
+                        location: { lat, lng },
+                        lastSeen: serverTimestamp(),
+                        isOnline: true
+                    }).catch(e => console.error("Loc update fail", e));
+                }
+                
+                showSecondaryView(document.getElementById('map-view'));
+                initMap(lat, lng);
+                
+            }, () => {
+                showMessage("Autorisation refusée ou erreur GPS", false);
+            });
+        };
+        
+        document.getElementById('map-back-btn').onclick = () => hideSecondaryView(document.getElementById('map-view'));
 
+        function initMap(lat, lng) {
+            if (!mapInstance) {
+                mapInstance = L.map('map-container').setView([lat, lng], 14);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; OpenStreetMap contributors'
+                }).addTo(mapInstance);
+            } else {
+                mapInstance.setView([lat, lng], 14);
+            }
+            
+            // Clear existing markers
+            mapMarkers.forEach(m => mapInstance.removeLayer(m));
+            mapMarkers = [];
+            
+            // Add ME
+            const myIcon = L.divIcon({
+                className: 'custom-map-marker',
+                html: `<img class="map-avatar-icon online" src="${generateAvatarUrl(usersData[currentUserId])}" style="width:40px;height:40px;">`,
+                iconSize: [40, 40],
+                iconAnchor: [20, 20]
+            });
+            const myMarker = L.marker([lat, lng], {icon: myIcon}).addTo(mapInstance);
+            myMarker.bindPopup("Moi");
+            mapMarkers.push(myMarker);
+            
+            // Add Friends
+            const friends = (usersData[currentUserId]?.friends || []).map(id => usersData[id]).filter(u => u && !blockedUsers.includes(u.id));
+            
+            friends.forEach(f => {
+                if(f.location && f.location.lat && f.location.lng) {
+                    const isOnline = isUserOnline(f);
+                    const statusClass = isOnline ? 'online' : 'offline';
+                    
+                    const fIcon = L.divIcon({
+                        className: 'custom-map-marker',
+                        html: `<img class="map-avatar-icon ${statusClass}" src="${generateAvatarUrl(f)}" style="width:40px;height:40px;">`,
+                        iconSize: [40, 40],
+                        iconAnchor: [20, 20]
+                    });
+                    
+                    const m = L.marker([f.location.lat, f.location.lng], {icon: fIcon}).addTo(mapInstance);
+                    m.bindPopup(`<b>${f.username}</b><br>${isOnline ? 'En ligne' : 'Vu récemment'}`);
+                    mapMarkers.push(m);
+                }
+            });
+            
+            // Fix Leaflet sizing issue in hidden container
+            setTimeout(() => { mapInstance.invalidateSize(); }, 200);
+        }
+
+        // --- PROFILE LOGIC ---
         async function showProfile(uid) {
-            // FIX: Clear previous profile listener
             if(unsubscribeProfilePostsListener) {
                 unsubscribeProfilePostsListener();
                 unsubscribeProfilePostsListener = null;
@@ -1092,7 +1257,6 @@
             activeProfileUserId = uid;
             const isMe = uid === currentUserId;
 
-            // NAVIGATION INSTANTANÉE
             if (isMe) {
                 const activeNav = document.querySelector('.nav-item.active');
                 if (activeNav && activeNav.dataset.view !== 'profile-view') {
@@ -1104,10 +1268,8 @@
                 showSecondaryView(document.getElementById('user-profile-view'));
             }
 
-            // CHARGEMENT DONNÉES UTILISATEUR (Optimisé: Ne bloque pas le thread)
             let u = usersData[uid];
             
-            // Fonction locale pour mettre à jour le DOM
             const updateUI = (userData) => {
                 if(!userData) return;
                 const prefix = isMe ? 'profile' : 'other-profile';
@@ -1130,7 +1292,12 @@
                     document.getElementById('edit-bio-btn').style.display = 'block';
                     document.getElementById('logout-btn').style.display = 'block'; 
                 } else {
-                    // Boutons actions ami...
+                    const isOnline = isUserOnline(userData);
+                    const statusEl = document.getElementById('other-profile-status');
+                    if(statusEl) {
+                        statusEl.className = `status-dot ${isOnline ? 'status-online' : 'status-offline'}`;
+                    }
+
                     const isFriend = usersData[currentUserId]?.friends?.includes(uid);
                     const isBlocked = blockedUsers.includes(uid);
                     document.getElementById('action-add-friend').style.display = isFriend || isBlocked ? 'none' : 'block';
@@ -1139,25 +1306,18 @@
                     blockBtn.style.display = 'block';
                     blockBtn.textContent = isBlocked ? "Débloquer" : "Bloquer";
                     
-                    // Setup listeners
                     document.getElementById('action-add-friend').onclick = () => sendFriendRequest(uid);
                     document.getElementById('action-message-user').onclick = () => showChat(uid, 'user');
                     blockBtn.onclick = () => toggleBlockUser(uid);
-                    
                     document.getElementById('user-profile-back-btn').onclick = () => hideSecondaryView(document.getElementById('user-profile-view'));
                 }
             };
 
-            // Si on a déjà les données, on affiche direct
             if(u) {
                 updateUI(u);
             } else {
-                // Sinon on met des placeholders et on fetch en arrière plan
-                if(isMe) {
-                    document.getElementById('profile-username').textContent = "Chargement...";
-                } else {
-                    document.getElementById('other-profile-username').textContent = "Chargement...";
-                }
+                if(isMe) document.getElementById('profile-username').textContent = "Chargement...";
+                else document.getElementById('other-profile-username').textContent = "Chargement...";
                 
                 getDoc(doc(usersCollectionRef, uid)).then(snap => {
                     if(snap.exists()) {
@@ -1167,7 +1327,6 @@
                 });
             }
 
-            // CHARGEMENT DES POSTS (Listener)
             const qProfilePosts = query(postsCollectionRef, where('publisherId', '==', uid), orderBy('createdAt', 'desc'), limit(20));
             
             unsubscribeProfilePostsListener = onSnapshot(qProfilePosts, (snap) => {
