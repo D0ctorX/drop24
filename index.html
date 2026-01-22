@@ -203,7 +203,6 @@
         }
         
         .pp-container { position: relative; width: 50px; height: 50px; margin-right: 15px; flex-shrink: 0; }
-        /* When inside container, remove margin from img itself */
         .pp-container .friend-pp { margin-right: 0; }
 
         .status-dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; position: absolute; bottom: 0; right: 0; }
@@ -238,6 +237,21 @@
         .map-avatar-icon { border: 2px solid white; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.3); transition: transform 0.2s; }
         .map-avatar-icon.offline { filter: grayscale(100%) opacity(0.8); border-color: #ccc; }
         .map-avatar-icon.online { border-color: var(--online-color); }
+        
+        /* POPUP MAP STYLE - LIKE CONTACT ITEM */
+        .leaflet-popup-content-wrapper { border-radius: 12px; padding: 0; overflow: hidden; }
+        .leaflet-popup-content { margin: 0; width: 260px !important; }
+        .map-friend-card {
+            display: flex; align-items: center; padding: 10px; background: white;
+        }
+        .map-friend-pp { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; margin-right: 10px; }
+        .map-friend-info { flex-grow: 1; }
+        .map-friend-name { font-weight: 600; font-size: 14px; color: #262626; margin: 0; }
+        .map-friend-status { font-size: 11px; color: #8e8e8e; margin: 0; }
+        .map-dm-btn {
+            background-color: var(--highlight-color); color: white; border: none;
+            padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 12px;
+        }
         
         .chat-view .view-header { gap: 10px; }
         #chat-user-pp { width: 40px; height: 40px; border-radius: 50%; object-fit: cover;}
@@ -1179,34 +1193,51 @@
         }
         
         // --- MAP LOGIC ---
+        // Global Map Vars
+        // mapInstance = null defined earlier
+        // mapMarkers = [] defined earlier
+
         document.getElementById('open-map-btn').onclick = () => {
             // 1. Show the view IMMEDIATELY with the loader
             showSecondaryView(document.getElementById('map-view'));
             
             // 2. Initialize map immediately to handle layout (even if empty)
-            // We use a default view (Paris or last known) so something is ready
-            // But we keep the loader on top until we have the real position
-            // The map instance must be created now so that when we get the position, we just setView
             if (!mapInstance) {
                 // Initialize hidden map, we will invalidate size later
-                // Default to 0,0, zoom 1
-                mapInstance = L.map('map-container').setView([0,0], 2);
+                // Try to get last location from localStorage
+                let initialLat = 48.8566; // Paris default
+                let initialLng = 2.3522;
+                const savedLoc = localStorage.getItem('last_map_loc');
+                if(savedLoc) {
+                    try {
+                        const parsed = JSON.parse(savedLoc);
+                        if(parsed.lat && parsed.lng) { initialLat = parsed.lat; initialLng = parsed.lng; }
+                    } catch(e) {}
+                }
+
+                mapInstance = L.map('map-container').setView([initialLat, initialLng], 12);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     attribution: '&copy; OpenStreetMap contributors'
                 }).addTo(mapInstance);
             }
+            
             // Fix Leaflet display bug when init in hidden div
             setTimeout(() => { mapInstance.invalidateSize(); }, 300);
 
-            // 3. Start Geolocation (Async)
+            // 3. Start Geolocation (Async) - FASTER SETTINGS
+            // Enable High Accuracy False makes it faster (cell tower vs GPS)
+            // Timeout 5s max
             if(!navigator.geolocation) {
-                document.getElementById('map-loader').innerHTML = '<p>Géolocalisation non supportée</p>';
+                document.getElementById('map-loader').style.display = 'none';
                 return;
             }
             
             navigator.geolocation.getCurrentPosition(position => {
                 const lat = position.coords.latitude;
                 const lng = position.coords.longitude;
+                
+                // Save for next time
+                localStorage.setItem('last_map_loc', JSON.stringify({lat, lng}));
                 
                 // Hide loader
                 document.getElementById('map-loader').style.display = 'none';
@@ -1220,47 +1251,61 @@
                     }).catch(e => console.error("Loc update fail", e));
                 }
                 
-                initMap(lat, lng); // This will update view and markers
+                // Move map
+                mapInstance.setView([lat, lng], 14);
+                updateMapMarkers(); // Refresh markers with new data
                 
             }, (error) => {
                 console.error("GPS Error", error);
                 document.getElementById('map-loader').style.display = 'none';
-                showMessage("Impossible de vous localiser. Affichage par défaut.", false);
-                // Default to Paris if geolocation fails, so user can still see friends
-                initMap(48.8566, 2.3522); 
+                // If fail, we just stay on default/last location, no annoying alert blocking UI
+                updateMapMarkers();
+            }, {
+                enableHighAccuracy: false, // FASTER
+                timeout: 5000,
+                maximumAge: 600000 // Accept 10 min old cache
             });
         };
         
         document.getElementById('map-back-btn').onclick = () => {
             hideSecondaryView(document.getElementById('map-view'));
-            // Reset loader for next time
-            document.getElementById('map-loader').style.display = 'flex';
+            // We don't reset loader to block again, next open will be instant on last pos
         };
 
-        function initMap(lat, lng) {
-            // mapInstance is already created in the click handler above
-            mapInstance.setView([lat, lng], 14);
+        // Separate function to render markers so we can call it anytime data changes
+        function updateMapMarkers() {
+            if(!mapInstance) return;
             
             // Clear existing markers
             mapMarkers.forEach(m => mapInstance.removeLayer(m));
             mapMarkers = [];
             
-            // Add ME
-            const myIcon = L.divIcon({
-                className: 'custom-map-marker',
-                html: `<img class="map-avatar-icon online" src="${generateAvatarUrl(usersData[currentUserId])}" style="width:40px;height:40px;">`,
-                iconSize: [40, 40],
-                iconAnchor: [20, 20]
-            });
-            const myMarker = L.marker([lat, lng], {icon: myIcon}).addTo(mapInstance);
-            myMarker.bindPopup("Moi");
-            mapMarkers.push(myMarker);
+            // 1. Add ME (if we have location in usersData or localStorage)
+            // Actually, we use the center of map or just skip 'me' marker if we want to see friends
+            // But let's add ME based on DB location if available
+            const myData = usersData[currentUserId];
+            if(myData && myData.location) {
+                 const myIcon = L.divIcon({
+                    className: 'custom-map-marker',
+                    html: `<img class="map-avatar-icon online" src="${generateAvatarUrl(myData)}" style="width:40px;height:40px;">`,
+                    iconSize: [40, 40],
+                    iconAnchor: [20, 20]
+                });
+                const m = L.marker([myData.location.lat, myData.location.lng], {icon: myIcon}).addTo(mapInstance);
+                // Bind Popup with "Me"
+                 m.bindPopup(`<div style="text-align:center; font-weight:bold;">Moi</div>`);
+                mapMarkers.push(m);
+            }
             
-            // Add Friends
-            const friends = (usersData[currentUserId]?.friends || []).map(id => usersData[id]).filter(u => u && !blockedUsers.includes(u.id));
+            // 2. Add Friends ONLY
+            // We iterate ONLY over the friends list IDs
+            const myFriendsIds = usersData[currentUserId]?.friends || [];
             
-            friends.forEach(f => {
-                if(f.location && f.location.lat && f.location.lng) {
+            myFriendsIds.forEach(fid => {
+                // Get friend data from cache
+                const f = usersData[fid];
+                // Check if friend exists, is not blocked, and has location
+                if(f && !blockedUsers.includes(f.id) && f.location && f.location.lat && f.location.lng) {
                     const isOnline = isUserOnline(f);
                     const statusClass = isOnline ? 'online' : 'offline';
                     
@@ -1272,14 +1317,29 @@
                     });
                     
                     const m = L.marker([f.location.lat, f.location.lng], {icon: fIcon}).addTo(mapInstance);
-                    m.bindPopup(`<b>${f.username}</b><br>${isOnline ? 'En ligne' : 'Vu récemment'}`);
+                    
+                    // CUSTOM POPUP CONTENT (Contact Style)
+                    const popupContent = `
+                        <div class="map-friend-card">
+                            <img class="map-friend-pp" src="${generateAvatarUrl(f)}">
+                            <div class="map-friend-info">
+                                <h4 class="map-friend-name">${f.username}</h4>
+                                <p class="map-friend-status">${isOnline ? 'En ligne' : 'Vu récemment'}</p>
+                            </div>
+                            <button class="map-dm-btn" onclick="window.openChatFromMap('${f.id}')">Message</button>
+                        </div>
+                    `;
+                    
+                    m.bindPopup(popupContent, { minWidth: 260, closeButton: false });
                     mapMarkers.push(m);
                 }
             });
-            
-            // Fix Leaflet sizing issue in hidden container
-            setTimeout(() => { mapInstance.invalidateSize(); }, 200);
         }
+        
+        // Global function for the onclick inside the HTML string
+        window.openChatFromMap = (uid) => {
+            showChat(uid, 'user');
+        };
 
         // --- PROFILE LOGIC ---
         async function showProfile(uid) {
@@ -2280,7 +2340,7 @@
                 const text = postTextarea.value;
                 const safeText = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
                 const highlighted = safeText.replace(/(#[\p{L}\p{N}_]+)/gu, '<span class="hashtag-highlight">$1</span>');
-                inputHighlighter.innerHTML = highlighted.replace(/\n/g, '<br>') + '<br>'; 
+                inputHighlighter.innerHTML = highlighted.replace(/\n/g, '<br>') + '<br>'; // Extra br for sync
                 
                 const hashtags = extractHashtags(text);
                 const textWithoutTags = text.replace(/#[\p{L}\p{N}_]+/gu, '').replace(/\s+/g, ' ');
