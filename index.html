@@ -227,6 +227,14 @@
         
         /* MAP VIEW */
         #map-container { width: 100%; height: 100%; background: #f0f0f0; }
+        #map-loader {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.9); z-index: 1000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .loader-spinner { border: 4px solid #f3f3f3; border-top: 4px solid var(--highlight-color); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 10px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
         .map-avatar-icon { border: 2px solid white; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.3); transition: transform 0.2s; }
         .map-avatar-icon.offline { filter: grayscale(100%) opacity(0.8); border-color: #ccc; }
         .map-avatar-icon.online { border-color: var(--online-color); }
@@ -315,7 +323,7 @@
         .request-accept-btn { background-color: var(--switch-on); color: white; }
         .request-reject-btn { background-color: var(--dislike-color); color: white; }
 
-        #create-group-modal .modal-content, #add-group-member-modal .modal-content { max-height: 80vh; }
+        #create-group-modal .modal-content { max-height: 80vh; }
         #group-friends-list, #add-member-friends-list { max-height: 200px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 6px; }
         .group-friend-select-item { display: flex; align-items: center; padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; }
         .group-friend-select-item input { width: auto; margin-right: 10px; }
@@ -500,7 +508,12 @@
                 <h1 class="header-title">Drop Map</h1>
                 <div class="header-placeholder"></div>
             </div>
-            <div id="map-container"></div>
+            <div id="map-container">
+                <div id="map-loader">
+                    <div class="loader-spinner"></div>
+                    <p>Géolocalisation en cours...</p>
+                </div>
+            </div>
         </div>
 
         <div id="user-profile-view" class="view secondary">
@@ -1167,12 +1180,37 @@
         
         // --- MAP LOGIC ---
         document.getElementById('open-map-btn').onclick = () => {
-            if(!navigator.geolocation) return showMessage("Géolocalisation non supportée", false);
+            // 1. Show the view IMMEDIATELY with the loader
+            showSecondaryView(document.getElementById('map-view'));
+            
+            // 2. Initialize map immediately to handle layout (even if empty)
+            // We use a default view (Paris or last known) so something is ready
+            // But we keep the loader on top until we have the real position
+            // The map instance must be created now so that when we get the position, we just setView
+            if (!mapInstance) {
+                // Initialize hidden map, we will invalidate size later
+                // Default to 0,0, zoom 1
+                mapInstance = L.map('map-container').setView([0,0], 2);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; OpenStreetMap contributors'
+                }).addTo(mapInstance);
+            }
+            // Fix Leaflet display bug when init in hidden div
+            setTimeout(() => { mapInstance.invalidateSize(); }, 300);
+
+            // 3. Start Geolocation (Async)
+            if(!navigator.geolocation) {
+                document.getElementById('map-loader').innerHTML = '<p>Géolocalisation non supportée</p>';
+                return;
+            }
             
             navigator.geolocation.getCurrentPosition(position => {
                 const lat = position.coords.latitude;
                 const lng = position.coords.longitude;
                 
+                // Hide loader
+                document.getElementById('map-loader').style.display = 'none';
+
                 // Update my location in DB
                 if(currentUserId) {
                     updateDoc(doc(usersCollectionRef, currentUserId), {
@@ -1182,25 +1220,26 @@
                     }).catch(e => console.error("Loc update fail", e));
                 }
                 
-                showSecondaryView(document.getElementById('map-view'));
-                initMap(lat, lng);
+                initMap(lat, lng); // This will update view and markers
                 
-            }, () => {
-                showMessage("Autorisation refusée ou erreur GPS", false);
+            }, (error) => {
+                console.error("GPS Error", error);
+                document.getElementById('map-loader').style.display = 'none';
+                showMessage("Impossible de vous localiser. Affichage par défaut.", false);
+                // Default to Paris if geolocation fails, so user can still see friends
+                initMap(48.8566, 2.3522); 
             });
         };
         
-        document.getElementById('map-back-btn').onclick = () => hideSecondaryView(document.getElementById('map-view'));
+        document.getElementById('map-back-btn').onclick = () => {
+            hideSecondaryView(document.getElementById('map-view'));
+            // Reset loader for next time
+            document.getElementById('map-loader').style.display = 'flex';
+        };
 
         function initMap(lat, lng) {
-            if (!mapInstance) {
-                mapInstance = L.map('map-container').setView([lat, lng], 14);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '&copy; OpenStreetMap contributors'
-                }).addTo(mapInstance);
-            } else {
-                mapInstance.setView([lat, lng], 14);
-            }
+            // mapInstance is already created in the click handler above
+            mapInstance.setView([lat, lng], 14);
             
             // Clear existing markers
             mapMarkers.forEach(m => mapInstance.removeLayer(m));
