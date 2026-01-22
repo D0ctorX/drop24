@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <!-- QR Code Generator -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.1/qrcode.min.js"></script>
-    <!-- HTML2Canvas -->
+    <!-- HTML2Canvas pour la génération d'image -->
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <!-- LEAFLET MAP CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
@@ -175,27 +175,10 @@
         .action-button.view-count { cursor: default; margin-left: 10px; }
 
         /* SONDAGES 1:1 */
-        .poll-square-container {
-            width: 100%; padding-top: 100%; position: relative;
-            background-color: var(--secondary-bg);
-            border-bottom: 1px solid var(--border-color);
-        }
-        .poll-square-inner {
-            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            display: flex; flex-direction: column; justify-content: center;
-            padding: 20px;
-        }
-        .poll-question {
-            font-size: 22px; text-align: center; margin-bottom: 25px;
-            font-weight: 700; word-wrap: break-word;
-            font-family: 'Inter', sans-serif;
-        }
-        .poll-option-btn {
-            display: block; width: 100%; padding: 14px; margin-bottom: 10px;
-            background: #f0f2f5; border: 1px solid var(--border-color); border-radius: 12px;
-            text-align: center; font-weight: 600; cursor: pointer; transition: background 0.2s;
-            font-size: 16px;
-        }
+        .poll-square-container { width: 100%; padding-top: 100%; position: relative; background-color: var(--secondary-bg); border-bottom: 1px solid var(--border-color); }
+        .poll-square-inner { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; justify-content: center; padding: 20px; }
+        .poll-question { font-size: 22px; text-align: center; margin-bottom: 25px; font-weight: 700; word-wrap: break-word; font-family: 'Inter', sans-serif; }
+        .poll-option-btn { display: block; width: 100%; padding: 14px; margin-bottom: 10px; background: #f0f2f5; border: 1px solid var(--border-color); border-radius: 12px; text-align: center; font-weight: 600; cursor: pointer; transition: background 0.2s; font-size: 16px; }
         .poll-option-btn:hover { background: #e4e6eb; }
         .poll-result-row { margin-bottom: 15px; }
         .poll-result-header { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 6px; color: #555; }
@@ -213,13 +196,17 @@
         .friend-item { display: flex; align-items: center; padding: 10px 15px; border-bottom: 1px solid var(--border-color); cursor: pointer; transition: background-color 0.2s; contain: content; }
         .friend-item:hover { background-color: #f9f9f9; }
         
-        /* AVATAR AVEC STATUT */
-        .pp-container { position: relative; width: 50px; height: 50px; margin-right: 15px; }
-        .friend-pp { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
-        .status-dot {
-            width: 12px; height: 12px; border-radius: 50%; border: 2px solid white;
-            position: absolute; bottom: 0; right: 0;
+        /* FIX: FORCE FRIEND PP DIMENSIONS AND PREVENT SHRINKING */
+        .friend-pp { 
+            width: 50px; height: 50px; border-radius: 50%; margin-right: 15px; object-fit: cover; 
+            flex-shrink: 0; min-width: 50px; 
         }
+        
+        .pp-container { position: relative; width: 50px; height: 50px; margin-right: 15px; flex-shrink: 0; }
+        /* When inside container, remove margin from img itself */
+        .pp-container .friend-pp { margin-right: 0; }
+
+        .status-dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; position: absolute; bottom: 0; right: 0; }
         .status-online { background-color: var(--online-color); }
         .status-offline { background-color: var(--offline-color); }
 
@@ -231,11 +218,7 @@
         .dm-unread-badge { position: absolute; top: -5px; right: -5px; background-color: var(--dislike-color); color: white; border-radius: 50%; padding: 2px 6px; font-size: 10px; font-weight: bold; border: 2px solid white; }
         
         /* FAB Buttons */
-        .fab-btn {
-            position: absolute; right: 20px; width: 56px; height: 56px;
-            border-radius: 50%; border: none; font-size: 24px; display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3); cursor: pointer; z-index: 100;
-        }
+        .fab-btn { position: absolute; right: 20px; width: 56px; height: 56px; border-radius: 50%; border: none; font-size: 24px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3); cursor: pointer; z-index: 100; }
         #add-friend-fab { bottom: calc(80px + env(safe-area-inset-bottom)); background-color: var(--highlight-color); color: white; }
         #open-map-btn { bottom: calc(150px + env(safe-area-inset-bottom)); background-color: black; color: white; }
         
@@ -244,7 +227,6 @@
         
         /* MAP VIEW */
         #map-container { width: 100%; height: 100%; background: #f0f0f0; }
-        /* Map Marker Styles */
         .map-avatar-icon { border: 2px solid white; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.3); transition: transform 0.2s; }
         .map-avatar-icon.offline { filter: grayscale(100%) opacity(0.8); border-color: #ccc; }
         .map-avatar-icon.online { border-color: var(--online-color); }
@@ -447,6 +429,7 @@
     <!-- APPLICATION PRINCIPALE -->
     <div id="app-container" class="container">
         
+        <!-- SIDEBAR TENDANCES -->
         <div id="sidebar-overlay" class="sidebar-overlay"></div>
         <div id="trending-sidebar">
             <div class="trending-header">
@@ -473,6 +456,7 @@
             <!-- VUE AMIS / GROUPES -->
             <div id="contacts-view" class="view contacts-view">
                 <div class="view-header"><div class="header-placeholder"></div><h1 class="header-title">Conversations</h1><div class="header-placeholder"></div></div>
+                <!-- BARRE RECHERCHE MODIFIEE -->
                 <div class="search-bar-container">
                     <input type="text" id="search-input" placeholder="Rechercher...">
                     <button id="create-group-btn"><i class="fas fa-users-cog"></i></button>
@@ -562,6 +546,7 @@
             </div>
         </div>
         
+        <!-- VUE INFOS GROUPE PLEIN ECRAN -->
         <div id="group-info-view" class="view group-info-view secondary">
             <div class="view-header">
                 <i id="group-info-back-btn" class="fas fa-arrow-left back-button"></i>
@@ -605,12 +590,13 @@
                 <div id="square-content" class="font-inter">
                     <div id="input-highlighter"></div>
                     <textarea id="post-textarea" placeholder="Exprimez-vous..." maxlength="200"></textarea> 
+                    <!-- Maxlength augmenté pour permettre la saisie, géré par JS pour la limite réelle -->
                 </div>
                 <div class="char-limit-indicator"><span id="char-count">0</span> / 70</div>
             </div>
             <div class="post-controls">
                 <div class="control-row">
-                    <label>Média</label>
+                    <label>Image</label>
                     <input type="file" id="image-upload-input" accept="image/*" style="display: none;">
                     <div style="display:flex; gap:10px;">
                         <button class="control-button" id="add-image-button"><i class="fas fa-camera"></i></button>
@@ -632,6 +618,7 @@
             </div>
         </div>
         
+        <!-- VUE INFO POST (Nouvelle page) -->
         <div id="post-info-view" class="view post-info-view secondary">
              <div class="view-header">
                 <i id="close-post-info-btn" class="fas fa-arrow-left back-button"></i>
@@ -669,6 +656,7 @@
     <div id="paste-id-modal" class="modal-backdrop"><div class="modal-content"><h3>Ajouter un ami par ID</h3><p style="font-size: 14px; color: var(--last-seen-color); text-align: center;">Collez l'ID de l'utilisateur.</p><div><label>ID de l'utilisateur</label><input type="text" id="paste-id-input" placeholder="Coller l'ID ici..."></div><div class="modal-actions"><button id="cancel-paste-id-btn">Annuler</button><button id="send-friend-request-btn" style="background-color: var(--highlight-color); color: white;">Envoyer</button></div></div></div>
     <div id="friend-requests-modal" class="modal-backdrop"><div class="modal-content"><h3>Demandes d'amis</h3><div id="friend-requests-list"></div><div class="modal-actions"><button id="cancel-friend-requests-btn">Fermer</button></div></div></div>
 
+    <!-- Modale Création de Groupe -->
     <div id="create-group-modal" class="modal-backdrop">
         <div class="modal-content">
             <h3>Nouveau Groupe</h3>
@@ -682,6 +670,7 @@
         </div>
     </div>
     
+    <!-- Modale Ajouter Membre Groupe -->
     <div id="add-group-member-modal" class="modal-backdrop">
         <div class="modal-content">
             <h3>Ajouter au groupe</h3>
@@ -706,6 +695,7 @@
         </div>
     </div>
 
+    <!-- Modale Options Membre Groupe -->
     <div id="group-member-options-modal" class="modal-backdrop">
         <div class="modal-content">
             <h3 id="member-options-title">Options</h3>
@@ -718,6 +708,7 @@
         </div>
     </div>
 
+    <!-- Modale Options Post Perso -->
     <div id="post-options-modal" class="modal-backdrop">
         <div class="modal-content">
             <h3>Options publication</h3>
@@ -730,6 +721,7 @@
         </div>
     </div>
 
+    <!-- Modale Recadrage Image -->
     <div id="cropper-modal" class="modal-backdrop">
         <div class="modal-content" style="background: #222; color: white;">
             <h3>Recadrer l'image</h3>
@@ -749,6 +741,7 @@
         import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, getDoc, setDoc, updateDoc, onSnapshot, query, arrayUnion, arrayRemove, writeBatch, serverTimestamp, addDoc, deleteDoc, where, increment, orderBy, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
+        // --- APP ID ---
         const appId = '1:541715107757:web:0141b71ee3cd1ce5ec5b24'; 
         
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
@@ -997,6 +990,8 @@
             if (viewIndex === -1) return;
             viewWrapper.style.transform = `translateX(-${viewIndex * 100}%)`;
             navItems.forEach(item => { item.classList.toggle('active', item.dataset.view === viewId); });
+            // FIX: Removed recursive call showProfile(currentUserId) here.
+            // Profile is loaded by explicit calls or when switching tab (handled below).
             if(viewId === 'profile-view') showProfile(currentUserId);
         }
 
@@ -1249,6 +1244,7 @@
 
         // --- PROFILE LOGIC ---
         async function showProfile(uid) {
+            // FIX: Clear previous profile listener
             if(unsubscribeProfilePostsListener) {
                 unsubscribeProfilePostsListener();
                 unsubscribeProfilePostsListener = null;
@@ -1257,6 +1253,7 @@
             activeProfileUserId = uid;
             const isMe = uid === currentUserId;
 
+            // NAVIGATION INSTANTANÉE
             if (isMe) {
                 const activeNav = document.querySelector('.nav-item.active');
                 if (activeNav && activeNav.dataset.view !== 'profile-view') {
@@ -1268,8 +1265,10 @@
                 showSecondaryView(document.getElementById('user-profile-view'));
             }
 
+            // CHARGEMENT DONNÉES UTILISATEUR (Optimisé: Ne bloque pas le thread)
             let u = usersData[uid];
             
+            // Fonction locale pour mettre à jour le DOM
             const updateUI = (userData) => {
                 if(!userData) return;
                 const prefix = isMe ? 'profile' : 'other-profile';
@@ -1309,15 +1308,21 @@
                     document.getElementById('action-add-friend').onclick = () => sendFriendRequest(uid);
                     document.getElementById('action-message-user').onclick = () => showChat(uid, 'user');
                     blockBtn.onclick = () => toggleBlockUser(uid);
+                    
                     document.getElementById('user-profile-back-btn').onclick = () => hideSecondaryView(document.getElementById('user-profile-view'));
                 }
             };
 
+            // Si on a déjà les données, on affiche direct
             if(u) {
                 updateUI(u);
             } else {
-                if(isMe) document.getElementById('profile-username').textContent = "Chargement...";
-                else document.getElementById('other-profile-username').textContent = "Chargement...";
+                // Sinon on met des placeholders et on fetch en arrière plan
+                if(isMe) {
+                    document.getElementById('profile-username').textContent = "Chargement...";
+                } else {
+                    document.getElementById('other-profile-username').textContent = "Chargement...";
+                }
                 
                 getDoc(doc(usersCollectionRef, uid)).then(snap => {
                     if(snap.exists()) {
@@ -1327,6 +1332,7 @@
                 });
             }
 
+            // CHARGEMENT DES POSTS (Listener)
             const qProfilePosts = query(postsCollectionRef, where('publisherId', '==', uid), orderBy('createdAt', 'desc'), limit(20));
             
             unsubscribeProfilePostsListener = onSnapshot(qProfilePosts, (snap) => {
